@@ -1,0 +1,16 @@
+# Seleno prototype - runtime
+# Verified against Python 3.14.3 on Windows 11.
+opencv-python-headless>=4.8      # SIFT, AKAZE, ORB, USAC_MAGSAC, warping
+numpy>=1.24
+fastapi>=0.110
+uvicorn>=0.27
+pydantic>=2.0
+
+# Only needed by scripts/fetch_products.py to pull the ISRO products.
+remotezip>=0.12
+
+# Optional - enables the LoFTR matcher, which is otherwise reported as
+# unavailable rather than silently replaced. Not installed in the environment
+# this prototype was built and benchmarked in.
+# torch>=2.2
+# kornia>=0.7

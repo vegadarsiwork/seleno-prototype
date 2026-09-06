@@ -1,0 +1,435 @@
+{
+  "generated_by": "scripts/prepare_data.py",
+  "products": {
+    "ohrc_orbit_2297_calibrated": {
+      "lid": "urn:isro:isda:ch2_cho.ohr:data_calibrated:ch2_ohr_ncp_20200229t0739312111_d_img_d18",
+      "lines": 93693,
+      "samples": 12000,
+      "pixel_resolution_m": 0.22977000623605362,
+      "spacecraft_altitude_km": 90.40566014595493,
+      "acquired": "2020-02-29T07:39:31.2111Z"
+    },
+    "ohrc_orbit_2297_raw": {
+      "lid": "urn:isro:isda:ch2_cho.ohr:data_raw:ch2_ohr_nrp_20200229t0739312111_d_img_d18",
+      "pixel_resolution_m": 0.22977000623605362
+    },
+    "ohrc_orbit_2298_calibrated": {
+      "lid": "urn:isro:isda:ch2_cho.ohr:data_calibrated:ch2_ohr_ncp_20200229t0938004033_d_img_d32",
+      "lines": 93693,
+      "samples": 12000,
+      "pixel_resolution_m": 0.2302230600054759,
+      "spacecraft_altitude_km": 90.58391937907761,
+      "acquired": "2020-02-29T09:38:00.4033Z"
+    }
+  },
+  "pairs": [
+    {
+      "name": "OHRC crater field - view change",
+      "short": "Well-lit mare/highland crater field at native OHRC sampling.",
+      "difficulty": "baseline",
+      "sensor_source": "Chandrayaan-2 OHRC (calibrated, orbit 2297)",
+      "sensor_reference": "Same OHRC product, synthetic view change + illumination change",
+      "gsd_source_m": 0.22977000623605362,
+      "gsd_reference_m": 0.22977000623605362,
+      "footprint_m": 294.1,
+      "recommended_model": "homography",
+      "synthetic_component": "reference is the same real imagery re-projected by a known 11 deg rotation, 1.12x scale and small perspective, then gamma/gain adjusted",
+      "real_component": "all pixels are delivered ISRO OHRC data",
+      "geo": {
+        "corners_lon_lat": [
+          [
+            43.861878,
+            -73.656091
+          ],
+          [
+            43.826255,
+            -73.655275
+          ],
+          [
+            43.82956,
+            -73.643781
+          ],
+          [
+            43.865158,
+            -73.644596
+          ]
+        ],
+        "center_lon_lat": [
+          43.845701,
+          -73.649933
+        ]
+      },
+      "id": "ohrc_crater_field",
+      "source_file": "ohrc_crater_field_source.png",
+      "reference_file": "ohrc_crater_field_reference.png",
+      "source_shape": [
+        1280,
+        1280
+      ],
+      "reference_shape": [
+        1280,
+        1280
+      ],
+      "ground_truth_available": true,
+      "gt_homography": [
+        [
+          1.1124320417643163,
+          -0.2273921997240296,
+          74.76248502715697
+        ],
+        [
+          0.23741455772861741,
+          1.0747904976796454,
+          -198.74292766226628
+        ],
+        [
+          1.937416973517143e-05,
+          -1.7422402085491828e-05,
+          1.0
+        ]
+      ]
+    },
+    {
+      "name": "OHRC calibrated vs raw - same acquisition",
+      "short": "Two ISRO products of the identical scene; only radiometry differs.",
+      "difficulty": "real pair, exact ground truth",
+      "sensor_source": "OHRC calibrated browse (ncp), orbit 2297",
+      "sensor_reference": "OHRC raw browse (nrp), same acquisition 2020-02-29T07:39:31Z",
+      "gsd_source_m": 2.297700062360536,
+      "gsd_reference_m": 2.297700062360536,
+      "footprint_m": 2352.8,
+      "recommended_model": "similarity",
+      "synthetic_component": "none - the two windows are cut from two delivered products at a known pixel offset, so ground truth is an exact translation",
+      "real_component": "both sides are delivered ISRO OHRC data; radiometric difference is real",
+      "geo": {
+        "corners_lon_lat": [
+          [
+            43.854015,
+            -73.799679
+          ],
+          [
+            43.565726,
+            -73.792967
+          ],
+          [
+            43.593971,
+            -73.701007
+          ],
+          [
+            43.880641,
+            -73.707691
+          ]
+        ],
+        "center_lon_lat": [
+          43.723948,
+          -73.75039
+        ]
+      },
+      "id": "ohrc_raw_vs_calibrated",
+      "source_file": "ohrc_raw_vs_calibrated_source.png",
+      "reference_file": "ohrc_raw_vs_calibrated_reference.png",
+      "source_shape": [
+        1024,
+        1024
+      ],
+      "reference_shape": [
+        1024,
+        1024
+      ],
+      "ground_truth_available": true,
+      "gt_homography": [
+        [
+          1.0,
+          0.0,
+          -37.0
+        ],
+        [
+          0.0,
+          1.0,
+          24.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "name": "Cross-resolution 2.3 -> 5.0 m/px (TMC-2 class)",
+      "short": "OHRC browse against a simulated TMC-2 ground sampling distance (2.2x).",
+      "difficulty": "cross-resolution",
+      "sensor_source": "OHRC calibrated browse, orbit 2297 (~2.30 m/px)",
+      "sensor_reference": "SIMULATED TMC-2-class product at 5.0 m/px - not real TMC-2 data",
+      "gsd_source_m": 2.297700062360536,
+      "gsd_reference_m": 5.0,
+      "footprint_m": 2527.5,
+      "recommended_model": "similarity",
+      "synthetic_component": "reference produced by anti-aliased resampling of the real tile to 5.0 m/px plus a 6 deg rotation; TMC-2 optics, MTF, noise and viewing geometry are NOT simulated",
+      "real_component": "source is delivered ISRO OHRC data; reference derives from it",
+      "geo": {
+        "corners_lon_lat": [
+          [
+            43.885995,
+            -73.728065
+          ],
+          [
+            43.577674,
+            -73.720879
+          ],
+          [
+            43.607791,
+            -73.622104
+          ],
+          [
+            43.91426,
+            -73.629258
+          ]
+        ],
+        "center_lon_lat": [
+          43.746839,
+          -73.675143
+        ]
+      },
+      "id": "ohrc_tmc2_moderate",
+      "source_file": "ohrc_tmc2_moderate_source.png",
+      "reference_file": "ohrc_tmc2_moderate_reference.png",
+      "source_shape": [
+        1100,
+        1100
+      ],
+      "reference_shape": [
+        458,
+        458
+      ],
+      "ground_truth_available": true,
+      "gt_homography": [
+        [
+          0.45702260420132,
+          -0.04803501131370768,
+          4.776658394593483
+        ],
+        [
+          0.04803501131370768,
+          0.45702260420132,
+          -48.010215555571506
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "name": "Cross-resolution 0.23 -> 5.0 m/px (21.8x)",
+      "short": "The actual OHRC-to-TMC-2 scale gap. Expected to be hard.",
+      "difficulty": "hard - extreme scale ratio",
+      "sensor_source": "Chandrayaan-2 OHRC full resolution, orbit 2297",
+      "sensor_reference": "SIMULATED TMC-2-class product at 5.0 m/px - not real TMC-2 data",
+      "gsd_source_m": 0.22977000623605362,
+      "gsd_reference_m": 5.0,
+      "footprint_m": 705.9,
+      "recommended_model": "similarity",
+      "synthetic_component": "reference is the real tile resampled to 5.0 m/px plus 4 deg rotation",
+      "real_component": "source is delivered ISRO OHRC data at native 0.23 m/px",
+      "geo": {
+        "corners_lon_lat": [
+          [
+            43.877545,
+            -73.65996
+          ],
+          [
+            43.79201,
+            -73.657999
+          ],
+          [
+            43.800059,
+            -73.630405
+          ],
+          [
+            43.88545,
+            -73.632364
+          ]
+        ],
+        "center_lon_lat": [
+          43.838785,
+          -73.645185
+        ]
+      },
+      "id": "ohrc_tmc2_extreme",
+      "source_file": "ohrc_tmc2_extreme_source.png",
+      "reference_file": "ohrc_tmc2_extreme_reference.png",
+      "source_shape": [
+        3072,
+        3072
+      ],
+      "reference_shape": [
+        132,
+        132
+      ],
+      "ground_truth_available": true,
+      "gt_homography": [
+        [
+          0.045842059609812545,
+          -0.0032055890814385564,
+          1.0895658556432295
+        ],
+        [
+          0.0032055890814385564,
+          0.045842059609812545,
+          -8.746096942278442
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "name": "Low-illumination polar terrain",
+      "short": "Real shadowed south-polar terrain with a strong illumination change.",
+      "difficulty": "hard - low contrast and shadow",
+      "sensor_source": "Chandrayaan-2 OHRC full resolution, orbit 2297 (shadowed band)",
+      "sensor_reference": "Same imagery, known view change plus strong gamma/gain change",
+      "gsd_source_m": 0.22977000623605362,
+      "gsd_reference_m": 0.22977000623605362,
+      "footprint_m": 294.1,
+      "recommended_model": "homography",
+      "synthetic_component": "known 9 deg rotation, 1.08x scale, gamma 1.6 with added noise",
+      "real_component": "all pixels are delivered ISRO OHRC data from a genuinely shadowed region",
+      "geo": {
+        "corners_lon_lat": [
+          [
+            43.807135,
+            -73.922673
+          ],
+          [
+            43.77095,
+            -73.921853
+          ],
+          [
+            43.77438,
+            -73.91035
+          ],
+          [
+            43.810539,
+            -73.91117
+          ]
+        ],
+        "center_lon_lat": [
+          43.790746,
+          -73.916514
+        ]
+      },
+      "id": "ohrc_low_illumination",
+      "source_file": "ohrc_low_illumination_source.png",
+      "reference_file": "ohrc_low_illumination_reference.png",
+      "source_shape": [
+        1280,
+        1280
+      ],
+      "reference_shape": [
+        1280,
+        1280
+      ],
+      "ground_truth_available": true,
+      "gt_homography": [
+        [
+          1.0667034078427489,
+          -0.16894922224344935,
+          65.04518589909037
+        ],
+        [
+          0.16894922224344935,
+          1.0667034078427489,
+          -150.4513461358947
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    {
+      "name": "Disjoint orbits - no true overlap",
+      "short": "Two real OHRC strips 10.9 km apart. There is no correct registration.",
+      "difficulty": "true negative",
+      "sensor_source": "OHRC calibrated browse, orbit 2297 (2020-02-29T07:39Z)",
+      "sensor_reference": "OHRC calibrated browse, orbit 2298 (2020-02-29T09:38Z)",
+      "gsd_source_m": 2.297700062360536,
+      "gsd_reference_m": 2.302230600054759,
+      "footprint_m": 2352.8,
+      "recommended_model": "similarity",
+      "synthetic_component": "none",
+      "real_component": "both sides are delivered ISRO OHRC data from different orbits",
+      "expected_outcome": "no valid registration; a high inlier count here would indicate the pipeline is fitting noise",
+      "separation_km": 10.95,
+      "geo": {
+        "source": {
+          "corners_lon_lat": [
+            [
+              43.887747,
+              -73.682907
+            ],
+            [
+              43.60151,
+              -73.676231
+            ],
+            [
+              43.629365,
+              -73.584262
+            ],
+            [
+              43.914006,
+              -73.590912
+            ]
+          ],
+          "center_lon_lat": [
+            43.758513,
+            -73.633633
+          ]
+        },
+        "reference": {
+          "corners_lon_lat": [
+            [
+              42.906385,
+              -73.452851
+            ],
+            [
+              42.6225,
+              -73.446309
+            ],
+            [
+              42.649259,
+              -73.354367
+            ],
+            [
+              42.931587,
+              -73.360874
+            ]
+          ],
+          "center_lon_lat": [
+            42.777785,
+            -73.403657
+          ]
+        }
+      },
+      "id": "ohrc_disjoint_orbits",
+      "source_file": "ohrc_disjoint_orbits_source.png",
+      "reference_file": "ohrc_disjoint_orbits_reference.png",
+      "source_shape": [
+        1024,
+        1024
+      ],
+      "reference_shape": [
+        1024,
+        1024
+      ],
+      "ground_truth_available": false,
+      "gt_homography": null
+    }
+  ]
+}

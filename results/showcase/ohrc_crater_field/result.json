@@ -1,0 +1,201 @@
+{
+  "ok": true,
+  "pair_id": "ohrc_crater_field",
+  "options": {
+    "matcher": "sift",
+    "preprocess_enabled": true,
+    "use_clahe": true,
+    "use_flatten": true,
+    "use_denoise": false,
+    "harmonise_gsd": true,
+    "verify_enabled": true,
+    "model_type": "homography",
+    "ransac_threshold": 3.0,
+    "spatial_enabled": true,
+    "grid": 6,
+    "per_cell": 3,
+    "ratio": 0.8,
+    "mutual_check": true,
+    "max_features": 8000
+  },
+  "stages": [
+    {
+      "name": "Preprocessing",
+      "status": "ok",
+      "note": "grayscale/uint8 normalisation | illumination flattening (divide-by-blur) | CLAHE (clip 2.5, 8x8 tiles)",
+      "seconds": 0.28290170000036596,
+      "detail": {
+        "source": {
+          "mean": 125.39,
+          "std": 64.16,
+          "shape": [
+            1280,
+            1280
+          ]
+        },
+        "reference": {
+          "mean": 123.73,
+          "std": 64.18,
+          "shape": [
+            1280,
+            1280
+          ]
+        },
+        "source_steps": [
+          "grayscale/uint8 normalisation",
+          "illumination flattening (divide-by-blur)",
+          "CLAHE (clip 2.5, 8x8 tiles)"
+        ],
+        "reference_steps": [
+          "grayscale/uint8 normalisation",
+          "illumination flattening (divide-by-blur)",
+          "CLAHE (clip 2.5, 8x8 tiles)"
+        ],
+        "source_coordinate_scale": 1.0
+      }
+    },
+    {
+      "name": "Feature extraction and candidate matching",
+      "status": "ok",
+      "note": "8000 keypoints (source), 8000 (reference) -> 4394 candidate correspondences",
+      "seconds": 0.5174836000005598,
+      "detail": {
+        "detector": "sift",
+        "ratio": 0.8,
+        "ratio_test_survivors_fwd": 4506,
+        "mutual_check": true,
+        "ratio_test_survivors_bwd": 4529,
+        "mutual_consistent": 4394
+      }
+    },
+    {
+      "name": "Geometric verification",
+      "status": "ok",
+      "note": "4394 candidates -> 4373 inliers (99.5%), 21 rejected",
+      "seconds": 0.002241800000774674,
+      "detail": {
+        "estimator": "USAC_MAGSAC",
+        "threshold_px": 3.0,
+        "confidence": 0.999,
+        "est_scale_x": 1.1374,
+        "est_scale_y": 1.0985,
+        "est_rotation_deg": 12.045,
+        "est_shear_det": 1.2493,
+        "est_translation_px": [
+          74.83,
+          -198.74
+        ],
+        "est_perspective": [
+          1.931133280106472e-05,
+          -1.7462990740880476e-05
+        ]
+      }
+    },
+    {
+      "name": "Spatial match selection",
+      "status": "ok",
+      "note": "4373 inliers -> 107 retained; grid coverage 80.6% (top-107 by confidence) vs 100.0% (spatially selected)",
+      "seconds": 0.004758199997013435,
+      "detail": {
+        "status": "applied",
+        "n_in": 4373,
+        "n_out": 107,
+        "budget": 107,
+        "cells_occupied": 36,
+        "cells_total": 36,
+        "per_cell_quota": 3,
+        "min_separation_px": 53.33,
+        "relaxed_to_min_keep": false
+      }
+    },
+    {
+      "name": "Registration",
+      "status": "ok",
+      "note": "Homography (8 dof, planar-scene approximation) refit on 107 correspondences; 98.9% of the reference frame covered",
+      "seconds": 0.13149279999925056,
+      "detail": {
+        "model": "Homography (8 dof, planar-scene approximation)",
+        "matrix": [
+          [
+            1.1126370450690952,
+            -0.22745219167555716,
+            74.76783469492273
+          ],
+          [
+            0.23764476662255987,
+            1.0747344107639278,
+            -198.8867566335985
+          ],
+          [
+            1.9645226384047084e-05,
+            -1.7590780537679696e-05,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Metrics",
+      "status": "ok",
+      "note": "inlier ratio 99.5%, reprojection RMSE 0.221 px, ground-truth corner error 0.163 px, coverage 100%",
+      "seconds": 0.014510699998936616,
+      "detail": {}
+    }
+  ],
+  "metrics": {
+    "candidate_matches": 4394,
+    "inliers": 4373,
+    "outliers_rejected": 21,
+    "inlier_ratio": 0.9952,
+    "selected_matches": 107,
+    "runtime_s": {
+      "preprocess": 0.2829,
+      "match": 0.5175,
+      "verify": 0.0022,
+      "spatial": 0.0048,
+      "register": 0.1315,
+      "metrics": 0.0145
+    },
+    "runtime_total_s": 0.9534,
+    "spatial_coverage_before": 0.8056,
+    "spatial_coverage_all_inliers": 1.0,
+    "spatial_coverage": 1.0,
+    "spatial_dispersion_before": 0.4321,
+    "spatial_dispersion": 0.51,
+    "reprojection": {
+      "rmse_px": 0.2209,
+      "median_px": 0.1505,
+      "p90_px": 0.2895,
+      "max_px": 1.0869,
+      "rmse_m": 0.0508
+    },
+    "error_gsd_m_per_px": 0.22977000623605362,
+    "ground_truth": {
+      "corner_error_px": 0.1629,
+      "corner_errors_px": [
+        0.144,
+        0.259,
+        0.119,
+        0.13
+      ],
+      "gt_rmse_px": 0.0884,
+      "gt_median_px": 0.0884,
+      "corner_error_m": 0.0374,
+      "gt_rmse_m": 0.0203
+    },
+    "ground_truth_available": true,
+    "ncc_before": 0.3078,
+    "ncc_after": 0.9929,
+    "overlap_fraction": 0.9887,
+    "keypoints_source": 8000,
+    "keypoints_reference": 8000
+  },
+  "warnings": [],
+  "verdict": {
+    "registered": true,
+    "reasons": [
+      "all acceptance checks passed"
+    ],
+    "expected_outcome": null
+  }
+}

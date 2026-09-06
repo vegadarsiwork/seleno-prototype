@@ -1,0 +1,191 @@
+{
+  "ok": true,
+  "pair_id": "ohrc_disjoint_orbits",
+  "options": {
+    "matcher": "sift",
+    "preprocess_enabled": true,
+    "use_clahe": true,
+    "use_flatten": true,
+    "use_denoise": false,
+    "harmonise_gsd": true,
+    "verify_enabled": true,
+    "model_type": "similarity",
+    "ransac_threshold": 3.0,
+    "spatial_enabled": true,
+    "grid": 6,
+    "per_cell": 3,
+    "ratio": 0.8,
+    "mutual_check": true,
+    "max_features": 8000
+  },
+  "stages": [
+    {
+      "name": "Preprocessing",
+      "status": "ok",
+      "note": "grayscale/uint8 normalisation | illumination flattening (divide-by-blur) | CLAHE (clip 2.5, 8x8 tiles)",
+      "seconds": 0.24998849999974482,
+      "detail": {
+        "source": {
+          "mean": 123.6,
+          "std": 74.95,
+          "shape": [
+            1024,
+            1024
+          ]
+        },
+        "reference": {
+          "mean": 116.74,
+          "std": 74.51,
+          "shape": [
+            1024,
+            1024
+          ]
+        },
+        "source_steps": [
+          "grayscale/uint8 normalisation",
+          "illumination flattening (divide-by-blur)",
+          "CLAHE (clip 2.5, 8x8 tiles)"
+        ],
+        "reference_steps": [
+          "grayscale/uint8 normalisation",
+          "illumination flattening (divide-by-blur)",
+          "CLAHE (clip 2.5, 8x8 tiles)"
+        ],
+        "source_coordinate_scale": 1.0
+      }
+    },
+    {
+      "name": "Feature extraction and candidate matching",
+      "status": "ok",
+      "note": "8000 keypoints (source), 8000 (reference) -> 22 candidate correspondences",
+      "seconds": 0.4277916999999434,
+      "detail": {
+        "detector": "sift",
+        "ratio": 0.8,
+        "ratio_test_survivors_fwd": 66,
+        "mutual_check": true,
+        "ratio_test_survivors_bwd": 73,
+        "mutual_consistent": 22
+      }
+    },
+    {
+      "name": "Geometric verification",
+      "status": "ok",
+      "note": "22 candidates -> 2 inliers (9.1%), 20 rejected",
+      "seconds": 0.0006189000014273915,
+      "detail": {
+        "estimator": "RANSAC (partialAffine2D)",
+        "threshold_px": 3.0,
+        "confidence": 0.999,
+        "est_scale_x": 1.7687,
+        "est_scale_y": 1.7687,
+        "est_rotation_deg": 106.123,
+        "est_shear_det": 3.1284,
+        "est_translation_px": [
+          1986.51,
+          410.79
+        ],
+        "est_perspective": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "Spatial match selection",
+      "status": "ok",
+      "note": "2 inliers -> 2 retained; grid coverage 5.6% (top-2 by confidence) vs 5.6% (spatially selected)",
+      "seconds": 0.00033379999877070077,
+      "detail": {
+        "status": "applied",
+        "n_in": 2,
+        "n_out": 2,
+        "budget": 2,
+        "cells_occupied": 2,
+        "cells_total": 36,
+        "per_cell_quota": 3,
+        "min_separation_px": 42.67,
+        "relaxed_to_min_keep": true
+      }
+    },
+    {
+      "name": "Registration",
+      "status": "ok",
+      "note": "Similarity (4 dof: rotation, uniform scale, translation) refit on 2 correspondences; 89.0% of the reference frame covered",
+      "seconds": 0.05608560000109719,
+      "detail": {
+        "model": "Similarity (4 dof: rotation, uniform scale, translation)",
+        "matrix": [
+          [
+            -0.49118634170919345,
+            -1.69916087938156,
+            1986.5093217484641
+          ],
+          [
+            1.69916087938156,
+            -0.49118634170919345,
+            410.7874968281434
+          ],
+          [
+            0.0,
+            0.0,
+            1.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "Metrics",
+      "status": "ok",
+      "note": "inlier ratio 9.1%, reprojection RMSE 0.000 px, coverage 6%",
+      "seconds": 0.009086400001251604,
+      "detail": {}
+    }
+  ],
+  "metrics": {
+    "candidate_matches": 22,
+    "inliers": 2,
+    "outliers_rejected": 20,
+    "inlier_ratio": 0.0909,
+    "selected_matches": 2,
+    "runtime_s": {
+      "preprocess": 0.25,
+      "match": 0.4278,
+      "verify": 0.0006,
+      "spatial": 0.0003,
+      "register": 0.0561,
+      "metrics": 0.0091
+    },
+    "runtime_total_s": 0.7439,
+    "spatial_coverage_before": 0.0556,
+    "spatial_coverage_all_inliers": 0.0556,
+    "spatial_coverage": 0.0556,
+    "spatial_dispersion_before": 0.2193,
+    "spatial_dispersion": 0.2193,
+    "reprojection": {
+      "rmse_px": 0.0,
+      "median_px": 0.0,
+      "p90_px": 0.0,
+      "max_px": 0.0,
+      "rmse_m": 0.0
+    },
+    "error_gsd_m_per_px": 2.302230600054759,
+    "ground_truth": null,
+    "ground_truth_available": false,
+    "ncc_before": -0.0034,
+    "ncc_after": 0.0753,
+    "overlap_fraction": 0.8903,
+    "keypoints_source": 8000,
+    "keypoints_reference": 8000
+  },
+  "warnings": [],
+  "verdict": {
+    "registered": false,
+    "reasons": [
+      "only 2 geometrically consistent matches (need >= 12)",
+      "inlier ratio 9.1% is below the 15% floor",
+      "matches cover only 6% of the grid"
+    ],
+    "expected_outcome": "no valid registration; a high inlier count here would indicate the pipeline is fitting noise"
+  }
+}
