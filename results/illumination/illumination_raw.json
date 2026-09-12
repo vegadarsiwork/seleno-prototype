@@ -1,0 +1,1943 @@
+{
+  "a": {
+    "product_id": "ch2_ohr_ncp_20241115T1326321339_d_img_d18",
+    "timestamp": "20241115T1326321339",
+    "lines": 101074,
+    "samples": 12000,
+    "bytes_on_disk": 1212888000,
+    "raster_check": {
+      "ok": true,
+      "detail": "ok: 1212888000 bytes == 101074 lines x 12000 samples"
+    },
+    "gsd_m": 0.24,
+    "start_time": "2024-11-15T13:26:32.133900+00:00",
+    "stop_time": "2024-11-15T13:26:48.517200+00:00",
+    "dwell_s": 16.3833,
+    "line_period_us": 162.0921,
+    "imaging_orbit": 23328,
+    "spacecraft_altitude_km": 93.67,
+    "tdi_stages": "TDI64",
+    "limb_direction": "Descending",
+    "roll_deg": 14.567189,
+    "pitch_deg": 11.610003,
+    "yaw_deg": 0.012914,
+    "sun_azimuth_deg_label": 180.299967,
+    "sun_elevation_deg_label": -0.169616,
+    "solar_incidence_deg_label": 90.169616,
+    "projection": "Polar stereographic",
+    "area": "South Pole",
+    "corners_lon_lat": [
+      [
+        222.259328,
+        -89.19986
+      ],
+      [
+        229.728973,
+        -89.20906
+      ],
+      [
+        22.453651,
+        -89.946885
+      ],
+      [
+        110.268353,
+        -89.908842
+      ]
+    ],
+    "corners_refined": false,
+    "reference_data_used": "System",
+    "label_notes": [
+      "line_exposure_duration is tagged unit=\"ms\" but the value (162.100) matches the line period in MICROSECONDS derived from the acquisition dwell (162.09 us); the unit attribute is wrong.",
+      "Refined_Corner_Coordinates is identical to System_Level_Coordinates: no photogrammetric refinement has been applied, so corner geolocation is system-predicted and must not be treated as sub-pixel truth.",
+      "isda:reference_data_used = 'System' - geolocation derives from predicted orbit/attitude, not from a control network."
+    ],
+    "has_geometry_csv": true,
+    "has_sun_series": true,
+    "has_browse_png": true,
+    "missing_files": [],
+    "sun_series": {
+      "records": 648,
+      "cadence_s": 0.04,
+      "span_s": 25.88,
+      "epoch": "2024-11-15T13:26:27.373000+00:00",
+      "azimuth_deg": [
+        165.1927,
+        205.0852
+      ],
+      "azimuth_sweep_deg": 39.8925,
+      "elevation_deg": [
+        -0.6712,
+        0.3321
+      ],
+      "source": "ch2_ohr_ncp_20241115T1326321339_d_img_d18.spm"
+    }
+  },
+  "b": {
+    "product_id": "ch2_ohr_ncp_20241115T1525004388_d_img_d18",
+    "timestamp": "20241115T1525004388",
+    "lines": 101074,
+    "samples": 12000,
+    "bytes_on_disk": 1212888000,
+    "raster_check": {
+      "ok": true,
+      "detail": "ok: 1212888000 bytes == 101074 lines x 12000 samples"
+    },
+    "gsd_m": 0.24,
+    "start_time": "2024-11-15T15:25:00.438800+00:00",
+    "stop_time": "2024-11-15T15:25:16.822100+00:00",
+    "dwell_s": 16.3833,
+    "line_period_us": 162.0921,
+    "imaging_orbit": 23329,
+    "spacecraft_altitude_km": 93.46,
+    "tdi_stages": "TDI64",
+    "limb_direction": "Descending",
+    "roll_deg": 15.185303,
+    "pitch_deg": -11.07561,
+    "yaw_deg": 0.02624,
+    "sun_azimuth_deg_label": 242.980602,
+    "sun_elevation_deg_label": 0.785661,
+    "solar_incidence_deg_label": 89.214339,
+    "projection": "Polar stereographic",
+    "area": "South Pole",
+    "corners_lon_lat": [
+      [
+        221.909032,
+        -89.196875
+      ],
+      [
+        229.33004,
+        -89.193425
+      ],
+      [
+        4.686608,
+        -89.950601
+      ],
+      [
+        105.92217,
+        -89.917686
+      ]
+    ],
+    "corners_refined": false,
+    "reference_data_used": "System",
+    "label_notes": [
+      "line_exposure_duration is tagged unit=\"ms\" but the value (162.100) matches the line period in MICROSECONDS derived from the acquisition dwell (162.09 us); the unit attribute is wrong.",
+      "Refined_Corner_Coordinates is identical to System_Level_Coordinates: no photogrammetric refinement has been applied, so corner geolocation is system-predicted and must not be treated as sub-pixel truth.",
+      "isda:reference_data_used = 'System' - geolocation derives from predicted orbit/attitude, not from a control network."
+    ],
+    "has_geometry_csv": true,
+    "has_sun_series": true,
+    "has_browse_png": true,
+    "missing_files": [],
+    "sun_series": {
+      "records": 648,
+      "cadence_s": 0.04,
+      "span_s": 25.88,
+      "epoch": "2024-11-15T15:24:55.678000+00:00",
+      "azimuth_deg": [
+        203.1401,
+        275.9097
+      ],
+      "azimuth_sweep_deg": 72.7696,
+      "elevation_deg": [
+        0.2832,
+        1.2882
+      ],
+      "source": "ch2_ohr_ncp_20241115T1525004388_d_img_d18.spm"
+    }
+  },
+  "footprint_overlap": {
+    "cell_m": 100.0,
+    "area_a_km2": 83.68,
+    "area_b_km2": 84.15,
+    "area_overlap_km2": 79.76,
+    "fraction_of_smaller": 0.9532,
+    "fraction_of_a": 0.9532,
+    "fraction_of_b": 0.9478
+  },
+  "sun_source_mid": {
+    "azimuth_deg": 177.92205199894397,
+    "elevation_deg": -0.169148600521626,
+    "phase_deg": 90.16914859852163,
+    "aspect_deg": 49.082493727618406,
+    "line": 50537,
+    "t_since_start_s": 8.1917
+  },
+  "sun_reference_mid": {
+    "azimuth_deg": 245.2265012372859,
+    "elevation_deg": 0.7861353782757523,
+    "phase_deg": 89.21386462372425,
+    "aspect_deg": 49.1845282302055,
+    "line": 50537,
+    "t_since_start_s": 8.1917
+  },
+  "coarse_alignment": {
+    "ok": true,
+    "a": "20241115T1326321339",
+    "b": "20241115T1525004388",
+    "offset_stereo_m": [
+      -439.88,
+      -310.5
+    ],
+    "offset_m": 538.43,
+    "offset_px_source_gsd": 2243.5,
+    "dx_grid_px": -85,
+    "dy_grid_px": -60,
+    "grid_res_m": 5.175,
+    "template_m": 1500.8,
+    "search_m": 900.5,
+    "peak_ncc": 0.1798,
+    "second_peak_ncc": 0.0695,
+    "peak_margin": 0.1103,
+    "representation": "gradient magnitude",
+    "lit_pixels": 664147,
+    "common_pixels": 3026582,
+    "confident": true,
+    "note": "bulk translation only; with differing roll angles the residual varies along the strip, so this is a prior for the per-window stage and not itself a registration",
+    "from_cache": true
+  },
+  "applied_offset_stereo_m": [
+    -439.88,
+    -310.5
+  ],
+  "windows": [
+    {
+      "window": {
+        "sample0": 5888,
+        "line0": 88832,
+        "source_mean": 66.6201,
+        "source_std": 45.981,
+        "reference_mean": 69.02,
+        "reference_std": 52.963,
+        "min_std": 45.981
+      },
+      "arms": [
+        {
+          "code": "A",
+          "preset": "baseline",
+          "label": "SIFT + ratio test, no verification",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 1431,
+          "dropped_by_mask": 0,
+          "candidates": 1431,
+          "inliers": 1431,
+          "inlier_ratio": 1.0,
+          "retained": 1431,
+          "reprojection_rmse_px": 111.3377,
+          "heldout_rmse_px": 165.6883,
+          "heldout_count": 429,
+          "coverage": 0.7222,
+          "coverage_whole_window": 0.7222,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 162.55,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8933,
+          "runtime_s": 1.057,
+          "reasons": [
+            "geometric verification disabled",
+            "reprojection RMSE 111.34 px exceeds 4x the RANSAC threshold",
+            "held-out RMSE 165.69 px exceeds 6.0 px - the transform does not generalise off the fitted points",
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "B",
+          "preset": "baseline_verified",
+          "label": "+ robust geometric verification",
+          "status": "warning",
+          "confidence": 0.7314,
+          "candidates_before_mask": 1431,
+          "dropped_by_mask": 0,
+          "candidates": 1431,
+          "inliers": 953,
+          "inlier_ratio": 0.666,
+          "retained": 953,
+          "reprojection_rmse_px": 1.3586,
+          "heldout_rmse_px": 1.2765,
+          "heldout_count": 286,
+          "coverage": 0.3333,
+          "coverage_whole_window": 0.3333,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 162.78,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8925,
+          "runtime_s": 0.965,
+          "reasons": [
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "C",
+          "preset": "resolution_harmonised",
+          "label": "+ GSD harmonisation",
+          "status": "warning",
+          "confidence": 0.7314,
+          "candidates_before_mask": 1431,
+          "dropped_by_mask": 0,
+          "candidates": 1431,
+          "inliers": 953,
+          "inlier_ratio": 0.666,
+          "retained": 953,
+          "reprojection_rmse_px": 1.3586,
+          "heldout_rmse_px": 1.2765,
+          "heldout_count": 286,
+          "coverage": 0.3333,
+          "coverage_whole_window": 0.3333,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 162.78,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8925,
+          "runtime_s": 0.96,
+          "reasons": [
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "D",
+          "preset": "preprocessed",
+          "label": "+ illumination flattening and CLAHE",
+          "status": "warning",
+          "confidence": 0.7355,
+          "candidates_before_mask": 1068,
+          "dropped_by_mask": 0,
+          "candidates": 1068,
+          "inliers": 780,
+          "inlier_ratio": 0.7303,
+          "retained": 780,
+          "reprojection_rmse_px": 1.2166,
+          "heldout_rmse_px": 1.3286,
+          "heldout_count": 234,
+          "coverage": 0.3333,
+          "coverage_whole_window": 0.3333,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 162.81,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8937,
+          "runtime_s": 1.56,
+          "reasons": [
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "E",
+          "preset": "observed_mask",
+          "label": "+ observed usability mask, no DEM  <- control & best",
+          "status": "warning",
+          "confidence": 0.7389,
+          "candidates_before_mask": 1068,
+          "dropped_by_mask": 0,
+          "candidates": 1068,
+          "inliers": 780,
+          "inlier_ratio": 0.7303,
+          "retained": 780,
+          "reprojection_rmse_px": 1.2166,
+          "heldout_rmse_px": 1.3286,
+          "heldout_count": 234,
+          "coverage": 0.3429,
+          "coverage_whole_window": 0.3333,
+          "matchable_cells": 35,
+          "usable_fraction": 0.901,
+          "prior_disagreement_m": 162.81,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8937,
+          "runtime_s": 1.582,
+          "reasons": [
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "F",
+          "preset": "predicted_mask",
+          "label": "+ predicted shadow mask (SYNTHETIC terrain)",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 1068,
+          "dropped_by_mask": 1066,
+          "candidates": 2,
+          "inliers": 0,
+          "inlier_ratio": 0.0,
+          "retained": 0,
+          "reprojection_rmse_px": null,
+          "heldout_rmse_px": null,
+          "heldout_count": 0,
+          "coverage": 0.0,
+          "coverage_whole_window": 0.0,
+          "matchable_cells": 5,
+          "usable_fraction": 0.0456,
+          "prior_disagreement_m": null,
+          "ncc_before": -0.0781,
+          "ncc_after": null,
+          "runtime_s": 1.791,
+          "reasons": [
+            "only 2 candidates, need >= 3 for affine",
+            "only 0 geometrically consistent matches (need >= 12)",
+            "inlier ratio 0.0% below the 15% floor",
+            "matches cover only 0% of the grid",
+            "no hold-out set was large enough to test generalisation",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface",
+            "only 4.6% of the source window was judged matchable"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "terrain model is SYNTHETIC (mock-synthetic): this mask exercises the pipeline and is not evidence about the real surface",
+            "shadow boundary uncertain to 1534 m (6390 px) at elevation 0.075 deg; mask eroded by 25 px (uncertainty capped for cost)"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "G",
+          "preset": "predicted_mask_shading",
+          "label": "+ broad shading removal (SYNTHETIC terrain)",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 1049,
+          "dropped_by_mask": 1046,
+          "candidates": 3,
+          "inliers": 3,
+          "inlier_ratio": 1.0,
+          "retained": 3,
+          "reprojection_rmse_px": 0.0,
+          "heldout_rmse_px": null,
+          "heldout_count": 0,
+          "coverage": 0.2,
+          "coverage_whole_window": 0.0278,
+          "matchable_cells": 5,
+          "usable_fraction": 0.0456,
+          "prior_disagreement_m": 1213.17,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.1823,
+          "runtime_s": 7.956,
+          "reasons": [
+            "only 3 geometrically consistent matches (need >= 12)",
+            "no hold-out set was large enough to test generalisation",
+            "estimate disagrees with the delivered geometry by 1213 m; one of the two is wrong (the delivered geometry is system-level and unrefined, so this is not proof of error)",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface",
+            "only 4.6% of the source window was judged matchable"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "terrain model is SYNTHETIC (mock-synthetic): this mask exercises the pipeline and is not evidence about the real surface",
+            "shadow boundary uncertain to 1534 m (6390 px) at elevation 0.075 deg; mask eroded by 25 px (uncertainty capped for cost)",
+            "shading removal used a SYNTHETIC terrain model; the result is not evidence about the real surface",
+            "fitted scale (6.666, 4.648) departs from the 1.000 implied by the products' ground sampling distances",
+            "strongly anisotropic scale - unusual for two near-nadir passes"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "H",
+          "preset": "spatial_grid",
+          "label": "E + spatial grid selection",
+          "status": "warning",
+          "confidence": 0.71,
+          "candidates_before_mask": 1068,
+          "dropped_by_mask": 0,
+          "candidates": 1068,
+          "inliers": 780,
+          "inlier_ratio": 0.7303,
+          "retained": 30,
+          "reprojection_rmse_px": 1.1249,
+          "heldout_rmse_px": 2.1735,
+          "heldout_count": 9,
+          "coverage": 0.3143,
+          "coverage_whole_window": 0.3056,
+          "matchable_cells": 35,
+          "usable_fraction": 0.901,
+          "prior_disagreement_m": 162.8,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8913,
+          "runtime_s": 1.588,
+          "reasons": [
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "I",
+          "preset": "subpixel",
+          "label": "E + sub-pixel refinement",
+          "status": "warning",
+          "confidence": 0.6814,
+          "candidates_before_mask": 1068,
+          "dropped_by_mask": 0,
+          "candidates": 1068,
+          "inliers": 780,
+          "inlier_ratio": 0.7303,
+          "retained": 780,
+          "reprojection_rmse_px": 2.1411,
+          "heldout_rmse_px": 2.3057,
+          "heldout_count": 234,
+          "coverage": 0.3429,
+          "coverage_whole_window": 0.3333,
+          "matchable_cells": 35,
+          "usable_fraction": 0.901,
+          "prior_disagreement_m": 163.09,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8951,
+          "runtime_s": 1.873,
+          "reasons": [
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "J",
+          "preset": "spatial_and_subpixel",
+          "label": "E + both selection and refinement",
+          "status": "warning",
+          "confidence": 0.6487,
+          "candidates_before_mask": 1068,
+          "dropped_by_mask": 0,
+          "candidates": 1068,
+          "inliers": 780,
+          "inlier_ratio": 0.7303,
+          "retained": 30,
+          "reprojection_rmse_px": 2.2314,
+          "heldout_rmse_px": 3.4432,
+          "heldout_count": 9,
+          "coverage": 0.3143,
+          "coverage_whole_window": 0.3056,
+          "matchable_cells": 35,
+          "usable_fraction": 0.901,
+          "prior_disagreement_m": 163.41,
+          "ncc_before": -0.0781,
+          "ncc_after": 0.8896,
+          "runtime_s": 1.563,
+          "reasons": [
+            "held-out RMSE 3.44 px is above the 3.0 px comfort level",
+            "the registered source covers only 31% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        }
+      ]
+    },
+    {
+      "window": {
+        "sample0": 10976,
+        "line0": 91904,
+        "source_mean": 46.5676,
+        "source_std": 46.3502,
+        "reference_mean": 75.93,
+        "reference_std": 41.983,
+        "min_std": 41.983
+      },
+      "arms": [
+        {
+          "code": "A",
+          "preset": "baseline",
+          "label": "SIFT + ratio test, no verification",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 3153,
+          "dropped_by_mask": 0,
+          "candidates": 3153,
+          "inliers": 3153,
+          "inlier_ratio": 1.0,
+          "retained": 3153,
+          "reprojection_rmse_px": 54.7687,
+          "heldout_rmse_px": 36.231,
+          "heldout_count": 946,
+          "coverage": 0.9167,
+          "coverage_whole_window": 0.9167,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 43.89,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.9281,
+          "runtime_s": 0.996,
+          "reasons": [
+            "geometric verification disabled",
+            "reprojection RMSE 54.77 px exceeds 4x the RANSAC threshold",
+            "held-out RMSE 36.23 px exceeds 6.0 px - the transform does not generalise off the fitted points"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "B",
+          "preset": "baseline_verified",
+          "label": "+ robust geometric verification",
+          "status": "accepted",
+          "confidence": 0.7981,
+          "candidates_before_mask": 3153,
+          "dropped_by_mask": 0,
+          "candidates": 3153,
+          "inliers": 1606,
+          "inlier_ratio": 0.5094,
+          "retained": 1606,
+          "reprojection_rmse_px": 1.5786,
+          "heldout_rmse_px": 1.6312,
+          "heldout_count": 482,
+          "coverage": 0.7222,
+          "coverage_whole_window": 0.7222,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 43.55,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.9246,
+          "runtime_s": 0.957,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "C",
+          "preset": "resolution_harmonised",
+          "label": "+ GSD harmonisation",
+          "status": "accepted",
+          "confidence": 0.7981,
+          "candidates_before_mask": 3153,
+          "dropped_by_mask": 0,
+          "candidates": 3153,
+          "inliers": 1606,
+          "inlier_ratio": 0.5094,
+          "retained": 1606,
+          "reprojection_rmse_px": 1.5786,
+          "heldout_rmse_px": 1.6312,
+          "heldout_count": 482,
+          "coverage": 0.7222,
+          "coverage_whole_window": 0.7222,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 43.55,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.9246,
+          "runtime_s": 1.004,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "D",
+          "preset": "preprocessed",
+          "label": "+ illumination flattening and CLAHE",
+          "status": "accepted",
+          "confidence": 0.8299,
+          "candidates_before_mask": 3059,
+          "dropped_by_mask": 0,
+          "candidates": 3059,
+          "inliers": 1771,
+          "inlier_ratio": 0.5789,
+          "retained": 1771,
+          "reprojection_rmse_px": 1.607,
+          "heldout_rmse_px": 1.7007,
+          "heldout_count": 531,
+          "coverage": 0.75,
+          "coverage_whole_window": 0.75,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 43.91,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.9237,
+          "runtime_s": 1.585,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "E",
+          "preset": "observed_mask",
+          "label": "+ observed usability mask, no DEM  <- control & best",
+          "status": "accepted",
+          "confidence": 0.8254,
+          "candidates_before_mask": 3059,
+          "dropped_by_mask": 2,
+          "candidates": 3057,
+          "inliers": 1713,
+          "inlier_ratio": 0.5604,
+          "retained": 1713,
+          "reprojection_rmse_px": 1.5744,
+          "heldout_rmse_px": 1.5733,
+          "heldout_count": 514,
+          "coverage": 0.7647,
+          "coverage_whole_window": 0.7222,
+          "matchable_cells": 34,
+          "usable_fraction": 0.8668,
+          "prior_disagreement_m": 43.36,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.9218,
+          "runtime_s": 1.711,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "F",
+          "preset": "predicted_mask",
+          "label": "+ predicted shadow mask (SYNTHETIC terrain)",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 3059,
+          "dropped_by_mask": 3059,
+          "candidates": 0,
+          "inliers": 0,
+          "inlier_ratio": 0.0,
+          "retained": 0,
+          "reprojection_rmse_px": null,
+          "heldout_rmse_px": null,
+          "heldout_count": 0,
+          "coverage": 0.0,
+          "coverage_whole_window": 0.0,
+          "matchable_cells": 0,
+          "usable_fraction": 0.0,
+          "prior_disagreement_m": null,
+          "ncc_before": 0.4973,
+          "ncc_after": null,
+          "runtime_s": 1.807,
+          "reasons": [
+            "only 0 candidates, need >= 3 for affine",
+            "only 0 geometrically consistent matches (need >= 12)",
+            "inlier ratio 0.0% below the 15% floor",
+            "matches cover only 0% of the grid",
+            "no hold-out set was large enough to test generalisation",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface",
+            "only 0.0% of the source window was judged matchable"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "terrain model is SYNTHETIC (mock-synthetic): this mask exercises the pipeline and is not evidence about the real surface",
+            "shadow boundary uncertain to 1219 m (5078 px) at elevation 0.094 deg; mask eroded by 25 px (uncertainty capped for cost)"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "G",
+          "preset": "predicted_mask_shading",
+          "label": "+ broad shading removal (SYNTHETIC terrain)",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 3048,
+          "dropped_by_mask": 3048,
+          "candidates": 0,
+          "inliers": 0,
+          "inlier_ratio": 0.0,
+          "retained": 0,
+          "reprojection_rmse_px": null,
+          "heldout_rmse_px": null,
+          "heldout_count": 0,
+          "coverage": 0.0,
+          "coverage_whole_window": 0.0,
+          "matchable_cells": 0,
+          "usable_fraction": 0.0,
+          "prior_disagreement_m": null,
+          "ncc_before": 0.4973,
+          "ncc_after": null,
+          "runtime_s": 7.906,
+          "reasons": [
+            "only 0 candidates, need >= 3 for affine",
+            "only 0 geometrically consistent matches (need >= 12)",
+            "inlier ratio 0.0% below the 15% floor",
+            "matches cover only 0% of the grid",
+            "no hold-out set was large enough to test generalisation",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface",
+            "only 0.0% of the source window was judged matchable"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "terrain model is SYNTHETIC (mock-synthetic): this mask exercises the pipeline and is not evidence about the real surface",
+            "shadow boundary uncertain to 1219 m (5078 px) at elevation 0.094 deg; mask eroded by 25 px (uncertainty capped for cost)",
+            "shading removal used a SYNTHETIC terrain model; the result is not evidence about the real surface"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "H",
+          "preset": "spatial_grid",
+          "label": "E + spatial grid selection",
+          "status": "accepted",
+          "confidence": 0.8157,
+          "candidates_before_mask": 3059,
+          "dropped_by_mask": 2,
+          "candidates": 3057,
+          "inliers": 1713,
+          "inlier_ratio": 0.5604,
+          "retained": 70,
+          "reprojection_rmse_px": 1.6261,
+          "heldout_rmse_px": 1.8619,
+          "heldout_count": 21,
+          "coverage": 0.7647,
+          "coverage_whole_window": 0.7222,
+          "matchable_cells": 34,
+          "usable_fraction": 0.8668,
+          "prior_disagreement_m": 43.3,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.9221,
+          "runtime_s": 1.615,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "I",
+          "preset": "subpixel",
+          "label": "E + sub-pixel refinement",
+          "status": "accepted",
+          "confidence": 0.7673,
+          "candidates_before_mask": 3059,
+          "dropped_by_mask": 2,
+          "candidates": 3057,
+          "inliers": 1713,
+          "inlier_ratio": 0.5604,
+          "retained": 1713,
+          "reprojection_rmse_px": 2.6734,
+          "heldout_rmse_px": 2.7187,
+          "heldout_count": 514,
+          "coverage": 0.7647,
+          "coverage_whole_window": 0.7222,
+          "matchable_cells": 34,
+          "usable_fraction": 0.8668,
+          "prior_disagreement_m": 43.38,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.9223,
+          "runtime_s": 2.259,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "J",
+          "preset": "spatial_and_subpixel",
+          "label": "E + both selection and refinement",
+          "status": "warning",
+          "confidence": 0.753,
+          "candidates_before_mask": 3059,
+          "dropped_by_mask": 2,
+          "candidates": 3057,
+          "inliers": 1713,
+          "inlier_ratio": 0.5604,
+          "retained": 70,
+          "reprojection_rmse_px": 2.8408,
+          "heldout_rmse_px": 3.3573,
+          "heldout_count": 21,
+          "coverage": 0.7647,
+          "coverage_whole_window": 0.7222,
+          "matchable_cells": 34,
+          "usable_fraction": 0.8668,
+          "prior_disagreement_m": 43.18,
+          "ncc_before": 0.4973,
+          "ncc_after": 0.918,
+          "runtime_s": 1.688,
+          "reasons": [
+            "held-out RMSE 3.36 px is above the 3.0 px comfort level"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        }
+      ]
+    },
+    {
+      "window": {
+        "sample0": 9984,
+        "line0": 100050,
+        "source_mean": 42.0984,
+        "source_std": 39.3268,
+        "reference_mean": 37.763,
+        "reference_std": 39.443,
+        "min_std": 39.327
+      },
+      "arms": [
+        {
+          "code": "A",
+          "preset": "baseline",
+          "label": "SIFT + ratio test, no verification",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 2892,
+          "dropped_by_mask": 0,
+          "candidates": 2892,
+          "inliers": 2892,
+          "inlier_ratio": 1.0,
+          "retained": 2892,
+          "reprojection_rmse_px": 53.0467,
+          "heldout_rmse_px": 58.6756,
+          "heldout_count": 868,
+          "coverage": 0.75,
+          "coverage_whole_window": 0.75,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 124.29,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9263,
+          "runtime_s": 0.949,
+          "reasons": [
+            "geometric verification disabled",
+            "reprojection RMSE 53.05 px exceeds 4x the RANSAC threshold",
+            "held-out RMSE 58.68 px exceeds 6.0 px - the transform does not generalise off the fitted points",
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "B",
+          "preset": "baseline_verified",
+          "label": "+ robust geometric verification",
+          "status": "warning",
+          "confidence": 0.7063,
+          "candidates_before_mask": 2892,
+          "dropped_by_mask": 0,
+          "candidates": 2892,
+          "inliers": 1504,
+          "inlier_ratio": 0.5201,
+          "retained": 1504,
+          "reprojection_rmse_px": 1.381,
+          "heldout_rmse_px": 1.4077,
+          "heldout_count": 451,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 125.04,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9233,
+          "runtime_s": 0.92,
+          "reasons": [
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "C",
+          "preset": "resolution_harmonised",
+          "label": "+ GSD harmonisation",
+          "status": "warning",
+          "confidence": 0.7063,
+          "candidates_before_mask": 2892,
+          "dropped_by_mask": 0,
+          "candidates": 2892,
+          "inliers": 1504,
+          "inlier_ratio": 0.5201,
+          "retained": 1504,
+          "reprojection_rmse_px": 1.381,
+          "heldout_rmse_px": 1.4077,
+          "heldout_count": 451,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 125.04,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9233,
+          "runtime_s": 0.906,
+          "reasons": [
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "D",
+          "preset": "preprocessed",
+          "label": "+ illumination flattening and CLAHE",
+          "status": "warning",
+          "confidence": 0.76,
+          "candidates_before_mask": 2763,
+          "dropped_by_mask": 0,
+          "candidates": 2763,
+          "inliers": 1737,
+          "inlier_ratio": 0.6287,
+          "retained": 1737,
+          "reprojection_rmse_px": 1.4632,
+          "heldout_rmse_px": 1.5032,
+          "heldout_count": 521,
+          "coverage": 0.4444,
+          "coverage_whole_window": 0.4444,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 124.87,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9237,
+          "runtime_s": 1.546,
+          "reasons": [
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "E",
+          "preset": "observed_mask",
+          "label": "+ observed usability mask, no DEM  <- control & best",
+          "status": "warning",
+          "confidence": 0.7757,
+          "candidates_before_mask": 2763,
+          "dropped_by_mask": 4,
+          "candidates": 2759,
+          "inliers": 1688,
+          "inlier_ratio": 0.6118,
+          "retained": 1688,
+          "reprojection_rmse_px": 1.4133,
+          "heldout_rmse_px": 1.3748,
+          "heldout_count": 506,
+          "coverage": 0.4722,
+          "coverage_whole_window": 0.4722,
+          "matchable_cells": 36,
+          "usable_fraction": 0.7958,
+          "prior_disagreement_m": 124.86,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9253,
+          "runtime_s": 1.594,
+          "reasons": [
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "F",
+          "preset": "predicted_mask",
+          "label": "+ predicted shadow mask (SYNTHETIC terrain)",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 2763,
+          "dropped_by_mask": 2763,
+          "candidates": 0,
+          "inliers": 0,
+          "inlier_ratio": 0.0,
+          "retained": 0,
+          "reprojection_rmse_px": null,
+          "heldout_rmse_px": null,
+          "heldout_count": 0,
+          "coverage": 0.0,
+          "coverage_whole_window": 0.0,
+          "matchable_cells": 0,
+          "usable_fraction": 0.0,
+          "prior_disagreement_m": null,
+          "ncc_before": 0.0481,
+          "ncc_after": null,
+          "runtime_s": 1.75,
+          "reasons": [
+            "only 0 candidates, need >= 3 for affine",
+            "only 0 geometrically consistent matches (need >= 12)",
+            "inlier ratio 0.0% below the 15% floor",
+            "matches cover only 0% of the grid",
+            "no hold-out set was large enough to test generalisation",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface",
+            "only 0.0% of the source window was judged matchable"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "terrain model is SYNTHETIC (mock-synthetic): this mask exercises the pipeline and is not evidence about the real surface",
+            "shadow boundary uncertain to 789 m (3288 px) at elevation 0.145 deg; mask eroded by 25 px (uncertainty capped for cost)"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "G",
+          "preset": "predicted_mask_shading",
+          "label": "+ broad shading removal (SYNTHETIC terrain)",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 2749,
+          "dropped_by_mask": 2749,
+          "candidates": 0,
+          "inliers": 0,
+          "inlier_ratio": 0.0,
+          "retained": 0,
+          "reprojection_rmse_px": null,
+          "heldout_rmse_px": null,
+          "heldout_count": 0,
+          "coverage": 0.0,
+          "coverage_whole_window": 0.0,
+          "matchable_cells": 0,
+          "usable_fraction": 0.0,
+          "prior_disagreement_m": null,
+          "ncc_before": 0.0481,
+          "ncc_after": null,
+          "runtime_s": 7.729,
+          "reasons": [
+            "only 0 candidates, need >= 3 for affine",
+            "only 0 geometrically consistent matches (need >= 12)",
+            "inlier ratio 0.0% below the 15% floor",
+            "matches cover only 0% of the grid",
+            "no hold-out set was large enough to test generalisation",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface",
+            "only 0.0% of the source window was judged matchable"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "terrain model is SYNTHETIC (mock-synthetic): this mask exercises the pipeline and is not evidence about the real surface",
+            "shadow boundary uncertain to 789 m (3288 px) at elevation 0.145 deg; mask eroded by 25 px (uncertainty capped for cost)",
+            "shading removal used a SYNTHETIC terrain model; the result is not evidence about the real surface"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "H",
+          "preset": "spatial_grid",
+          "label": "E + spatial grid selection",
+          "status": "warning",
+          "confidence": 0.767,
+          "candidates_before_mask": 2763,
+          "dropped_by_mask": 4,
+          "candidates": 2759,
+          "inliers": 1688,
+          "inlier_ratio": 0.6118,
+          "retained": 43,
+          "reprojection_rmse_px": 1.0585,
+          "heldout_rmse_px": 1.86,
+          "heldout_count": 13,
+          "coverage": 0.4444,
+          "coverage_whole_window": 0.4444,
+          "matchable_cells": 36,
+          "usable_fraction": 0.7958,
+          "prior_disagreement_m": 124.63,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9251,
+          "runtime_s": 1.562,
+          "reasons": [
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "I",
+          "preset": "subpixel",
+          "label": "E + sub-pixel refinement",
+          "status": "warning",
+          "confidence": 0.7164,
+          "candidates_before_mask": 2763,
+          "dropped_by_mask": 4,
+          "candidates": 2759,
+          "inliers": 1688,
+          "inlier_ratio": 0.6118,
+          "retained": 1688,
+          "reprojection_rmse_px": 2.4715,
+          "heldout_rmse_px": 2.4207,
+          "heldout_count": 506,
+          "coverage": 0.4722,
+          "coverage_whole_window": 0.4722,
+          "matchable_cells": 36,
+          "usable_fraction": 0.7958,
+          "prior_disagreement_m": 124.83,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9253,
+          "runtime_s": 2.194,
+          "reasons": [
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "J",
+          "preset": "spatial_and_subpixel",
+          "label": "E + both selection and refinement",
+          "status": "warning",
+          "confidence": 0.7044,
+          "candidates_before_mask": 2763,
+          "dropped_by_mask": 4,
+          "candidates": 2759,
+          "inliers": 1688,
+          "inlier_ratio": 0.6118,
+          "retained": 43,
+          "reprojection_rmse_px": 2.1092,
+          "heldout_rmse_px": 3.0668,
+          "heldout_count": 13,
+          "coverage": 0.4444,
+          "coverage_whole_window": 0.4444,
+          "matchable_cells": 36,
+          "usable_fraction": 0.7958,
+          "prior_disagreement_m": 124.61,
+          "ncc_before": 0.0481,
+          "ncc_after": 0.9243,
+          "runtime_s": 1.598,
+          "reasons": [
+            "held-out RMSE 3.07 px is above the 3.0 px comfort level",
+            "the registered source covers only 50% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 74.1 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        }
+      ]
+    },
+    {
+      "window": {
+        "sample0": 768,
+        "line0": 69376,
+        "source_mean": 58.0608,
+        "source_std": 34.1319,
+        "reference_mean": 57.328,
+        "reference_std": 48.019,
+        "min_std": 34.132
+      },
+      "arms": [
+        {
+          "code": "A",
+          "preset": "baseline",
+          "label": "SIFT + ratio test, no verification",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 3560,
+          "dropped_by_mask": 0,
+          "candidates": 3560,
+          "inliers": 3560,
+          "inlier_ratio": 1.0,
+          "retained": 3560,
+          "reprojection_rmse_px": 31.3675,
+          "heldout_rmse_px": 42.9127,
+          "heldout_count": 1068,
+          "coverage": 0.7778,
+          "coverage_whole_window": 0.7778,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 66.85,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9273,
+          "runtime_s": 1.102,
+          "reasons": [
+            "geometric verification disabled",
+            "reprojection RMSE 31.37 px exceeds 4x the RANSAC threshold",
+            "held-out RMSE 42.91 px exceeds 6.0 px - the transform does not generalise off the fitted points"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "B",
+          "preset": "baseline_verified",
+          "label": "+ robust geometric verification",
+          "status": "accepted",
+          "confidence": 0.6599,
+          "candidates_before_mask": 3560,
+          "dropped_by_mask": 0,
+          "candidates": 3560,
+          "inliers": 1509,
+          "inlier_ratio": 0.4239,
+          "retained": 1509,
+          "reprojection_rmse_px": 1.5229,
+          "heldout_rmse_px": 1.5015,
+          "heldout_count": 453,
+          "coverage": 0.4167,
+          "coverage_whole_window": 0.4167,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 70.96,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9359,
+          "runtime_s": 1.014,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "C",
+          "preset": "resolution_harmonised",
+          "label": "+ GSD harmonisation",
+          "status": "accepted",
+          "confidence": 0.6599,
+          "candidates_before_mask": 3560,
+          "dropped_by_mask": 0,
+          "candidates": 3560,
+          "inliers": 1509,
+          "inlier_ratio": 0.4239,
+          "retained": 1509,
+          "reprojection_rmse_px": 1.5229,
+          "heldout_rmse_px": 1.5015,
+          "heldout_count": 453,
+          "coverage": 0.4167,
+          "coverage_whole_window": 0.4167,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 70.96,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9359,
+          "runtime_s": 1.018,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "D",
+          "preset": "preprocessed",
+          "label": "+ illumination flattening and CLAHE",
+          "status": "accepted",
+          "confidence": 0.6461,
+          "candidates_before_mask": 3465,
+          "dropped_by_mask": 0,
+          "candidates": 3465,
+          "inliers": 1559,
+          "inlier_ratio": 0.4499,
+          "retained": 1559,
+          "reprojection_rmse_px": 1.8072,
+          "heldout_rmse_px": 1.7513,
+          "heldout_count": 468,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 67.21,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9014,
+          "runtime_s": 1.574,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "E",
+          "preset": "observed_mask",
+          "label": "+ observed usability mask, no DEM  <- control & best",
+          "status": "accepted",
+          "confidence": 0.7135,
+          "candidates_before_mask": 3465,
+          "dropped_by_mask": 4,
+          "candidates": 3461,
+          "inliers": 1485,
+          "inlier_ratio": 0.4291,
+          "retained": 1485,
+          "reprojection_rmse_px": 1.285,
+          "heldout_rmse_px": 1.2871,
+          "heldout_count": 446,
+          "coverage": 0.5152,
+          "coverage_whole_window": 0.4722,
+          "matchable_cells": 33,
+          "usable_fraction": 0.825,
+          "prior_disagreement_m": 67.01,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9166,
+          "runtime_s": 1.617,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "F",
+          "preset": "predicted_mask",
+          "label": "+ predicted shadow mask (SYNTHETIC terrain)",
+          "status": "warning",
+          "confidence": 0.6461,
+          "candidates_before_mask": 3465,
+          "dropped_by_mask": 0,
+          "candidates": 3465,
+          "inliers": 1559,
+          "inlier_ratio": 0.4499,
+          "retained": 1559,
+          "reprojection_rmse_px": 1.8072,
+          "heldout_rmse_px": 1.7513,
+          "heldout_count": 468,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 67.21,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9014,
+          "runtime_s": 1.592,
+          "reasons": [
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "predicted-shadow masking is INAPPLICABLE here: the solar elevation is -0.048 deg, at or below the local horizon. A local horizon ray cast would declare the entire window shadowed, which contradicts the imagery - near the pole high ground is lit over a depressed horizon. Deciding that requires horizon angles computed over tens of km of DEM, which this test does not do. No masking was applied."
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "G",
+          "preset": "predicted_mask_shading",
+          "label": "+ broad shading removal (SYNTHETIC terrain)",
+          "status": "warning",
+          "confidence": 0.6645,
+          "candidates_before_mask": 3250,
+          "dropped_by_mask": 0,
+          "candidates": 3250,
+          "inliers": 1396,
+          "inlier_ratio": 0.4295,
+          "retained": 1396,
+          "reprojection_rmse_px": 1.4479,
+          "heldout_rmse_px": 1.5351,
+          "heldout_count": 419,
+          "coverage": 0.4167,
+          "coverage_whole_window": 0.4167,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 67.83,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.8834,
+          "runtime_s": 7.643,
+          "reasons": [
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "predicted-shadow masking is INAPPLICABLE here: the solar elevation is -0.048 deg, at or below the local horizon. A local horizon ray cast would declare the entire window shadowed, which contradicts the imagery - near the pole high ground is lit over a depressed horizon. Deciding that requires horizon angles computed over tens of km of DEM, which this test does not do. No masking was applied.",
+            "shading removal used a SYNTHETIC terrain model; the result is not evidence about the real surface"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "H",
+          "preset": "spatial_grid",
+          "label": "E + spatial grid selection",
+          "status": "accepted",
+          "confidence": 0.6747,
+          "candidates_before_mask": 3465,
+          "dropped_by_mask": 4,
+          "candidates": 3461,
+          "inliers": 1485,
+          "inlier_ratio": 0.4291,
+          "retained": 39,
+          "reprojection_rmse_px": 1.6186,
+          "heldout_rmse_px": 1.4311,
+          "heldout_count": 12,
+          "coverage": 0.4545,
+          "coverage_whole_window": 0.4167,
+          "matchable_cells": 33,
+          "usable_fraction": 0.825,
+          "prior_disagreement_m": 66.95,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.92,
+          "runtime_s": 1.596,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "I",
+          "preset": "subpixel",
+          "label": "E + sub-pixel refinement",
+          "status": "accepted",
+          "confidence": 0.6569,
+          "candidates_before_mask": 3465,
+          "dropped_by_mask": 4,
+          "candidates": 3461,
+          "inliers": 1485,
+          "inlier_ratio": 0.4291,
+          "retained": 1485,
+          "reprojection_rmse_px": 2.255,
+          "heldout_rmse_px": 2.1873,
+          "heldout_count": 446,
+          "coverage": 0.5152,
+          "coverage_whole_window": 0.4722,
+          "matchable_cells": 33,
+          "usable_fraction": 0.825,
+          "prior_disagreement_m": 67.01,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9171,
+          "runtime_s": 2.119,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "J",
+          "preset": "spatial_and_subpixel",
+          "label": "E + both selection and refinement",
+          "status": "accepted",
+          "confidence": 0.6262,
+          "candidates_before_mask": 3465,
+          "dropped_by_mask": 4,
+          "candidates": 3461,
+          "inliers": 1485,
+          "inlier_ratio": 0.4291,
+          "retained": 39,
+          "reprojection_rmse_px": 2.4224,
+          "heldout_rmse_px": 2.4037,
+          "heldout_count": 12,
+          "coverage": 0.4545,
+          "coverage_whole_window": 0.4167,
+          "matchable_cells": 33,
+          "usable_fraction": 0.825,
+          "prior_disagreement_m": 66.98,
+          "ncc_before": 0.6521,
+          "ncc_after": 0.9207,
+          "runtime_s": 1.607,
+          "reasons": [
+            "all acceptance checks passed"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 71.0 deg azimuth and 0.94 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        }
+      ]
+    },
+    {
+      "window": {
+        "sample0": 3840,
+        "line0": 62208,
+        "source_mean": 106.5342,
+        "source_std": 36.7163,
+        "reference_mean": 130.366,
+        "reference_std": 34.107,
+        "min_std": 34.107
+      },
+      "arms": [
+        {
+          "code": "A",
+          "preset": "baseline",
+          "label": "SIFT + ratio test, no verification",
+          "status": "refused",
+          "confidence": 0.0,
+          "candidates_before_mask": 1735,
+          "dropped_by_mask": 0,
+          "candidates": 1735,
+          "inliers": 1735,
+          "inlier_ratio": 1.0,
+          "retained": 1735,
+          "reprojection_rmse_px": 156.8157,
+          "heldout_rmse_px": 124.2437,
+          "heldout_count": 520,
+          "coverage": 0.8333,
+          "coverage_whole_window": 0.8333,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 164.09,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9288,
+          "runtime_s": 0.966,
+          "reasons": [
+            "geometric verification disabled",
+            "reprojection RMSE 156.82 px exceeds 4x the RANSAC threshold",
+            "held-out RMSE 124.24 px exceeds 6.0 px - the transform does not generalise off the fitted points",
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "B",
+          "preset": "baseline_verified",
+          "label": "+ robust geometric verification",
+          "status": "warning",
+          "confidence": 0.7311,
+          "candidates_before_mask": 1735,
+          "dropped_by_mask": 0,
+          "candidates": 1735,
+          "inliers": 1163,
+          "inlier_ratio": 0.6703,
+          "retained": 1163,
+          "reprojection_rmse_px": 1.4666,
+          "heldout_rmse_px": 1.4708,
+          "heldout_count": 349,
+          "coverage": 0.3611,
+          "coverage_whole_window": 0.3611,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 163.79,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9233,
+          "runtime_s": 1.011,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "C",
+          "preset": "resolution_harmonised",
+          "label": "+ GSD harmonisation",
+          "status": "warning",
+          "confidence": 0.7311,
+          "candidates_before_mask": 1735,
+          "dropped_by_mask": 0,
+          "candidates": 1735,
+          "inliers": 1163,
+          "inlier_ratio": 0.6703,
+          "retained": 1163,
+          "reprojection_rmse_px": 1.4666,
+          "heldout_rmse_px": 1.4708,
+          "heldout_count": 349,
+          "coverage": 0.3611,
+          "coverage_whole_window": 0.3611,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 163.79,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9233,
+          "runtime_s": 1.001,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "D",
+          "preset": "preprocessed",
+          "label": "+ illumination flattening and CLAHE",
+          "status": "warning",
+          "confidence": 0.7449,
+          "candidates_before_mask": 1465,
+          "dropped_by_mask": 0,
+          "candidates": 1465,
+          "inliers": 877,
+          "inlier_ratio": 0.5986,
+          "retained": 877,
+          "reprojection_rmse_px": 1.4105,
+          "heldout_rmse_px": 1.3908,
+          "heldout_count": 263,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 163.35,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9256,
+          "runtime_s": 1.522,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "E",
+          "preset": "observed_mask",
+          "label": "+ observed usability mask, no DEM  <- control & best",
+          "status": "warning",
+          "confidence": 0.7286,
+          "candidates_before_mask": 1465,
+          "dropped_by_mask": 1,
+          "candidates": 1464,
+          "inliers": 850,
+          "inlier_ratio": 0.5806,
+          "retained": 850,
+          "reprojection_rmse_px": 1.5212,
+          "heldout_rmse_px": 1.4941,
+          "heldout_count": 255,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 0.9973,
+          "prior_disagreement_m": 163.67,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9267,
+          "runtime_s": 1.57,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "F",
+          "preset": "predicted_mask",
+          "label": "+ predicted shadow mask (SYNTHETIC terrain)",
+          "status": "warning",
+          "confidence": 0.7449,
+          "candidates_before_mask": 1465,
+          "dropped_by_mask": 0,
+          "candidates": 1465,
+          "inliers": 877,
+          "inlier_ratio": 0.5986,
+          "retained": 877,
+          "reprojection_rmse_px": 1.4105,
+          "heldout_rmse_px": 1.3908,
+          "heldout_count": 263,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 163.35,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9256,
+          "runtime_s": 1.569,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "predicted-shadow masking is INAPPLICABLE here: the solar elevation is -0.093 deg, at or below the local horizon. A local horizon ray cast would declare the entire window shadowed, which contradicts the imagery - near the pole high ground is lit over a depressed horizon. Deciding that requires horizon angles computed over tens of km of DEM, which this test does not do. No masking was applied."
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "G",
+          "preset": "predicted_mask_shading",
+          "label": "+ broad shading removal (SYNTHETIC terrain)",
+          "status": "warning",
+          "confidence": 0.7334,
+          "candidates_before_mask": 1418,
+          "dropped_by_mask": 0,
+          "candidates": 1418,
+          "inliers": 866,
+          "inlier_ratio": 0.6107,
+          "retained": 866,
+          "reprojection_rmse_px": 1.4187,
+          "heldout_rmse_px": 1.4544,
+          "heldout_count": 260,
+          "coverage": 0.3611,
+          "coverage_whole_window": 0.3611,
+          "matchable_cells": 36,
+          "usable_fraction": 1.0,
+          "prior_disagreement_m": 163.7,
+          "ncc_before": 0.119,
+          "ncc_after": 0.925,
+          "runtime_s": 7.345,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other",
+            "a SYNTHETIC terrain model contributed to this result; it is not evidence about the real surface"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses",
+            "predicted-shadow masking is INAPPLICABLE here: the solar elevation is -0.093 deg, at or below the local horizon. A local horizon ray cast would declare the entire window shadowed, which contradicts the imagery - near the pole high ground is lit over a depressed horizon. Deciding that requires horizon angles computed over tens of km of DEM, which this test does not do. No masking was applied.",
+            "shading removal used a SYNTHETIC terrain model; the result is not evidence about the real surface"
+          ],
+          "mask_is_synthetic": true
+        },
+        {
+          "code": "H",
+          "preset": "spatial_grid",
+          "label": "E + spatial grid selection",
+          "status": "warning",
+          "confidence": 0.7309,
+          "candidates_before_mask": 1465,
+          "dropped_by_mask": 1,
+          "candidates": 1464,
+          "inliers": 850,
+          "inlier_ratio": 0.5806,
+          "retained": 37,
+          "reprojection_rmse_px": 1.7032,
+          "heldout_rmse_px": 1.2168,
+          "heldout_count": 11,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 0.9973,
+          "prior_disagreement_m": 163.72,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9261,
+          "runtime_s": 1.579,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "I",
+          "preset": "subpixel",
+          "label": "E + sub-pixel refinement",
+          "status": "warning",
+          "confidence": 0.6876,
+          "candidates_before_mask": 1465,
+          "dropped_by_mask": 1,
+          "candidates": 1464,
+          "inliers": 850,
+          "inlier_ratio": 0.5806,
+          "retained": 850,
+          "reprojection_rmse_px": 2.2789,
+          "heldout_rmse_px": 2.1564,
+          "heldout_count": 255,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 0.9973,
+          "prior_disagreement_m": 163.52,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9258,
+          "runtime_s": 1.826,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        },
+        {
+          "code": "J",
+          "preset": "spatial_and_subpixel",
+          "label": "E + both selection and refinement",
+          "status": "warning",
+          "confidence": 0.6804,
+          "candidates_before_mask": 1465,
+          "dropped_by_mask": 1,
+          "candidates": 1464,
+          "inliers": 850,
+          "inlier_ratio": 0.5806,
+          "retained": 37,
+          "reprojection_rmse_px": 2.4263,
+          "heldout_rmse_px": 2.3118,
+          "heldout_count": 11,
+          "coverage": 0.3889,
+          "coverage_whole_window": 0.3889,
+          "matchable_cells": 36,
+          "usable_fraction": 0.9973,
+          "prior_disagreement_m": 163.71,
+          "ncc_before": 0.119,
+          "ncc_after": 0.9251,
+          "runtime_s": 1.601,
+          "reasons": [
+            "the registered source covers only 34% of the reference frame, so the transform is extrapolated over the remainder; with correspondences confined to part of the frame, rotation and translation trade off against each other"
+          ],
+          "warnings": [
+            "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+            "illumination differs by 69.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+          ],
+          "mask_is_synthetic": false
+        }
+      ]
+    }
+  ]
+}

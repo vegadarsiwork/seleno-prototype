@@ -1,0 +1,311 @@
+{
+  "ohrc": "ch2_ohr_ncp_20251010T0942085687_d_img_d18",
+  "mosaic": "CM_AVG",
+  "tile": "P892S2250",
+  "window": {
+    "sample0": 5258,
+    "line0": 50932,
+    "std": 0.0,
+    "km": 10.55,
+    "col": 38134.0,
+    "row": 7563.0,
+    "pinned": true
+  },
+  "sun": {
+    "azimuth_deg": 148.71698535522617,
+    "elevation_deg": -0.7695244785999169,
+    "phase_deg": 90.76952447659991,
+    "aspect_deg": 8.167718689395718,
+    "line": 51444,
+    "t_since_start_s": 8.3389
+  },
+  "region": 3072,
+  "search_m": 300,
+  "coarse": 2,
+  "align_applied": [
+    -1668.0,
+    -3420.0
+  ],
+  "ohrc_dark_fraction": 0.1717,
+  "ohrc_valid_fraction": 0.8684,
+  "rows": [
+    {
+      "method": "corr-raw",
+      "dx": -300.0,
+      "dy": -244.0,
+      "score": 0.373,
+      "second": 0.3689,
+      "margin": 0.0042,
+      "template_m": 2048.0,
+      "search_m": 300.0,
+      "at_search_edge": true,
+      "n": null,
+      "estimate": null
+    },
+    {
+      "method": "corr-grad",
+      "dx": 300.0,
+      "dy": 284.0,
+      "score": 0.2385,
+      "second": 0.2311,
+      "margin": 0.0074,
+      "template_m": 2048.0,
+      "search_m": 300.0,
+      "at_search_edge": true,
+      "n": null,
+      "estimate": null
+    },
+    {
+      "method": "corr-clahe",
+      "dx": 192.0,
+      "dy": 300.0,
+      "score": 0.1827,
+      "second": 0.1738,
+      "margin": 0.009,
+      "template_m": 2048.0,
+      "search_m": 300.0,
+      "at_search_edge": true,
+      "n": null,
+      "estimate": null
+    },
+    {
+      "method": "sift-raw",
+      "vote": {
+        "dx": -25.373396589949323,
+        "dy": 70.33332288587415,
+        "votes": 37,
+        "total": 73,
+        "expected_by_chance": 0.07,
+        "significance": 564.71,
+        "scatter_m": 13.2
+      },
+      "similarity_rejected": false,
+      "dx": -37.47451458073829,
+      "dy": 164.71260620823034,
+      "score": 0.1507,
+      "n": 73,
+      "inliers": 11,
+      "rmse_px": 1.338,
+      "scale": 0.9739,
+      "rot_deg": -2.496,
+      "estimate": [
+        -50.746793179898646,
+        140.6666457717483
+      ]
+    },
+    {
+      "method": "sift-grad",
+      "vote": {
+        "dx": -7.907340519864794,
+        "dy": 25.063607904752736,
+        "votes": 497,
+        "total": 794,
+        "expected_by_chance": 0.67,
+        "significance": 746.59,
+        "scatter_m": 17.0
+      },
+      "similarity_rejected": false,
+      "dx": -7.623692134742454,
+      "dy": 37.9822677841482,
+      "score": 0.1058,
+      "n": 794,
+      "inliers": 84,
+      "rmse_px": 1.752,
+      "scale": 0.9971,
+      "rot_deg": 0.414,
+      "estimate": [
+        -15.814681039729589,
+        50.12721580950547
+      ]
+    },
+    {
+      "method": "sift-clahe",
+      "vote": {
+        "dx": -25.804567807680602,
+        "dy": 71.36964475953734,
+        "votes": 77,
+        "total": 110,
+        "expected_by_chance": 0.07,
+        "significance": 1068.5,
+        "scatter_m": 14.1
+      },
+      "similarity_rejected": false,
+      "dx": -30.309841158806975,
+      "dy": 104.49908085744859,
+      "score": 0.1909,
+      "n": 110,
+      "inliers": 21,
+      "rmse_px": 1.562,
+      "scale": 0.9917,
+      "rot_deg": -0.655,
+      "estimate": [
+        -51.609135615361204,
+        142.73928951907467
+      ]
+    },
+    {
+      "method": "akaze-raw",
+      "vote": {
+        "dx": 1.4365761496803977,
+        "dy": -6.063634005459872,
+        "votes": 22,
+        "total": 96,
+        "expected_by_chance": 0.07,
+        "significance": 320.08,
+        "scatter_m": 17.1
+      },
+      "similarity_rejected": false,
+      "dx": -37.226647619074264,
+      "dy": 32.78391097225626,
+      "score": 0.0625,
+      "n": 96,
+      "inliers": 6,
+      "rmse_px": 1.704,
+      "scale": 1.0202,
+      "rot_deg": 0.963,
+      "estimate": [
+        2.8731522993607954,
+        -12.127268010919744
+      ]
+    },
+    {
+      "method": "akaze-grad",
+      "vote": {
+        "dx": -12.315061982046037,
+        "dy": 37.16826677002363,
+        "votes": 1192,
+        "total": 1895,
+        "expected_by_chance": 1.34,
+        "significance": 887.86,
+        "scatter_m": 16.9
+      },
+      "similarity_rejected": false,
+      "dx": -43.98599805618894,
+      "dy": 42.53882960552151,
+      "score": 0.0945,
+      "n": 1895,
+      "inliers": 179,
+      "rmse_px": 1.856,
+      "scale": 1.0256,
+      "rot_deg": -2.349,
+      "estimate": [
+        -24.630123964092075,
+        74.33653354004726
+      ]
+    },
+    {
+      "method": "akaze-clahe",
+      "vote": {
+        "dx": -28.317044306460613,
+        "dy": 78.56704219695061,
+        "votes": 217,
+        "total": 347,
+        "expected_by_chance": 0.22,
+        "significance": 982.0,
+        "scatter_m": 10.8
+      },
+      "similarity_rejected": false,
+      "dx": -23.804525832023753,
+      "dy": 124.62251203260556,
+      "score": 0.1614,
+      "n": 347,
+      "inliers": 56,
+      "rmse_px": 1.79,
+      "scale": 0.9813,
+      "rot_deg": -1.176,
+      "estimate": [
+        -56.634088612921225,
+        157.13408439390122
+      ]
+    }
+  ],
+  "agreement": {
+    "n": 6,
+    "clusters": [
+      {
+        "members": [
+          "sift-raw",
+          "sift-grad",
+          "sift-clahe",
+          "akaze-raw",
+          "akaze-grad",
+          "akaze-clahe"
+        ],
+        "families": [
+          "akaze",
+          "sift"
+        ],
+        "n": 6,
+        "n_families": 2,
+        "centre": [
+          -32.8,
+          92.1
+        ],
+        "offset_m": 97.8,
+        "spread_m": 110.2
+      },
+      {
+        "members": [
+          "sift-raw",
+          "sift-grad",
+          "sift-clahe",
+          "akaze-grad",
+          "akaze-clahe"
+        ],
+        "families": [
+          "akaze",
+          "sift"
+        ],
+        "n": 5,
+        "n_families": 2,
+        "centre": [
+          -39.9,
+          113.0
+        ],
+        "offset_m": 119.8,
+        "spread_m": 67.3
+      },
+      {
+        "members": [
+          "sift-grad",
+          "akaze-raw",
+          "akaze-grad"
+        ],
+        "families": [
+          "akaze",
+          "sift"
+        ],
+        "n": 3,
+        "n_families": 2,
+        "centre": [
+          -12.5,
+          37.4
+        ],
+        "offset_m": 39.5,
+        "spread_m": 51.9
+      }
+    ],
+    "best": {
+      "members": [
+        "sift-raw",
+        "sift-grad",
+        "sift-clahe",
+        "akaze-raw",
+        "akaze-grad",
+        "akaze-clahe"
+      ],
+      "families": [
+        "akaze",
+        "sift"
+      ],
+      "n": 6,
+      "n_families": 2,
+      "centre": [
+        -32.8,
+        92.1
+      ],
+      "offset_m": 97.8,
+      "spread_m": 110.2
+    }
+  }
+}

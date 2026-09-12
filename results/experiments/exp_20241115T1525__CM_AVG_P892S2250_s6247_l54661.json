@@ -1,0 +1,137 @@
+{
+  "ohrc": "ch2_ohr_ncp_20241115T1525004388_d_img_d18",
+  "mosaic": "CM_AVG",
+  "tile": "P892S2250",
+  "window": {
+    "sample0": 6247,
+    "line0": 54661,
+    "std": 0.0,
+    "km": 10.55,
+    "col": 38134.0,
+    "row": 7563.0,
+    "pinned": true
+  },
+  "sun": {
+    "azimuth_deg": 247.5802759209613,
+    "elevation_deg": 0.8153173427516502,
+    "phase_deg": 89.18468265924835,
+    "aspect_deg": 49.184548285936366,
+    "line": 55173,
+    "t_since_start_s": 8.9432
+  },
+  "region": 6144,
+  "search_m": 2000,
+  "coarse": 4,
+  "align_applied": [
+    0.0,
+    0.0
+  ],
+  "ohrc_dark_fraction": 0.4055,
+  "ohrc_valid_fraction": 0.5935,
+  "rows": [
+    {
+      "method": "corr-grad",
+      "dx": -420.0,
+      "dy": 2000.0,
+      "score": 0.3252,
+      "second": 0.3068,
+      "margin": 0.0183,
+      "template_m": 2024.0,
+      "search_m": 2000.0,
+      "at_search_edge": true,
+      "n": null,
+      "estimate": null
+    },
+    {
+      "method": "sift-grad",
+      "vote": {
+        "dx": -524.408159063768,
+        "dy": -846.4241238379664,
+        "votes": 258,
+        "total": 299,
+        "expected_by_chance": 0.21,
+        "significance": 1204.53,
+        "scatter_m": 16.9
+      },
+      "similarity_rejected": false,
+      "dx": -564.2523186177973,
+      "dy": -921.4454028380461,
+      "score": 0.2007,
+      "n": 299,
+      "inliers": 60,
+      "rmse_px": 1.926,
+      "scale": 1.0382,
+      "rot_deg": 1.031,
+      "estimate": [
+        -2097.632636255072,
+        -3385.6964953518655
+      ]
+    },
+    {
+      "method": "akaze-grad",
+      "vote": {
+        "dx": -527.2399659195567,
+        "dy": -846.1813532232269,
+        "votes": 615,
+        "total": 664,
+        "expected_by_chance": 0.59,
+        "significance": 1036.68,
+        "scatter_m": 16.9
+      },
+      "similarity_rejected": false,
+      "dx": -569.4108773342859,
+      "dy": -891.0012663807669,
+      "score": 0.2771,
+      "n": 664,
+      "inliers": 184,
+      "rmse_px": 1.673,
+      "scale": 1.0277,
+      "rot_deg": 0.343,
+      "estimate": [
+        -2108.9598636782266,
+        -3384.7254128929076
+      ]
+    }
+  ],
+  "agreement": {
+    "n": 2,
+    "clusters": [
+      {
+        "members": [
+          "sift-grad",
+          "akaze-grad"
+        ],
+        "families": [
+          "akaze",
+          "sift"
+        ],
+        "n": 2,
+        "n_families": 2,
+        "centre": [
+          -2103.3,
+          -3385.2
+        ],
+        "offset_m": 3985.4,
+        "spread_m": 5.7
+      }
+    ],
+    "best": {
+      "members": [
+        "sift-grad",
+        "akaze-grad"
+      ],
+      "families": [
+        "akaze",
+        "sift"
+      ],
+      "n": 2,
+      "n_families": 2,
+      "centre": [
+        -2103.3,
+        -3385.2
+      ],
+      "offset_m": 3985.4,
+      "spread_m": 5.7
+    }
+  }
+}

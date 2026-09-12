@@ -1,0 +1,95 @@
+{
+  "ohrc": "ch2_ohr_ncp_20211228T2209123959_d_img_d18",
+  "mosaic": "CM_AVG",
+  "tile": "P892S2250",
+  "window": {
+    "sample0": 5537,
+    "line0": 41136,
+    "std": 0.0,
+    "km": 10.55,
+    "col": 38134.0,
+    "row": 7563.0,
+    "pinned": true
+  },
+  "sun": {
+    "azimuth_deg": 153.95081592716093,
+    "elevation_deg": -0.025382211807919688,
+    "phase_deg": 90.02538220980793,
+    "aspect_deg": 96.71643065957008,
+    "line": 41648,
+    "t_since_start_s": 8.5512
+  },
+  "region": 6144,
+  "search_m": 2000,
+  "coarse": 4,
+  "align_applied": [
+    0.0,
+    0.0
+  ],
+  "ohrc_dark_fraction": 0.7142,
+  "ohrc_valid_fraction": 0.6678,
+  "rows": [
+    {
+      "method": "corr-grad",
+      "dx": 1712.0,
+      "dy": 2000.0,
+      "score": 0.6558,
+      "second": 0.6402,
+      "margin": 0.0156,
+      "template_m": 1880.0,
+      "search_m": 2000.0,
+      "at_search_edge": true,
+      "n": null,
+      "estimate": null
+    },
+    {
+      "method": "sift-grad",
+      "vote": {
+        "dx": 487.209716796875,
+        "dy": -660.2269592285156,
+        "votes": 1,
+        "total": 19,
+        "expected_by_chance": 0.02,
+        "significance": 51.49,
+        "scatter_m": 0.0
+      },
+      "similarity_rejected": true,
+      "dx": null,
+      "dy": null,
+      "score": 0.1053,
+      "n": 19,
+      "inliers": 2,
+      "rmse_px": 0.0,
+      "scale": 6.5452,
+      "rot_deg": -48.163,
+      "estimate": null
+    },
+    {
+      "method": "akaze-grad",
+      "vote": {
+        "dx": 297.9124755859375,
+        "dy": -278.4072265625,
+        "votes": 1,
+        "total": 36,
+        "expected_by_chance": 0.03,
+        "significance": 30.37,
+        "scatter_m": 0.0
+      },
+      "similarity_rejected": true,
+      "dx": null,
+      "dy": null,
+      "score": 0.0556,
+      "n": 36,
+      "inliers": 2,
+      "rmse_px": 0.0,
+      "scale": 3.5239,
+      "rot_deg": 156.643,
+      "estimate": null
+    }
+  ],
+  "agreement": {
+    "n": 0,
+    "clusters": [],
+    "best": null
+  }
+}

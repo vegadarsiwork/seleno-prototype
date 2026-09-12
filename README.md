@@ -1,14 +1,13 @@
 # SELENO
 
-**Robust Lunar Image Correspondence & Registration — prototype**
+**Geometry-first lunar image registration with predicted unmatchable regions and
+calibrated refusal — prototype (SIH26166)**
 
-Seleno takes two images of lunar terrain, finds corresponding physical
-locations, throws out the correspondences that cannot be geometrically
-explained, keeps a spatially distributed subset of what survives, registers the
-pair, and reports what it actually measured.
-
-Every pixel it runs on comes from a delivered ISRO Chandrayaan-2 OHRC product.
-Every number in the interface is computed by the run you just triggered.
+Seleno registers real Chandrayaan-2 OHRC imagery. It reads the delivered PDS4
+geometry and Sun series, works out which parts of an image can be matched at all,
+finds and verifies correspondences on what is left, and then **decides whether the
+result should be trusted** — returning a refusal with reasons rather than a
+confident transform it cannot support.
 
 ```
 python run.py        →  http://127.0.0.1:8000
@@ -16,133 +15,127 @@ python run.py        →  http://127.0.0.1:8000
 
 ---
 
-## 1. What this demonstrates
+## 1. The headline result
 
-The problem is lunar image correspondence and registration across Chandrayaan-2
-imagery: matching views of the same ground when resolution, illumination and
-viewing geometry differ.
+The most important number in this repository is not a matcher score.
 
-The prototype shows six things end to end:
+> **The delivered geolocation of the two 2024-11-15 OHRC products disagrees by
+> 538 m — about 2 244 pixels at 0.24 m/px.**
 
-1. **Preprocessing** — illumination flattening, CLAHE, and ground-sampling-distance harmonisation.
-2. **Correspondence extraction** — SIFT / AKAZE / ORB, ratio test, mutual-consistency check, optional multi-scale pyramid.
-3. **Geometric verification** — MAGSAC++/RANSAC splits candidates into a self-consistent set and outliers.
-4. **Spatially distributed selection** — a grid quota with minimum separation, compared against the fair top-K-by-confidence baseline.
-5. **Registration** — least-squares refit, warp, two-colour overlay, checkerboard, difference image.
-6. **Evaluation** — counts, ratios, RMSE, coverage, runtime, and *where a true transform exists*, ground-truth accuracy reported separately.
+Before correcting it, a baseline SIFT + MAGSAC++ pipeline on 1024 px window pairs
+returned 2–3 inliers at a 4–8 % inlier ratio and refused every window. It would
+have been easy to publish that as *"a 67° solar azimuth change defeats SIFT"*. It
+was not illumination. The two windows were 2 200 pixels apart.
 
-It also demonstrates **refusing to register**. Two real OHRC strips from
-consecutive orbits whose demo tiles are 10.95 km apart are rejected under every
-configuration tested — see the ablation table in `results/BENCHMARK.md`.
+| window | without the coarse-offset correction | with it |
+|---|--:|--:|
+| s10240 l52224 | 46 cand · 2 inliers · 4.3 % | 366 cand · 79 inliers · 21.6 % |
+| s9216 l52224 | 58 cand · 3 inliers · 5.2 % | 73 cand · 22 inliers · 30.1 % |
+| s10976 l41984 | 33 cand · 2 inliers · 6.1 % | 206 cand · 59 inliers · 28.6 % |
 
-### What it is not
-
-Feature matching on Chandrayaan-2 data is established work. **Makharia et al.
-(2025)**, [arXiv:2509.04775](https://arxiv.org/abs/2509.04775), already benchmark
-SIFT, ASIFT, AKAZE, RIFT2 and SuperGlue on exactly this data and report that
-preprocessing and learned matching both matter. **We do not present feature
-matching as novel.** No claim is made here of sub-pixel geodetic accuracy,
-state-of-the-art performance, a novel architecture, superiority to SuperGlue,
-cross-modal IIRS matching, production readiness, or any ISRO validation.
-See `RESEARCH.md` §5 and `ASSUMPTIONS.md`.
+That is what "geometry-first" means here, and it is measurable:
+`python scripts/illumination_experiment.py`.
 
 ---
 
-## 2. Architecture
+## 2. The data
+
+Four **real Chandrayaan-2 OHRC Level-2 (calibrated) PDS4 products** of south-polar
+terrain, ~4.6 GB of unique pixels. **No labels, masks, crater catalogues, DEMs or
+ground truth of any kind.** Four scenes, not thousands of images.
+
+| | 20211228T2209 | 20241115T1326 | 20241115T1525 | 20251010T0942 |
+|---|--:|--:|--:|--:|
+| Lines × samples | 79 796 × 12 000 | 101 074 × 12 000 | 101 074 × 12 000 | 101 075 × 12 000 |
+| GSD (m/px) | 0.28 | 0.24 | 0.24 | 0.22 |
+| Orbit | 10445 | 23328 | 23329 | 27338 |
+| Sun elevation, mid-strip | −0.043° | **−0.169°** | **+0.786°** | −0.771° |
+| Solar incidence | 90.04° | 90.17° | 89.21° | 90.77° |
+| Pixels ≤ DN 10 | 80.2 % | 71.4 % | 68.6 % | 57.6 % |
+| Usable 512 px tiles | 22 % | 31 % | 33 % | 42 % |
+
+The defining property: **solar incidence is 89–91° everywhere** — the Sun is on
+or below the local horizon. Two thirds to four fifths of every strip is at or
+below DN 10 out of 255, and only 22–42 % of tiles carry enough gradient
+information for a detector to work on. Deciding what *can* be matched is not a
+refinement here; it is the problem.
+
+**Primary illumination-stress pair:** `20241115T1326` → `20241115T1525`.
+Consecutive orbits two hours apart, **95.3 %** mutual footprint, and at mid-strip
+**Δazimuth 67.3°, Δelevation 0.955°**. Cast shadows move bodily: a shadow that
+fills one window is absent from the other over the same ground.
+
+Every `.img` is accessed through `numpy.memmap(mode="r")` and never loaded whole.
+The archive is never written to. Provenance in `data/README.md`.
+
+---
+
+## 3. Architecture
 
 ```
-                    Image A (source)        Image B (reference)
-                            |                       |
-                            +-----------+-----------+
-                                        v
-   preprocess.py    PREPROCESSING          illumination flattening, CLAHE,
-                                           anti-aliased GSD harmonisation
-                                        v
-   matchers.py      CORRESPONDENCE         SIFT / AKAZE / ORB / pyramid
-                                           ratio test + mutual check
-                                           (LoFTR slot, probed not faked)
-                                        v
-                    candidate correspondences
-                                        v
-   verify.py        GEOMETRIC              MAGSAC++ / RANSAC
-                    VERIFICATION           similarity | affine | homography
-                                           + physical plausibility checks
-                                        v
-   spatial.py       SPATIAL SELECTION      grid quota + minimum separation
-                                           vs top-K by confidence
-                                        v
-   register.py      REGISTRATION           least-squares refit, warp,
-                                           anaglyph / checkerboard / difference
-                                        v
-   metrics.py       EVALUATION             counts, inlier ratio, reprojection
-                                           RMSE, ground-truth error, coverage,
-                                           NCC, runtime
-                                        v
-   pipeline.py      VERDICT                accept / reject, with reasons
+              Strip A (memmap)                Strip B (memmap)
+                     |                              |
+                     +--------------+---------------+
+                                    v
+  ohrc/label,geometry,sun    METADATA / GEOMETRY      PDS4 label, geometry
+                                    v                 lattice, per-line Sun
+  ohrc/reproject             REFERENCE / OVERLAP      footprints in projected
+  alignment                  ESTIMATION               metres; coarse offset
+                                    v                 between products measured
+  illumination               ILLUMINATION-AWARE       observed usability mask
+  preprocess                 PREPROCESSING            (no DEM) or predicted
+                                    v                 shadow mask (terrain model)
+  matchers                   CORRESPONDENCE           SIFT / AKAZE / ORB /
+                                    v                 pyramid; LoFTR slot
+  verify                     ROBUST VERIFICATION      MAGSAC++ / RANSAC,
+                                    v                 similarity|affine|homography
+  spatial                    CORRESPONDENCE           grid quota | top-K | all
+                             SELECTION                coverage over MATCHABLE area
+                                    v
+  subpixel                   SUB-PIXEL REFINEMENT     local NCC + paraboloid
+                                    v
+  registration               TRUST / REFUSAL          accept | warning | refuse,
+                                    v                 with every reason listed
+                                 RESULT
 ```
 
 ```
 prototype/
-├── run.py                     single entry point
-├── README.md  RESEARCH.md  ASSUMPTIONS.md
-├── requirements.txt
+├── run.py                        single entry point
+├── README.md  RESEARCH.md  ASSUMPTIONS.md  HANDOFF.md
 ├── backend/
-│   ├── app.py                 FastAPI: /api/config, /api/run, /api/compare, images
+│   ├── app.py                    FastAPI: /api/ohrc/*, /api/register, /api/compare
 │   └── seleno/
-│       ├── pipeline.py        stage orchestration, timing, verdict
-│       ├── preprocess.py      stage 1
-│       ├── matchers.py        stage 2 + pluggable learned-matcher interface
-│       ├── verify.py          stage 3 + transform decomposition, plausibility
-│       ├── spatial.py         stage 4
-│       ├── register.py        stage 5 + visual products
-│       ├── metrics.py         stage 6
-│       ├── geodesy.py         pixel → selenographic, from ISRO's geometry grid
-│       ├── store.py           manifest and image access
-│       └── viz.py             all drawing
-├── frontend/                  Vite + React (dist/ is prebuilt and committed)
-├── data/
-│   ├── README.md              full provenance
-│   ├── manifest.json          pair definitions + ground-truth transforms
-│   └── pairs/                 the six demo pairs
-├── results/BENCHMARK.md       generated, never hand-edited
+│       ├── ohrc/                 THE DATASET LAYER (new)
+│       │   ├── label.py          PDS4 parsing + defect detection
+│       │   ├── product.py        discovery, memmap tiles, thumbnails
+│       │   ├── geometry.py       geometry lattice + polar stereographic plane
+│       │   ├── sun.py            .spm / .oat ancillary Sun series
+│       │   ├── tiles.py          tile index, illumination classes, DN profiles
+│       │   └── reproject.py      common-grid reprojection + coarse alignment
+│       ├── alignment.py          cached inter-product offset
+│       ├── pairs.py              PairSpec: OHRC windows or legacy manifest pairs
+│       ├── illumination.py       TerrainModel, masks — the proposed contribution
+│       ├── subpixel.py           sub-pixel refinement
+│       ├── registration.py       the staged pipeline + RegistrationResult
+│       ├── experiments.py        presets and the ablation arms
+│       ├── theme.py              colour tokens shared with the frontend
+│       ├── preprocess.py verify.py spatial.py register.py metrics.py viz.py
+│       ├── pipeline.py store.py  (retained: the earlier prototype's pipeline)
+│       └── geodesy.py            (retained)
+├── tests/test_ohrc_dataset.py    28 tests, read-only against the archive
+├── frontend/                     Vite + React (dist/ prebuilt and committed)
+├── data/                         legacy manifest pairs + provenance
+├── results/
+│   ├── dataset/                  Phase-2 inspection figures + tile indices
+│   └── illumination/             the experiment tables, figures, alignment cache
 └── scripts/
-    ├── fetch_products.py      download ISRO products
-    ├── prepare_data.py        build the six pairs
-    ├── run_pipeline.py        CLI harness
-    └── benchmark.py           regenerate results/BENCHMARK.md
+    ├── inspect_dataset.py        dataset visualisation and statistics
+    ├── run_registration.py       one pair, one configuration
+    ├── illumination_experiment.py the primary experiment + ablation
+    ├── benchmark.py              legacy-pair regression table
+    └── fetch_products.py prepare_data.py   (legacy data build)
 ```
-
----
-
-## 3. Data
-
-Three real OHRC products, from the public Internet Archive mirror of ISRO's
-release (no credentials needed). Read from the PDS4 labels, not from brochures:
-
-| | Orbit 2297 | Orbit 2298 |
-|---|---|---|
-| Array | 93693 × 12000 uint8 | 93693 × 12000 uint8 |
-| `isda:pixel_resolution` | **0.22977 m/px** | **0.23022 m/px** |
-| Altitude | 90.41 km | 90.58 km |
-| Latitude | −74.37° … −73.52° | −73.92° … −73.07° |
-
-Both are south polar. Their longitude ranges do not overlap.
-
-Six demo pairs. "Synthetic" never means synthetic terrain — it means a known
-transform applied to real imagery so ground truth exists.
-
-| Pair | Difficulty | Ground truth |
-|---|---|---|
-| `ohrc_crater_field` | baseline | synthetic transform |
-| `ohrc_raw_vs_calibrated` | **fully real**, calibrated vs raw of the same acquisition | exact translation, nothing resampled |
-| `ohrc_tmc2_moderate` | cross-resolution 2.3 → 5.0 m/px | synthetic |
-| `ohrc_tmc2_extreme` | cross-resolution 0.23 → 5.0 m/px (21.8×) | synthetic |
-| `ohrc_low_illumination` | real shadowed polar terrain, ~35 % of pixels below DN 20 | synthetic |
-| `ohrc_disjoint_orbits` | **true negative**, tile centres 10.95 km apart | none exists |
-
-**No real TMC-2 or IIRS imagery was obtainable without credentials.** The
-`tmc2` pairs resample OHRC to TMC-2's 5 m/px GSD; TMC-2's optics, MTF, noise and
-stereo geometry are *not* simulated. Full detail in `data/README.md`.
 
 ---
 
@@ -152,19 +145,12 @@ stereo geometry are *not* simulated. Full detail in `data/README.md`.
 pip install -r requirements.txt
 ```
 
-Python 3.14.3, OpenCV 4.13, NumPy 2.4.4 on Windows 11 is what this was built and
-benchmarked on. The demo pairs are committed, so nothing needs downloading to run
-the demo.
+Built and measured on Python 3.14.3, OpenCV 4.13, NumPy 2.4.4, SciPy 1.17.1 on
+Windows 11. The OHRC archive is expected at `../datasettesting/dataset`; override
+with `SELENO_OHRC_ROOT`. Nothing else needs downloading — the legacy demo pairs
+and the built frontend are committed.
 
-To rebuild the data from the ISRO products:
-
-```bash
-pip install remotezip
-python scripts/fetch_products.py --out data/raw     # ~1 GB streamed, ~180 MB kept
-python scripts/prepare_data.py --raw data/raw
-```
-
-To rebuild the frontend (only if you change it — `dist/` is committed):
+To rebuild the frontend (only if you change it):
 
 ```bash
 cd frontend && npm install && npm run build
@@ -175,189 +161,229 @@ cd frontend && npm install && npm run build
 ## 5. Running
 
 ```bash
-python run.py                                   # UI + API on :8000
+python run.py                       # UI + API on :8000
+python tests/test_ohrc_dataset.py   # 28 dataset-layer tests
 ```
 
-CLI, no browser needed:
+**Reproduce the baseline (Phase 4)** — minimal preprocessing, SIFT, ratio test,
+MAGSAC++, no masking:
 
 ```bash
-python scripts/run_pipeline.py --pair ohrc_crater_field
-python scripts/run_pipeline.py --all
-python scripts/run_pipeline.py --pair ohrc_low_illumination \
-       --ratio 0.95 --no-mutual --no-preprocess --no-spatial   # the naive baseline
-python scripts/run_pipeline.py --pair ohrc_crater_field --save results/
-python scripts/benchmark.py                     # regenerates results/BENCHMARK.md
+python scripts/run_registration.py \
+    --a 20241115T1326 --b 20241115T1525 --window 9984 51968 --size 1024 \
+    --preset baseline_verified
 ```
 
-In the UI: pick a pair in the left rail, adjust the experiment controls, press
-**RUN CORRESPONDENCE**. **RUN MATCHER COMPARISON** runs every available matcher
-plus the naive configuration on the current pair and tabulates them.
+**Reproduce the illumination experiment and the full ablation (Phases 5 and 7):**
+
+```bash
+python scripts/illumination_experiment.py --windows 5 --size 1024
+# writes results/illumination/ILLUMINATION.md + illumination_raw.json + figures
+```
+
+**Show what happens without the geometry-first correction** — the finding in §1:
+
+```bash
+python scripts/illumination_experiment.py --windows 3 --no-offset
+```
+
+**Inspect the dataset (Phase 2):**
+
+```bash
+python scripts/inspect_dataset.py            # full pass
+python scripts/inspect_dataset.py --quick    # coarser, faster
+```
+
+**Legacy regression** — the earlier prototype's six pairs, numbers preserved:
+
+```bash
+python scripts/run_registration.py --legacy ohrc_crater_field --preset seleno
+python scripts/benchmark.py
+```
+
+In the UI: pick source and reference products, choose a candidate window, press
+**RUN REGISTRATION**; **RUN ABLATION** runs every arm on that window. The
+*Apply measured coarse offset* switch reproduces §1 interactively.
 
 ---
 
 ## 6. What each stage does
 
-**Preprocessing.** Illumination flattening divides the image by a heavily blurred
-copy of itself, removing the large-scale brightness ramp while keeping
-crater-scale texture. CLAHE equalises contrast locally so shadowed regions keep
-usable gradients. GSD harmonisation anti-aliases before decimating — a naive
-`resize` on a 21.8× reduction turns crater rims into noise. This is *image
-processing*, not photometric correction; no Hapke or Lommel-Seeliger model is
-applied and the pipeline diagram says so.
+**Metadata and geometry.** Dimensions come from the PDS4 label, never a constant
+— the four products have three different line counts. Sun geometry is
+interpolated per image line from the `.spm` series, because **solar azimuth
+sweeps tens of degrees along a single 16 s strip** near the pole and the label's
+scalar is only the mid-strip sample.
 
-**Correspondence.** A detector/descriptor pass, Lowe's ratio test, and a
-mutual-best check. The pyramid variant matches the source at several decimation
-levels and pools the results, which is what recovers matches across a large scale
-ratio.
+**Reference and overlap estimation.** Footprints are reduced to a **south polar
+stereographic plane in metres**. This is not fussiness: one footprint spans
+longitude 222° → 110° → 22° while covering 25 km of ground, so any overlap
+arithmetic in lon/lat is wrong. Both strips are then reprojected onto a common
+grid and the bulk offset between their delivered geolocation is measured by
+correlating gradient magnitude over the mutually lit ground — gradient because it
+survives an illumination-direction change far better than raw DN. The result
+carries a peak, a runner-up and a margin, so "no alignment found" is a reportable
+outcome rather than a silent zero.
 
-**Geometric verification.** MAGSAC++ (homography) or RANSAC (affine, similarity)
-finds the largest subset explainable by one transform. Repeated crater rims and
-uniform regolith generate many individually plausible, collectively impossible
-matches; this is the stage that removes them. The fitted transform is then
-decomposed into scale, rotation, shear and perspective and checked against the
-scale the two products' GSDs already imply.
+**Illumination-aware preprocessing.** Two mask sources, kept strictly apart:
+the **observed** mask (local standard deviation, local mean, local DN level
+diversity — measured from the image, no DEM) and the **predicted** shadow mask
+(horizon ray-cast against a pluggable `TerrainModel`, uncertainty-feathered). The
+observed mask is the DEM-free **control**: excluding dark pixels helps a matcher
+whether or not a prediction was any good.
 
-**Spatial selection.** Ranking by descriptor confidence concentrates matches on
-the few high-contrast structures in a scene. A transform fitted from a cluster is
-well constrained locally and badly extrapolated at the corners. The selector
-imposes a per-cell quota on an N×N grid plus a minimum separation, and is
-compared against **top-K by confidence at the same K** — comparing against all
-inliers would be meaningless, since any selection loses coverage when it drops
-points.
+**Correspondence.** SIFT/AKAZE/ORB with Lowe's ratio test and a mutual-best
+check. Correspondences whose source pixel falls in an unmatchable region are
+dropped *after* detection — blanking the region first would manufacture an edge
+the detector then fires on.
 
-**Registration.** Least-squares refit on the retained correspondences, then warp
-into the reference frame. Three views: a green/magenta anaglyph (grey where the
-two agree, coloured fringes where they do not), a checkerboard (structures must
-run straight across seams), and a contrast-stretched difference.
+**Robust verification.** MAGSAC++ or RANSAC over similarity / affine /
+homography. Default for OHRC pairs is **affine**: the two strips differ in roll
+by ~0.6°, which a 4-dof similarity cannot absorb.
 
-**Evaluation and verdict.** See below. The verdict rejects unless there are ≥12
-inliers, ≥15 % inlier ratio, ≥15 % grid coverage, and reprojection RMSE within 4×
-the RANSAC threshold — with every failing reason listed.
+**Correspondence selection.** Grid quota, top-K by confidence at the same budget,
+or all inliers. The usability mask also fixes the coverage *metric*: cells with
+nothing matchable in them are excluded from the denominator, otherwise a good
+registration over mostly-shadowed terrain is refused for the wrong reason.
+
+**Sub-pixel refinement.** Local NCC with a paraboloid peak fit, rejected where a
+patch is too flat to hold a peak.
+
+**Trust and refusal.** ≥12 inliers, ≥15 % inlier ratio, ≥15 % coverage,
+reprojection RMSE within 4× the RANSAC threshold, held-out RMSE under 6 px, and a
+warning below 50 % frame overlap. That last one exists because of a measured
+case: a 73 % inlier ratio with 1.22 px reprojection RMSE and 0.89 overlap NCC,
+where the warped source covered only 31 % of the reference frame and the fitted
+rotation disagreed with the delivered geometry by 4.9°. **No self-consistency
+metric can detect that.** Every failing check is listed. **The thresholds are
+hand-picked, not calibrated**, and the API and UI both say so.
 
 ---
 
-## 7. Metrics
+## 7. Metrics — four error concepts, never merged
 
-| Metric | What it means |
+| Metric | Meaning |
 |---|---|
-| Candidate matches | Survivors of descriptor matching, before geometry |
-| Inliers / outliers / ratio | The robust estimator's split |
-| Retained matches | After spatial selection |
-| **Reprojection RMSE** | Symmetric transfer error of retained matches under the fitted model. **Self-consistency, not accuracy** — a wrong model can score well |
-| **GT corner error** | Image corners projected through estimated vs true transform. **This is the accuracy figure.** Only where a true transform exists |
-| GT RMSE | Same comparison at the match locations; always flattering relative to corner error |
-| Spatial coverage | Fraction of grid cells occupied, vs the same-budget confidence baseline |
-| Overlap NCC | Photometric agreement before vs after registration; uses no correspondences, so it is an independent witness |
-| Runtime | Per stage and total, single run, single thread |
+| **Reprojection RMSE** | Retained correspondences agree with the fitted model. **Self-consistency, not accuracy** — a wrong model can score well. |
+| **Held-out RMSE** | Fitted on 70 % of correspondences, evaluated on the other 30 %. Tests generalisation. The strongest honest figure when there is no ground truth. |
+| **Ground-truth error** | Corners projected through estimated vs *true* transform. **Does not exist for any OHRC pair.** |
+| **Disagreement with delivered geometry** | Corner displacement against ISRO's geolocation, in metres. An independent check against a prior that is itself only metre-to-decametre accurate. |
 
-Pixel errors are converted to metres using the **reference** image's GSD.
+Also reported: inlier counts and ratio, matchable fraction, coverage over
+matchable cells *and* over the whole window, overlap NCC before/after, per-stage
+runtime.
 
 ---
 
 ## 8. Results
 
-From `results/BENCHMARK.md`, regenerated by `python scripts/benchmark.py`.
+From `results/illumination/ILLUMINATION.md`. Five 1024 px windows on the primary
+pair, affine model, mean over windows. **No ground truth exists**, so held-out
+RMSE is the figure to read.
 
-Default pipeline, all six pairs:
+| arm | configuration | cand. | inliers | ratio | reproj RMSE | held-out RMSE | coverage | accepted |
+|---|---|--:|--:|--:|--:|--:|--:|--:|
+| A | no verification | 2554 | 2554 | 100.0 % | 81.47 px | 85.55 px | 80 % | 0/5 |
+| B | + robust verification | 2554 | 1347 | 55.8 % | 1.46 px | 1.46 px | 44 % | 5/5 |
+| C | + GSD harmonisation | 2554 | 1347 | 55.8 % | 1.46 px | 1.46 px | 44 % | 5/5 |
+| D | + flattening and CLAHE | 2364 | 1345 | 59.7 % | 1.50 px | 1.53 px | 46 % | 5/5 |
+| E | + observed usability mask | 2362 | 1303 | 58.2 % | 1.40 px | **1.41 px** | 50 % | 5/5 |
+| F | + predicted shadow mask *(SYNTHETIC terrain)* | 986 | 487 | 21.0 % | 1.61 px | 1.57 px | 16 % | 2/5 |
+| G | + shading removal *(SYNTHETIC terrain)* | 934 | 453 | 40.8 % | 0.96 px | 1.49 px | 20 % | 2/5 |
 
-| Pair | Cand. | Inliers | Inlier ratio | Reproj RMSE | GT corner err | Coverage | NCC | Verdict |
-|---|--:|--:|--:|--:|--:|--:|--:|---|
-| `ohrc_crater_field` | 4394 | 4373 | 99.5 % | 0.221 px | 0.163 px | 100 % | 0.31 → 0.99 | accepted |
-| `ohrc_raw_vs_calibrated` | 6358 | 6356 | 100.0 % | 0.034 px | 0.005 px | 100 % | 0.23 → 1.00 | accepted |
-| `ohrc_tmc2_moderate` | 3385 | 3381 | 99.9 % | 0.148 px | 0.032 px | 100 % | −0.04 → 0.89 | accepted |
-| `ohrc_tmc2_extreme` | 232 | 231 | 99.6 % | 2.237 px | 0.039 px | 94 % | −0.04 → 0.77 | accepted |
-| `ohrc_low_illumination` | 2277 | 2203 | 96.8 % | 0.651 px | 0.288 px | 94 % | 0.63 → 0.96 | accepted |
-| `ohrc_disjoint_orbits` | 22 | 2 | 9.1 % | — | none | 6 % | −0.00 → 0.08 | **REJECTED** |
+Four things to read out of that:
 
-### The stages that are load-bearing
+1. **Arm A is the cleanest possible warning about inlier ratio.** 100 % "inliers"
+   with an 81 px reprojection RMSE. Without geometric verification the ratio
+   means nothing.
+2. **Arm C is a no-op** — both products are 0.24 m/px, so there is nothing to
+   harmonise. Reported as such.
+3. **Arms F and G are worse on every figure that matters.** The synthetic mask
+   cuts candidates 2362 → 986 and coverage 50 % → 16 %, and acceptance falls from
+   5/5 to 2/5. Arm G's low reprojection RMSE (0.96 px) comes from fitting a much
+   smaller, better-behaved region — a selection effect, not an improvement.
+   **These rows are not evidence about the real surface.**
+4. **Arm E is the best defensible configuration** and it needs no DEM at all.
 
-Ablation on `ohrc_tmc2_extreme` (the 21.8× scale gap):
+### Two negative results about our own stages
 
-| Configuration | Candidates | Inliers | GT corner err | Verdict |
-|---|--:|--:|--:|---|
-| full pipeline | 232 | 231 | 0.039 px | accepted |
-| **no GSD harmonisation** | **9** | **6** | 0.516 px | **REJECTED** |
-| no geometric verification | 232 | 232 | — (RMSE 85.7 px) | **REJECTED** |
+The same five windows, arm E as the parent (rows H, I, J of the generated table):
 
-Ablation on `ohrc_low_illumination` (real shadowed polar terrain):
+| arm | configuration | retained | reproj RMSE | held-out RMSE |
+|---|---|--:|--:|--:|
+| E | all inliers, no refinement | 1303 | 1.40 px | **1.41 px** |
+| H | E + spatial grid selection | 44 | 1.43 px | 1.71 px |
+| I | E + sub-pixel refinement | 1303 | 2.36 px | 2.36 px |
+| J | E + both | 44 | 2.41 px | 2.92 px |
 
-| Configuration | Inlier ratio | Reproj RMSE | **GT corner err** | Coverage |
-|---|--:|--:|--:|--:|
-| full pipeline | 96.8 % | 0.651 px | **0.288 px** | 94 % |
-| naive (ratio 0.95, no mutual check, no preprocessing, no spatial selection) | 37.3 % | 0.413 px | **1.008 px** | 44 % |
-| no spatial selection (top-K by confidence) | 96.8 % | 0.368 px | **0.452 px** | 44 % |
-| no preprocessing | 98.8 % | 0.502 px | **0.137 px** | 92 % |
+**Spatially uniform selection — prior art we adopted — hurts in this regime.**
+With ~1300 inliers already confined to the lit minority, thinning to ~44 removes
+information without improving conditioning — note reprojection RMSE barely moves
+(1.40 → 1.43 px) while held-out error rises by a fifth (1.41 → 1.71 px), which is
+the signature of a worse-conditioned fit. On the legacy *synthetic* pair the
+same stage helps (ground-truth corner error 0.163 → 0.035 px), so it is a regime
+difference, not a bug.
 
-Three things worth saying out loud about that table:
+**Sub-pixel refinement hurts, and tightening it does not rescue it.** On a
+separate three-window sweep the held-out RMSE went 1.346 px unrefined → 2.438 px
+(NCC ≥ 0.35, shift ≤ 4 px) → 2.087 px (≥ 0.60, ≤ 2 px) → 1.521 px (≥ 0.80,
+≤ 1 px): monotone toward *not refining*. Patch correlation assumes the two
+patches are one scene under a photometric transform; under a 67° azimuth change
+at grazing incidence they are two different light fields, so the correlation peak
+is biased toward whatever the changed shading favours.
 
-1. **The naive configuration is 3.5× less accurate** (1.008 px vs 0.288 px) while
-   its inlier ratio collapses to 37 %.
-2. **Dropping spatial selection halves coverage (94 % → 44 %), *improves*
-   reprojection RMSE (0.651 → 0.368) and *worsens* real accuracy (0.288 →
-   0.452).** This is the clearest evidence in the prototype that reprojection
-   RMSE must not be read as accuracy — and it is precisely what the spatial stage
-   exists to fix. The same effect is visible in the `3a`/`3b` panels of the UI:
-   the confidence-ranked matches pile into the right-hand third of the frame.
-3. **Our preprocessing makes this pair worse.** Turning it off yields fewer
-   candidates (1076 vs 2277) but better accuracy (0.137 px vs 0.288 px). CLAHE
-   and illumination flattening amplify noise in the genuinely dark regions and
-   buy matches of lower positional quality. That is a real negative result about
-   our own preprocessing and it is not hidden; it is the first thing to
-   investigate next.
-
-`ohrc_disjoint_orbits` is rejected under **all seven** configurations tested.
+Both stages remain implemented and selectable, and both are **off** in the
+`seleno` preset. A preset named after the project should be the best
+configuration we can defend.
 
 ---
 
 ## 9. Current limitations
 
-1. **No real cross-sensor pair.** No TMC-2 or IIRS imagery was obtainable without
-   credentials. The `tmc2` pairs simulate a GSD, nothing more.
-2. **No pair of two independent acquisitions of the same ground.** The three
-   available OHRC scenes cover disjoint tracks. Five of six pairs match real
-   imagery against a transformed copy of itself, which is substantially easier
-   than a genuine repeat pass — sub-pixel results must be read in that light.
-3. **A global 2D transform is an approximation.** OHRC is a pushbroom scanner
-   where every line has its own exterior orientation; rigorous registration needs
-   the sensor model, SPICE kernels and a DEM.
-4. **Illumination handling is image processing, not physics.** No photometric
-   model. Nothing recovers detail from unlit pixels, and no pair tests a genuine
-   change of sun azimuth — the hardest part of polar matching.
-5. **The learned matcher is an interface, not a result.** LoFTR is wired in and
-   selectable; `torch`/`kornia` are not installed here, so it reports the import
-   error instead of silently falling back to SIFT. We have run no learned matcher
-   on this data.
-6. **GSD harmonisation discards resolution** — the finer image is decimated
-   rather than matched coarse-to-fine.
-7. **Verdict thresholds are hand-picked**, not calibrated against a labelled set.
-8. **No held-out validation** of the fitted transform, and single-run untuned
-   runtimes.
+1. **The proposed contribution is not validated.** Predicted-shadow masking is
+   implemented end to end but there is **no DEM in this repository**; the only
+   working terrain model is synthetic and is labelled as such everywhere.
+2. **A local horizon ray-cast is inapplicable to most of this archive.** Three of
+   four products have a mid-strip solar elevation ≤ 0 yet contain lit terrain —
+   near the pole, high ground is lit over a *depressed* horizon. The prediction
+   declares itself inapplicable below 0.05° rather than emitting a mask that
+   says "everything is shadowed". Doing it properly needs wide-area horizon
+   angles, a different algorithm.
+3. **At these Sun angles shadow prediction is intrinsically imprecise.** At 0.79°
+   elevation one metre of relief casts a 73 m shadow, so a DEM good to ±2 m
+   locates a shadow boundary only to ±150 m — about 600 pixels.
+4. **Refusal thresholds are not calibrated.** No precision/recall for the
+   decision has been measured.
+5. **No ground truth for any OHRC pair**, so no absolute accuracy is reported.
+6. **Coarse alignment is one bulk translation**; the residual is still 160–290 m
+   and varies along the strip because of the roll difference.
+7. **A global 2D transform is an approximation** — OHRC is a pushbroom scanner
+   where every line has its own exterior orientation.
+8. **No learned matcher has been run on this data by us**; LoFTR reports its
+   import error rather than falling back to SIFT.
+9. **No real TMC-2 or IIRS data**; IIRS cross-modal matching is not implemented.
+10. **n = 4 scenes**, mutually overlapping 58–95 %, so any train/test split would
+    have to be geographic.
 
-`ASSUMPTIONS.md` states all of this in full, including exactly what each RMSE
-figure does and does not represent.
+`ASSUMPTIONS.md` states all of this in full, along with eight label and
+documentation defects found in the archive and handled explicitly in code.
 
 ---
 
 ## 10. Future work
 
-Ranked by what would most change the result:
-
-1. **Get real TMC-2 and OHRC data over the same ground** via PRADAN. Everything
-   above is bounded by not having a genuine repeat-pass or cross-sensor pair.
-2. **Chase the negative preprocessing result** in §8 — establish where CLAHE and
-   flattening help and where they cost accuracy, per illumination regime.
-3. **Physically-based photometric normalisation** (Lommel-Seeliger / Hapke) using
-   the incidence and emission angles already present in the PDS4 labels, tested
-   against a genuine sun-azimuth change.
+1. **Wide-area horizon angles from a real polar DEM** — the correct formulation
+   of the shadow-prediction idea, and the one thing that would let the central
+   claim be tested at all.
+2. **Calibrate the refusal decision** on labelled overlapping and
+   non-overlapping window pairs and report its precision and recall. The
+   disjoint-orbit geometry supplies negatives for free.
+3. **Along-strip alignment** instead of a single bulk translation.
 4. **Install and evaluate LoFTR / SuperGlue / LightGlue** through the existing
-   interface, and reproduce Makharia et al.'s polar finding on our pairs.
-5. **Coarse-to-fine cross-resolution matching** instead of decimating the finer
-   image, so OHRC's native 0.23 m/px is actually used.
-6. **Select correspondences to minimise the transform's covariance** rather than
-   filtering spatially after the fact.
-7. **Calibrate the accept/reject rule** on a labelled set of overlapping and
-   non-overlapping pairs, and report precision/recall for the decision itself.
-8. **Sensor-model registration** with SPICE and a TMC-2 DEM, replacing the global
-   2D transform.
-9. **IIRS cross-modal matching** — a genuinely different problem needing
-   band selection and a modality-invariant descriptor. Not started.
+   interface — given §8, the remaining gap is exactly where they are reported to
+   help.
+5. **Sensor-model registration** with SPICE and the ancillary series, replacing
+   the global 2D transform.
+6. **Multi-frame use of all four strips** over the 53–80 km² they share.
+7. **Verify the label MD5 checksums** against the 4.6 GB of imagery.
+8. **IIRS cross-modal matching** — a genuinely different problem. Not started.

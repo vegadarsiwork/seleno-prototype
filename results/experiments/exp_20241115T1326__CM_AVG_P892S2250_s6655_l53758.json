@@ -1,0 +1,137 @@
+{
+  "ohrc": "ch2_ohr_ncp_20241115T1326321339_d_img_d18",
+  "mosaic": "CM_AVG",
+  "tile": "P892S2250",
+  "window": {
+    "sample0": 6655,
+    "line0": 53758,
+    "std": 0.0,
+    "km": 10.55,
+    "col": 38134.0,
+    "row": 7563.0,
+    "pinned": true
+  },
+  "sun": {
+    "azimuth_deg": 178.7779734418986,
+    "elevation_deg": -0.14569104106751662,
+    "phase_deg": 90.14569103906751,
+    "aspect_deg": 49.08250866374218,
+    "line": 54270,
+    "t_since_start_s": 8.7968
+  },
+  "region": 6144,
+  "search_m": 2000,
+  "coarse": 4,
+  "align_applied": [
+    0.0,
+    0.0
+  ],
+  "ohrc_dark_fraction": 0.4997,
+  "ohrc_valid_fraction": 0.5912,
+  "rows": [
+    {
+      "method": "corr-grad",
+      "dx": 176.0,
+      "dy": 2000.0,
+      "score": 0.4486,
+      "second": 0.4055,
+      "margin": 0.0431,
+      "template_m": 1856.0,
+      "search_m": 2000.0,
+      "at_search_edge": true,
+      "n": null,
+      "estimate": null
+    },
+    {
+      "method": "sift-grad",
+      "vote": {
+        "dx": -636.3793697921482,
+        "dy": -918.8711808334441,
+        "votes": 169,
+        "total": 209,
+        "expected_by_chance": 0.17,
+        "significance": 998.49,
+        "scatter_m": 17.3
+      },
+      "similarity_rejected": false,
+      "dx": -697.4619264735287,
+      "dy": -875.0360106938097,
+      "score": 0.2488,
+      "n": 209,
+      "inliers": 52,
+      "rmse_px": 1.586,
+      "scale": 1.0106,
+      "rot_deg": -1.797,
+      "estimate": [
+        -2545.5174791685927,
+        -3675.4847233337764
+      ]
+    },
+    {
+      "method": "akaze-grad",
+      "vote": {
+        "dx": -636.3456743924123,
+        "dy": -920.473303021125,
+        "votes": 265,
+        "total": 308,
+        "expected_by_chance": 0.3,
+        "significance": 895.83,
+        "scatter_m": 18.2
+      },
+      "similarity_rejected": false,
+      "dx": -665.7636739532676,
+      "dy": -880.0631037485252,
+      "score": 0.289,
+      "n": 308,
+      "inliers": 89,
+      "rmse_px": 1.606,
+      "scale": 1.0012,
+      "rot_deg": -1.075,
+      "estimate": [
+        -2545.3826975696493,
+        -3681.8932120845
+      ]
+    }
+  ],
+  "agreement": {
+    "n": 2,
+    "clusters": [
+      {
+        "members": [
+          "sift-grad",
+          "akaze-grad"
+        ],
+        "families": [
+          "akaze",
+          "sift"
+        ],
+        "n": 2,
+        "n_families": 2,
+        "centre": [
+          -2545.5,
+          -3678.7
+        ],
+        "offset_m": 4473.5,
+        "spread_m": 3.2
+      }
+    ],
+    "best": {
+      "members": [
+        "sift-grad",
+        "akaze-grad"
+      ],
+      "families": [
+        "akaze",
+        "sift"
+      ],
+      "n": 2,
+      "n_families": 2,
+      "centre": [
+        -2545.5,
+        -3678.7
+      ],
+      "offset_m": 4473.5,
+      "spread_m": 3.2
+    }
+  }
+}

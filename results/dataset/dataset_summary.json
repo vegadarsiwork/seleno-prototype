@@ -1,0 +1,1569 @@
+{
+  "generated": "2026-09-09T16:06:12",
+  "dataset_root": "C:\\Users\\ASUS\\Desktop\\Dev\\hackathon\\smartindiahackathon\\datasettesting\\dataset",
+  "tile_scan": {
+    "tile_px": 512,
+    "stride_px": 2048,
+    "read_step": 8
+  },
+  "thresholds": {
+    "dark_dn": 10,
+    "shadow_fraction": 0.75,
+    "lit_fraction": 0.25,
+    "usable_std": 6.0,
+    "usable_distinct": 16
+  },
+  "products": {
+    "20211228T2209123959": {
+      "product_id": "ch2_ohr_ncp_20211228T2209123959_d_img_d18",
+      "timestamp": "20211228T2209123959",
+      "lines": 79796,
+      "samples": 12000,
+      "bytes_on_disk": 957552000,
+      "raster_check": {
+        "ok": true,
+        "detail": "ok: 957552000 bytes == 79796 lines x 12000 samples"
+      },
+      "gsd_m": 0.28,
+      "start_time": "2021-12-28T22:09:12.395900+00:00",
+      "stop_time": "2021-12-28T22:09:28.779500+00:00",
+      "dwell_s": 16.3836,
+      "line_period_us": 205.3186,
+      "imaging_orbit": 10445,
+      "spacecraft_altitude_km": 111.97,
+      "tdi_stages": "TDI128",
+      "limb_direction": "Ascending",
+      "roll_deg": -7.861901,
+      "pitch_deg": 18.421736,
+      "yaw_deg": 0.002741,
+      "sun_azimuth_deg_label": 152.400416,
+      "sun_elevation_deg_label": -0.043949,
+      "solar_incidence_deg_label": 90.043949,
+      "projection": "Polar stereographic",
+      "area": "South Pole",
+      "corners_lon_lat": [
+        [
+          55.564452,
+          -89.923132
+        ],
+        [
+          110.41603,
+          -89.850542
+        ],
+        [
+          224.351932,
+          -89.252796
+        ],
+        [
+          233.745958,
+          -89.257559
+        ]
+      ],
+      "corners_refined": false,
+      "reference_data_used": "System",
+      "label_notes": [
+        "line_exposure_duration is tagged unit=\"ms\" but the value (205.320) matches the line period in MICROSECONDS derived from the acquisition dwell (205.32 us); the unit attribute is wrong.",
+        "Refined_Corner_Coordinates is identical to System_Level_Coordinates: no photogrammetric refinement has been applied, so corner geolocation is system-predicted and must not be treated as sub-pixel truth.",
+        "isda:reference_data_used = 'System' - geolocation derives from predicted orbit/attitude, not from a control network."
+      ],
+      "has_geometry_csv": true,
+      "has_sun_series": true,
+      "has_browse_png": true,
+      "missing_files": [],
+      "sun_series": {
+        "records": 518,
+        "cadence_s": 0.04,
+        "span_s": 20.68,
+        "epoch": "2021-12-28T22:09:10.235000+00:00",
+        "azimuth_deg": [
+          131.3497,
+          164.7626
+        ],
+        "azimuth_sweep_deg": 33.4129,
+        "elevation_deg": [
+          -0.5605,
+          0.4727
+        ],
+        "source": "ch2_ohr_ncp_20211228T2209123959_d_img_d18.spm"
+      },
+      "tile_index": {
+        "product_id": "ch2_ohr_ncp_20211228T2209123959_d_img_d18",
+        "timestamp": "20211228T2209123959",
+        "tiles": 234,
+        "tile_px": 512,
+        "stride_px": 2048,
+        "read_step": 8,
+        "counts": {
+          "lit": 46,
+          "transition": 4,
+          "shadow": 184
+        },
+        "fractions": {
+          "lit": 0.1966,
+          "transition": 0.0171,
+          "shadow": 0.7863
+        },
+        "usable_tiles": 52,
+        "usable_fraction": 0.2222,
+        "tile_mean_dn": {
+          "min": 1.07,
+          "max": 238.22,
+          "median": 2.36
+        }
+      },
+      "dn_stats": {
+        "pixels_sampled": 3624000,
+        "mean": 27.474,
+        "std": 61.448,
+        "median": 2,
+        "p01": 1,
+        "p99": 255,
+        "frac_le_5": 0.77841,
+        "frac_le_10": 0.80171,
+        "frac_ge_200": 0.04516,
+        "distinct_levels": 256,
+        "max_dn": 255
+      },
+      "cross_track": {
+        "sample0_mean_dn": 31.897,
+        "sample_last_mean_dn": 11.566,
+        "min": 9.695,
+        "max": 42.384
+      },
+      "along_track": {
+        "min": 0.892,
+        "max": 165.112
+      },
+      "figures": {
+        "thumbnail": {
+          "file": "strip_20211228T2209123959_thumb.png",
+          "thumb_shape": [
+            1478,
+            223
+          ],
+          "note": "per-tile percentile stretch, visualisation only"
+        },
+        "tiles": {
+          "file": "strip_20211228T2209123959_tiles.png",
+          "tiles": {
+            "lit": [
+              {
+                "sample0": 8192,
+                "line0": 77824,
+                "width": 512,
+                "height": 512,
+                "mean": 128.3196,
+                "std": 100.7304,
+                "p01": 21.0,
+                "p50": 129.0,
+                "p99": 255.0,
+                "max": 255,
+                "frac_dark": 0.0,
+                "frac_bright": 0.34937,
+                "distinct": 232,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 2048,
+                "line0": 77824,
+                "width": 512,
+                "height": 512,
+                "mean": 102.3079,
+                "std": 96.1076,
+                "p01": 15.0,
+                "p50": 38.0,
+                "p99": 255.0,
+                "max": 255,
+                "frac_dark": 0.0,
+                "frac_bright": 0.25098,
+                "distinct": 243,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 10240,
+                "line0": 77824,
+                "width": 512,
+                "height": 512,
+                "mean": 160.2778,
+                "std": 82.8501,
+                "p01": 16.0,
+                "p50": 169.0,
+                "p99": 255.0,
+                "max": 255,
+                "frac_dark": 0.0,
+                "frac_bright": 0.40283,
+                "distinct": 243,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "transition": [
+              {
+                "sample0": 6144,
+                "line0": 34816,
+                "width": 512,
+                "height": 512,
+                "mean": 64.5691,
+                "std": 60.6996,
+                "p01": 5.0,
+                "p50": 47.0,
+                "p99": 255.0,
+                "max": 255,
+                "frac_dark": 0.30054,
+                "frac_bright": 0.02393,
+                "distinct": 225,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 8192,
+                "line0": 36864,
+                "width": 512,
+                "height": 512,
+                "mean": 29.0671,
+                "std": 36.8067,
+                "p01": 6.0,
+                "p50": 12.0,
+                "p99": 172.0,
+                "max": 255,
+                "frac_dark": 0.43384,
+                "frac_bright": 0.00439,
+                "distinct": 190,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 0,
+                "line0": 67584,
+                "width": 512,
+                "height": 512,
+                "mean": 24.4136,
+                "std": 30.4017,
+                "p01": 5.0,
+                "p50": 8.0,
+                "p99": 128.0,
+                "max": 247,
+                "frac_dark": 0.56787,
+                "frac_bright": 0.00098,
+                "distinct": 149,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "shadow": [
+              {
+                "sample0": 2048,
+                "line0": 67584,
+                "width": 512,
+                "height": 512,
+                "mean": 11.019,
+                "std": 15.8537,
+                "p01": 5.0,
+                "p50": 7.0,
+                "p99": 79.0,
+                "max": 223,
+                "frac_dark": 0.86133,
+                "frac_bright": 0.00073,
+                "distinct": 109,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 10240,
+                "line0": 38912,
+                "width": 512,
+                "height": 512,
+                "mean": 7.6006,
+                "std": 6.8951,
+                "p01": 2.0,
+                "p50": 5.0,
+                "p99": 32.0,
+                "max": 44,
+                "frac_dark": 0.78052,
+                "frac_bright": 0.0,
+                "distinct": 40,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 8192,
+                "line0": 67584,
+                "width": 512,
+                "height": 512,
+                "mean": 4.3848,
+                "std": 1.5682,
+                "p01": 3.0,
+                "p50": 4.0,
+                "p99": 11.0,
+                "max": 26,
+                "frac_dark": 0.98462,
+                "frac_bright": 0.0,
+                "distinct": 23,
+                "illumination": "shadow",
+                "usable": false,
+                "step": 8
+              }
+            ]
+          },
+          "note": "each window stretched independently; raw DN stats printed on the tile"
+        }
+      },
+      "sun_along_strip": {
+        "start": {
+          "azimuth_deg": 163.16173671295002,
+          "elevation_deg": -0.45257758610000004,
+          "phase_deg": 90.4525775841,
+          "aspect_deg": 96.716465246175,
+          "line": 0,
+          "t_since_start_s": 0.0
+        },
+        "middle": {
+          "azimuth_deg": 154.4654959873824,
+          "elevation_deg": -0.043334580870720917,
+          "phase_deg": 90.04333457887071,
+          "aspect_deg": 96.71643201699003,
+          "line": 39898,
+          "t_since_start_s": 8.1919
+        },
+        "end": {
+          "azimuth_deg": 137.92283961662503,
+          "elevation_deg": 0.365994573375,
+          "phase_deg": 89.634005428625,
+          "aspect_deg": 96.716404692625,
+          "line": 79795,
+          "t_since_start_s": 16.3836
+        },
+        "shadow_length_per_metre_at_middle": Infinity
+      }
+    },
+    "20241115T1326321339": {
+      "product_id": "ch2_ohr_ncp_20241115T1326321339_d_img_d18",
+      "timestamp": "20241115T1326321339",
+      "lines": 101074,
+      "samples": 12000,
+      "bytes_on_disk": 1212888000,
+      "raster_check": {
+        "ok": true,
+        "detail": "ok: 1212888000 bytes == 101074 lines x 12000 samples"
+      },
+      "gsd_m": 0.24,
+      "start_time": "2024-11-15T13:26:32.133900+00:00",
+      "stop_time": "2024-11-15T13:26:48.517200+00:00",
+      "dwell_s": 16.3833,
+      "line_period_us": 162.0921,
+      "imaging_orbit": 23328,
+      "spacecraft_altitude_km": 93.67,
+      "tdi_stages": "TDI64",
+      "limb_direction": "Descending",
+      "roll_deg": 14.567189,
+      "pitch_deg": 11.610003,
+      "yaw_deg": 0.012914,
+      "sun_azimuth_deg_label": 180.299967,
+      "sun_elevation_deg_label": -0.169616,
+      "solar_incidence_deg_label": 90.169616,
+      "projection": "Polar stereographic",
+      "area": "South Pole",
+      "corners_lon_lat": [
+        [
+          222.259328,
+          -89.19986
+        ],
+        [
+          229.728973,
+          -89.20906
+        ],
+        [
+          22.453651,
+          -89.946885
+        ],
+        [
+          110.268353,
+          -89.908842
+        ]
+      ],
+      "corners_refined": false,
+      "reference_data_used": "System",
+      "label_notes": [
+        "line_exposure_duration is tagged unit=\"ms\" but the value (162.100) matches the line period in MICROSECONDS derived from the acquisition dwell (162.09 us); the unit attribute is wrong.",
+        "Refined_Corner_Coordinates is identical to System_Level_Coordinates: no photogrammetric refinement has been applied, so corner geolocation is system-predicted and must not be treated as sub-pixel truth.",
+        "isda:reference_data_used = 'System' - geolocation derives from predicted orbit/attitude, not from a control network."
+      ],
+      "has_geometry_csv": true,
+      "has_sun_series": true,
+      "has_browse_png": true,
+      "missing_files": [],
+      "sun_series": {
+        "records": 648,
+        "cadence_s": 0.04,
+        "span_s": 25.88,
+        "epoch": "2024-11-15T13:26:27.373000+00:00",
+        "azimuth_deg": [
+          165.1927,
+          205.0852
+        ],
+        "azimuth_sweep_deg": 39.8925,
+        "elevation_deg": [
+          -0.6712,
+          0.3321
+        ],
+        "source": "ch2_ohr_ncp_20241115T1326321339_d_img_d18.spm"
+      },
+      "tile_index": {
+        "product_id": "ch2_ohr_ncp_20241115T1326321339_d_img_d18",
+        "timestamp": "20241115T1326321339",
+        "tiles": 300,
+        "tile_px": 512,
+        "stride_px": 2048,
+        "read_step": 8,
+        "counts": {
+          "lit": 75,
+          "transition": 12,
+          "shadow": 213
+        },
+        "fractions": {
+          "lit": 0.25,
+          "transition": 0.04,
+          "shadow": 0.71
+        },
+        "usable_tiles": 92,
+        "usable_fraction": 0.3067,
+        "tile_mean_dn": {
+          "min": 1.31,
+          "max": 159.48,
+          "median": 3.685
+        }
+      },
+      "dn_stats": {
+        "pixels_sampled": 3612000,
+        "mean": 26.011,
+        "std": 43.808,
+        "median": 4,
+        "p01": 1,
+        "p99": 169,
+        "frac_le_5": 0.68191,
+        "frac_le_10": 0.71427,
+        "frac_ge_200": 0.00129,
+        "distinct_levels": 256,
+        "max_dn": 255
+      },
+      "cross_track": {
+        "sample0_mean_dn": 10.399,
+        "sample_last_mean_dn": 45.678,
+        "min": 8.831,
+        "max": 46.734
+      },
+      "along_track": {
+        "min": 1.107,
+        "max": 112.186
+      },
+      "figures": {
+        "thumbnail": {
+          "file": "strip_20241115T1326321339_thumb.png",
+          "thumb_shape": [
+            1487,
+            177
+          ],
+          "note": "per-tile percentile stretch, visualisation only"
+        },
+        "tiles": {
+          "file": "strip_20241115T1326321339_tiles.png",
+          "tiles": {
+            "lit": [
+              {
+                "sample0": 6144,
+                "line0": 53248,
+                "width": 512,
+                "height": 512,
+                "mean": 65.5576,
+                "std": 35.497,
+                "p01": 9.0,
+                "p50": 74.0,
+                "p99": 136.0,
+                "max": 211,
+                "frac_dark": 0.10352,
+                "frac_bright": 0.00024,
+                "distinct": 153,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 57344,
+                "width": 512,
+                "height": 512,
+                "mean": 94.6365,
+                "std": 34.4265,
+                "p01": 19.0,
+                "p50": 93.0,
+                "p99": 188.0,
+                "max": 255,
+                "frac_dark": 0.0,
+                "frac_bright": 0.00781,
+                "distinct": 197,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 10240,
+                "line0": 59392,
+                "width": 512,
+                "height": 512,
+                "mean": 145.5698,
+                "std": 33.3604,
+                "p01": 58.0,
+                "p50": 148.0,
+                "p99": 216.0,
+                "max": 255,
+                "frac_dark": 0.0,
+                "frac_bright": 0.04077,
+                "distinct": 196,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "transition": [
+              {
+                "sample0": 10240,
+                "line0": 100352,
+                "width": 512,
+                "height": 512,
+                "mean": 42.0984,
+                "std": 39.3268,
+                "p01": 6.0,
+                "p50": 28.0,
+                "p99": 146.0,
+                "max": 217,
+                "frac_dark": 0.39966,
+                "frac_bright": 0.00073,
+                "distinct": 172,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 8192,
+                "line0": 96256,
+                "width": 512,
+                "height": 512,
+                "mean": 27.7141,
+                "std": 22.2398,
+                "p01": 8.0,
+                "p50": 19.0,
+                "p99": 94.0,
+                "max": 176,
+                "frac_dark": 0.34155,
+                "frac_bright": 0.0,
+                "distinct": 113,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 0,
+                "line0": 67584,
+                "width": 512,
+                "height": 512,
+                "mean": 20.4243,
+                "std": 22.0819,
+                "p01": 5.0,
+                "p50": 7.0,
+                "p99": 89.0,
+                "max": 175,
+                "frac_dark": 0.60034,
+                "frac_bright": 0.0,
+                "distinct": 112,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "shadow": [
+              {
+                "sample0": 4096,
+                "line0": 57344,
+                "width": 512,
+                "height": 512,
+                "mean": 11.6636,
+                "std": 13.0754,
+                "p01": 5.0,
+                "p50": 6.0,
+                "p99": 61.0,
+                "max": 209,
+                "frac_dark": 0.76172,
+                "frac_bright": 0.00024,
+                "distinct": 84,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 2048,
+                "line0": 59392,
+                "width": 512,
+                "height": 512,
+                "mean": 7.7947,
+                "std": 9.2455,
+                "p01": 4.0,
+                "p50": 5.0,
+                "p99": 48.0,
+                "max": 107,
+                "frac_dark": 0.87744,
+                "frac_bright": 0.0,
+                "distinct": 71,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 96256,
+                "width": 512,
+                "height": 512,
+                "mean": 6.2427,
+                "std": 7.9587,
+                "p01": 3.0,
+                "p50": 4.0,
+                "p99": 46.0,
+                "max": 107,
+                "frac_dark": 0.91357,
+                "frac_bright": 0.0,
+                "distinct": 66,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              }
+            ]
+          },
+          "note": "each window stretched independently; raw DN stats printed on the tile"
+        }
+      },
+      "sun_along_strip": {
+        "start": {
+          "azimuth_deg": 168.87159420642502,
+          "elevation_deg": -0.48668503845,
+          "phase_deg": 90.48668503645,
+          "aspect_deg": 49.0822940516,
+          "line": 0,
+          "t_since_start_s": 0.0
+        },
+        "middle": {
+          "azimuth_deg": 177.92205199894397,
+          "elevation_deg": -0.169148600521626,
+          "phase_deg": 90.16914859852163,
+          "aspect_deg": 49.082493727618406,
+          "line": 50537,
+          "t_since_start_s": 8.1917
+        },
+        "end": {
+          "azimuth_deg": 192.6885197124,
+          "elevation_deg": 0.1484347164999999,
+          "phase_deg": 89.8515652855,
+          "aspect_deg": 49.08269872105,
+          "line": 101073,
+          "t_since_start_s": 16.3833
+        },
+        "shadow_length_per_metre_at_middle": Infinity
+      }
+    },
+    "20241115T1525004388": {
+      "product_id": "ch2_ohr_ncp_20241115T1525004388_d_img_d18",
+      "timestamp": "20241115T1525004388",
+      "lines": 101074,
+      "samples": 12000,
+      "bytes_on_disk": 1212888000,
+      "raster_check": {
+        "ok": true,
+        "detail": "ok: 1212888000 bytes == 101074 lines x 12000 samples"
+      },
+      "gsd_m": 0.24,
+      "start_time": "2024-11-15T15:25:00.438800+00:00",
+      "stop_time": "2024-11-15T15:25:16.822100+00:00",
+      "dwell_s": 16.3833,
+      "line_period_us": 162.0921,
+      "imaging_orbit": 23329,
+      "spacecraft_altitude_km": 93.46,
+      "tdi_stages": "TDI64",
+      "limb_direction": "Descending",
+      "roll_deg": 15.185303,
+      "pitch_deg": -11.07561,
+      "yaw_deg": 0.02624,
+      "sun_azimuth_deg_label": 242.980602,
+      "sun_elevation_deg_label": 0.785661,
+      "solar_incidence_deg_label": 89.214339,
+      "projection": "Polar stereographic",
+      "area": "South Pole",
+      "corners_lon_lat": [
+        [
+          221.909032,
+          -89.196875
+        ],
+        [
+          229.33004,
+          -89.193425
+        ],
+        [
+          4.686608,
+          -89.950601
+        ],
+        [
+          105.92217,
+          -89.917686
+        ]
+      ],
+      "corners_refined": false,
+      "reference_data_used": "System",
+      "label_notes": [
+        "line_exposure_duration is tagged unit=\"ms\" but the value (162.100) matches the line period in MICROSECONDS derived from the acquisition dwell (162.09 us); the unit attribute is wrong.",
+        "Refined_Corner_Coordinates is identical to System_Level_Coordinates: no photogrammetric refinement has been applied, so corner geolocation is system-predicted and must not be treated as sub-pixel truth.",
+        "isda:reference_data_used = 'System' - geolocation derives from predicted orbit/attitude, not from a control network."
+      ],
+      "has_geometry_csv": true,
+      "has_sun_series": true,
+      "has_browse_png": true,
+      "missing_files": [],
+      "sun_series": {
+        "records": 648,
+        "cadence_s": 0.04,
+        "span_s": 25.88,
+        "epoch": "2024-11-15T15:24:55.678000+00:00",
+        "azimuth_deg": [
+          203.1401,
+          275.9097
+        ],
+        "azimuth_sweep_deg": 72.7696,
+        "elevation_deg": [
+          0.2832,
+          1.2882
+        ],
+        "source": "ch2_ohr_ncp_20241115T1525004388_d_img_d18.spm"
+      },
+      "tile_index": {
+        "product_id": "ch2_ohr_ncp_20241115T1525004388_d_img_d18",
+        "timestamp": "20241115T1525004388",
+        "tiles": 300,
+        "tile_px": 512,
+        "stride_px": 2048,
+        "read_step": 8,
+        "counts": {
+          "lit": 82,
+          "transition": 10,
+          "shadow": 208
+        },
+        "fractions": {
+          "lit": 0.2733,
+          "transition": 0.0333,
+          "shadow": 0.6933
+        },
+        "usable_tiles": 98,
+        "usable_fraction": 0.3267,
+        "tile_mean_dn": {
+          "min": 0.506,
+          "max": 176.591,
+          "median": 2.357
+        }
+      },
+      "dn_stats": {
+        "pixels_sampled": 3612000,
+        "mean": 31.224,
+        "std": 51.666,
+        "median": 3,
+        "p01": 0,
+        "p99": 190,
+        "frac_le_5": 0.66353,
+        "frac_le_10": 0.68649,
+        "frac_ge_200": 0.00571,
+        "distinct_levels": 256,
+        "max_dn": 255
+      },
+      "cross_track": {
+        "sample0_mean_dn": 10.256,
+        "sample_last_mean_dn": 53.123,
+        "min": 8.518,
+        "max": 55.385
+      },
+      "along_track": {
+        "min": 0.442,
+        "max": 140.674
+      },
+      "figures": {
+        "thumbnail": {
+          "file": "strip_20241115T1525004388_thumb.png",
+          "thumb_shape": [
+            1487,
+            177
+          ],
+          "note": "per-tile percentile stretch, visualisation only"
+        },
+        "tiles": {
+          "file": "strip_20241115T1525004388_tiles.png",
+          "tiles": {
+            "lit": [
+              {
+                "sample0": 0,
+                "line0": 67584,
+                "width": 512,
+                "height": 512,
+                "mean": 50.3523,
+                "std": 51.7477,
+                "p01": 7.0,
+                "p50": 15.0,
+                "p99": 160.0,
+                "max": 234,
+                "frac_dark": 0.1687,
+                "frac_bright": 0.00122,
+                "distinct": 178,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 4096,
+                "line0": 86016,
+                "width": 512,
+                "height": 512,
+                "mean": 50.4556,
+                "std": 46.9525,
+                "p01": 8.0,
+                "p50": 39.0,
+                "p99": 225.0,
+                "max": 255,
+                "frac_dark": 0.1709,
+                "frac_bright": 0.021,
+                "distinct": 231,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 86016,
+                "width": 512,
+                "height": 512,
+                "mean": 51.1519,
+                "std": 44.9685,
+                "p01": 9.0,
+                "p50": 36.0,
+                "p99": 160.0,
+                "max": 206,
+                "frac_dark": 0.13721,
+                "frac_bright": 0.00024,
+                "distinct": 175,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "transition": [
+              {
+                "sample0": 10240,
+                "line0": 100352,
+                "width": 512,
+                "height": 512,
+                "mean": 48.0671,
+                "std": 52.5356,
+                "p01": 7.0,
+                "p50": 17.0,
+                "p99": 200.0,
+                "max": 255,
+                "frac_dark": 0.43457,
+                "frac_bright": 0.01001,
+                "distinct": 219,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 51200,
+                "width": 512,
+                "height": 512,
+                "mean": 40.0066,
+                "std": 40.9848,
+                "p01": 5.0,
+                "p50": 11.0,
+                "p99": 135.0,
+                "max": 255,
+                "frac_dark": 0.44971,
+                "frac_bright": 0.00024,
+                "distinct": 151,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 2048,
+                "line0": 59392,
+                "width": 512,
+                "height": 512,
+                "mean": 38.9827,
+                "std": 29.5332,
+                "p01": 6.0,
+                "p50": 33.0,
+                "p99": 110.0,
+                "max": 206,
+                "frac_dark": 0.26001,
+                "frac_bright": 0.00024,
+                "distinct": 129,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "shadow": [
+              {
+                "sample0": 4096,
+                "line0": 92160,
+                "width": 512,
+                "height": 512,
+                "mean": 12.022,
+                "std": 20.4517,
+                "p01": 2.0,
+                "p50": 4.0,
+                "p99": 91.0,
+                "max": 255,
+                "frac_dark": 0.76025,
+                "frac_bright": 0.00171,
+                "distinct": 118,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 94208,
+                "width": 512,
+                "height": 512,
+                "mean": 8.8179,
+                "std": 13.8631,
+                "p01": 3.0,
+                "p50": 4.0,
+                "p99": 70.0,
+                "max": 181,
+                "frac_dark": 0.86011,
+                "frac_bright": 0.0,
+                "distinct": 92,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 2048,
+                "line0": 86016,
+                "width": 512,
+                "height": 512,
+                "mean": 6.2712,
+                "std": 8.665,
+                "p01": 3.0,
+                "p50": 4.0,
+                "p99": 48.0,
+                "max": 103,
+                "frac_dark": 0.90625,
+                "frac_bright": 0.0,
+                "distinct": 73,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              }
+            ]
+          },
+          "note": "each window stretched independently; raw DN stats printed on the tile"
+        }
+      },
+      "sun_along_strip": {
+        "start": {
+          "azimuth_deg": 217.687674968,
+          "elevation_deg": 0.4680408352,
+          "phase_deg": 89.53195916680001,
+          "aspect_deg": 49.1843124008,
+          "line": 0,
+          "t_since_start_s": 0.0
+        },
+        "middle": {
+          "azimuth_deg": 245.2265012372859,
+          "elevation_deg": 0.7861353782757523,
+          "phase_deg": 89.21386462372425,
+          "aspect_deg": 49.1845282302055,
+          "line": 50537,
+          "t_since_start_s": 8.1917
+        },
+        "end": {
+          "azimuth_deg": 267.0819886256,
+          "elevation_deg": 1.1042540716499998,
+          "phase_deg": 88.89574593035,
+          "aspect_deg": 49.184749326725,
+          "line": 101073,
+          "t_since_start_s": 16.3833
+        },
+        "shadow_length_per_metre_at_middle": 72.87826705365973
+      }
+    },
+    "20251010T0942085687": {
+      "product_id": "ch2_ohr_ncp_20251010T0942085687_d_img_d18",
+      "timestamp": "20251010T0942085687",
+      "lines": 101075,
+      "samples": 12000,
+      "bytes_on_disk": 1212900000,
+      "raster_check": {
+        "ok": true,
+        "detail": "ok: 1212900000 bytes == 101075 lines x 12000 samples"
+      },
+      "gsd_m": 0.22,
+      "start_time": "2025-10-10T09:42:08.568700+00:00",
+      "stop_time": "2025-10-10T09:42:24.952500+00:00",
+      "dwell_s": 16.3838,
+      "line_period_us": 162.0955,
+      "imaging_orbit": 27338,
+      "spacecraft_altitude_km": 85.71,
+      "tdi_stages": "TDI64",
+      "limb_direction": "Descending",
+      "roll_deg": 26.670542,
+      "pitch_deg": 14.147646,
+      "yaw_deg": 0.023855,
+      "sun_azimuth_deg_label": 149.773591,
+      "sun_elevation_deg_label": -0.770711,
+      "solar_incidence_deg_label": 90.770711,
+      "projection": "Polar stereographic",
+      "area": "South Pole",
+      "corners_lon_lat": [
+        [
+          218.053507,
+          -89.219895
+        ],
+        [
+          226.509641,
+          -89.228375
+        ],
+        [
+          351.147086,
+          -89.877154
+        ],
+        [
+          57.548965,
+          -89.928812
+        ]
+      ],
+      "corners_refined": false,
+      "reference_data_used": "System",
+      "label_notes": [
+        "line_exposure_duration is tagged unit=\"ms\" but the value (162.100) matches the line period in MICROSECONDS derived from the acquisition dwell (162.10 us); the unit attribute is wrong.",
+        "Refined_Corner_Coordinates is identical to System_Level_Coordinates: no photogrammetric refinement has been applied, so corner geolocation is system-predicted and must not be treated as sub-pixel truth.",
+        "isda:reference_data_used = 'System' - geolocation derives from predicted orbit/attitude, not from a control network."
+      ],
+      "has_geometry_csv": true,
+      "has_sun_series": true,
+      "has_browse_png": true,
+      "missing_files": [],
+      "sun_series": {
+        "records": 648,
+        "cadence_s": 0.04,
+        "span_s": 25.88,
+        "epoch": "2025-10-10T09:42:03.803000+00:00",
+        "azimuth_deg": [
+          135.5206,
+          168.9638
+        ],
+        "azimuth_sweep_deg": 33.4432,
+        "elevation_deg": [
+          -0.8654,
+          -0.676
+        ],
+        "source": "ch2_ohr_ncp_20251010T0942085687_d_img_d18.spm"
+      },
+      "tile_index": {
+        "product_id": "ch2_ohr_ncp_20251010T0942085687_d_img_d18",
+        "timestamp": "20251010T0942085687",
+        "tiles": 300,
+        "tile_px": 512,
+        "stride_px": 2048,
+        "read_step": 8,
+        "counts": {
+          "lit": 115,
+          "transition": 8,
+          "shadow": 177
+        },
+        "fractions": {
+          "lit": 0.3833,
+          "transition": 0.0267,
+          "shadow": 0.59
+        },
+        "usable_tiles": 126,
+        "usable_fraction": 0.42,
+        "tile_mean_dn": {
+          "min": 3.833,
+          "max": 163.11,
+          "median": 6.732
+        }
+      },
+      "dn_stats": {
+        "pixels_sampled": 3612000,
+        "mean": 40.282,
+        "std": 47.859,
+        "median": 7,
+        "p01": 4,
+        "p99": 167,
+        "frac_le_5": 0.33189,
+        "frac_le_10": 0.5764,
+        "frac_ge_200": 0.00122,
+        "distinct_levels": 256,
+        "max_dn": 255
+      },
+      "cross_track": {
+        "sample0_mean_dn": 16.877,
+        "sample_last_mean_dn": 54.95,
+        "min": 15.027,
+        "max": 57.505
+      },
+      "along_track": {
+        "min": 2.462,
+        "max": 97.025
+      },
+      "figures": {
+        "thumbnail": {
+          "file": "strip_20251010T0942085687_thumb.png",
+          "thumb_shape": [
+            1487,
+            177
+          ],
+          "note": "per-tile percentile stretch, visualisation only"
+        },
+        "tiles": {
+          "file": "strip_20251010T0942085687_tiles.png",
+          "tiles": {
+            "lit": [
+              {
+                "sample0": 10240,
+                "line0": 49152,
+                "width": 512,
+                "height": 512,
+                "mean": 90.6711,
+                "std": 63.6935,
+                "p01": 18.0,
+                "p50": 90.0,
+                "p99": 215.0,
+                "max": 241,
+                "frac_dark": 0.0,
+                "frac_bright": 0.03491,
+                "distinct": 216,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 96256,
+                "width": 512,
+                "height": 512,
+                "mean": 62.8274,
+                "std": 50.5516,
+                "p01": 14.0,
+                "p50": 40.0,
+                "p99": 184.0,
+                "max": 255,
+                "frac_dark": 0.0,
+                "frac_bright": 0.00635,
+                "distinct": 196,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 8192,
+                "line0": 83968,
+                "width": 512,
+                "height": 512,
+                "mean": 130.7273,
+                "std": 40.8316,
+                "p01": 32.0,
+                "p50": 131.0,
+                "p99": 230.0,
+                "max": 255,
+                "frac_dark": 0.0,
+                "frac_bright": 0.05542,
+                "distinct": 221,
+                "illumination": "lit",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "transition": [
+              {
+                "sample0": 8192,
+                "line0": 32768,
+                "width": 512,
+                "height": 512,
+                "mean": 38.9524,
+                "std": 30.2394,
+                "p01": 8.0,
+                "p50": 29.0,
+                "p99": 111.0,
+                "max": 163,
+                "frac_dark": 0.27856,
+                "frac_bright": 0.0,
+                "distinct": 129,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 51200,
+                "width": 512,
+                "height": 512,
+                "mean": 22.7791,
+                "std": 21.4195,
+                "p01": 7.0,
+                "p50": 9.0,
+                "p99": 85.0,
+                "max": 211,
+                "frac_dark": 0.54468,
+                "frac_bright": 0.00024,
+                "distinct": 105,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 0,
+                "line0": 81920,
+                "width": 512,
+                "height": 512,
+                "mean": 25.3582,
+                "std": 20.2247,
+                "p01": 6.0,
+                "p50": 17.0,
+                "p99": 86.0,
+                "max": 134,
+                "frac_dark": 0.34351,
+                "frac_bright": 0.0,
+                "distinct": 104,
+                "illumination": "transition",
+                "usable": true,
+                "step": 8
+              }
+            ],
+            "shadow": [
+              {
+                "sample0": 8192,
+                "line0": 30720,
+                "width": 512,
+                "height": 512,
+                "mean": 9.9231,
+                "std": 8.7667,
+                "p01": 6.0,
+                "p50": 7.0,
+                "p99": 56.0,
+                "max": 82,
+                "frac_dark": 0.89185,
+                "frac_bright": 0.0,
+                "distinct": 65,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 32768,
+                "width": 512,
+                "height": 512,
+                "mean": 9.0159,
+                "std": 7.618,
+                "p01": 5.0,
+                "p50": 7.0,
+                "p99": 42.0,
+                "max": 100,
+                "frac_dark": 0.86621,
+                "frac_bright": 0.0,
+                "distinct": 58,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              },
+              {
+                "sample0": 6144,
+                "line0": 26624,
+                "width": 512,
+                "height": 512,
+                "mean": 8.136,
+                "std": 6.5976,
+                "p01": 5.0,
+                "p50": 6.0,
+                "p99": 37.0,
+                "max": 97,
+                "frac_dark": 0.86694,
+                "frac_bright": 0.0,
+                "distinct": 55,
+                "illumination": "shadow",
+                "usable": true,
+                "step": 8
+              }
+            ]
+          },
+          "note": "each window stretched independently; raw DN stats printed on the tile"
+        }
+      },
+      "sun_along_strip": {
+        "start": {
+          "azimuth_deg": 139.60227343377503,
+          "elevation_deg": -0.830540640775,
+          "phase_deg": 90.830540638775,
+          "aspect_deg": 8.16751196965,
+          "line": 0,
+          "t_since_start_s": 0.0
+        },
+        "middle": {
+          "azimuth_deg": 148.5308198324,
+          "elevation_deg": -0.7706006494000001,
+          "phase_deg": 90.77060064739999,
+          "aspect_deg": 8.167715020000001,
+          "line": 50537,
+          "t_since_start_s": 8.1919
+        },
+        "end": {
+          "azimuth_deg": 160.513145534875,
+          "elevation_deg": -0.710616821875,
+          "phase_deg": 90.710616819875,
+          "aspect_deg": 8.167922379624999,
+          "line": 101074,
+          "t_since_start_s": 16.3838
+        },
+        "shadow_length_per_metre_at_middle": Infinity
+      }
+    }
+  },
+  "figures": {
+    "dn_histograms": "dn_histograms.png",
+    "cross_track_profile": "cross_track_profile.png",
+    "along_track_profile": "along_track_profile.png",
+    "illumination_classes": "illumination_classes.png"
+  },
+  "pair_2024": {
+    "a": "20241115T1326321339",
+    "b": "20241115T1525004388",
+    "footprint_overlap": {
+      "cell_m": 100.0,
+      "area_a_km2": 83.68,
+      "area_b_km2": 84.15,
+      "area_overlap_km2": 79.76,
+      "fraction_of_smaller": 0.9532,
+      "fraction_of_a": 0.9532,
+      "fraction_of_b": 0.9478
+    },
+    "sun_a_mid": {
+      "azimuth_deg": 177.92205199894397,
+      "elevation_deg": -0.169148600521626,
+      "phase_deg": 90.16914859852163,
+      "aspect_deg": 49.082493727618406,
+      "line": 50537,
+      "t_since_start_s": 8.1917
+    },
+    "sun_b_mid": {
+      "azimuth_deg": 245.2265012372859,
+      "elevation_deg": 0.7861353782757523,
+      "phase_deg": 89.21386462372425,
+      "aspect_deg": 49.1845282302055,
+      "line": 50537,
+      "t_since_start_s": 8.1917
+    },
+    "d_azimuth_deg": 67.304,
+    "d_elevation_deg": 0.9553,
+    "shadow_length_per_metre": {
+      "a": Infinity,
+      "b": 72.87826705365973
+    },
+    "regions": {
+      "file": "pair_2024_regions.png",
+      "windows": [
+        {
+          "a": {
+            "sample0": 9216,
+            "line0": 52224,
+            "mean": 90.2644,
+            "std": 49.0902,
+            "sun": {
+              "azimuth_deg": 178.36365569044588,
+              "elevation_deg": -0.1569391440100813,
+              "phase_deg": 90.15693914201009,
+              "aspect_deg": 49.082501495689726,
+              "line": 52480,
+              "t_since_start_s": 8.5067
+            }
+          },
+          "b": {
+            "sample0": 8826,
+            "line0": 53509,
+            "mean": 146.439,
+            "std": 24.251,
+            "sun": {
+              "azimuth_deg": 246.87180143392865,
+              "elevation_deg": 0.8064544526334175,
+              "phase_deg": 89.19354554936659,
+              "aspect_deg": 49.184542187894955,
+              "line": 53765,
+              "t_since_start_s": 8.715
+            }
+          },
+          "stereo_m": [
+            -8058.95,
+            -7201.59
+          ],
+          "d_azimuth_deg": 68.508,
+          "d_elevation_deg": 0.9634
+        },
+        {
+          "a": {
+            "sample0": 6144,
+            "line0": 89088,
+            "mean": 66.6201,
+            "std": 45.981,
+            "sun": {
+              "azimuth_deg": 188.57558163565412,
+              "elevation_deg": 0.07472182621392585,
+              "phase_deg": 89.92527817578608,
+              "aspect_deg": 49.08265053581543,
+              "line": 89344,
+              "t_since_start_s": 14.4821
+            }
+          },
+          "b": {
+            "sample0": 5083,
+            "line0": 89746,
+            "mean": 51.52,
+            "std": 29.066,
+            "sun": {
+              "azimuth_deg": 263.04158388269065,
+              "elevation_deg": 1.034561084580511,
+              "phase_deg": 88.96543891741949,
+              "aspect_deg": 49.18470042073718,
+              "line": 90002,
+              "t_since_start_s": 14.5888
+            }
+          },
+          "stereo_m": [
+            -652.72,
+            -1631.16
+          ],
+          "d_azimuth_deg": 74.466,
+          "d_elevation_deg": 0.9598
+        },
+        {
+          "a": {
+            "sample0": 9216,
+            "line0": 55296,
+            "mean": 125.189,
+            "std": 31.6977,
+            "sun": {
+              "azimuth_deg": 179.07922807344912,
+              "elevation_deg": -0.13763509691437772,
+              "phase_deg": 90.13763509491437,
+              "aspect_deg": 49.08251379689532,
+              "line": 55552,
+              "t_since_start_s": 9.0046
+            }
+          },
+          "b": {
+            "sample0": 8769,
+            "line0": 56563,
+            "mean": 166.452,
+            "std": 30.284,
+            "sun": {
+              "azimuth_deg": 248.40118487485555,
+              "elevation_deg": 0.8256783846802098,
+              "phase_deg": 89.17432161731979,
+              "aspect_deg": 49.184555419003935,
+              "line": 56819,
+              "t_since_start_s": 9.21
+            }
+          },
+          "stereo_m": [
+            -7484.3,
+            -6685.17
+          ],
+          "d_azimuth_deg": 69.322,
+          "d_elevation_deg": 0.9633
+        }
+      ],
+      "note": "windows co-located through the delivered system-level geometry; alignment is approximate by construction"
+    }
+  },
+  "overlap_matrix": [
+    {
+      "cell_m": 100.0,
+      "area_a_km2": 83.68,
+      "area_b_km2": 84.15,
+      "area_overlap_km2": 79.76,
+      "fraction_of_smaller": 0.9532,
+      "fraction_of_a": 0.9532,
+      "fraction_of_b": 0.9478,
+      "a": "20241115T1326321339",
+      "b": "20241115T1525004388"
+    },
+    {
+      "cell_m": 100.0,
+      "area_a_km2": 95.58,
+      "area_b_km2": 83.68,
+      "area_overlap_km2": 69.85,
+      "fraction_of_smaller": 0.8347,
+      "fraction_of_a": 0.7308,
+      "fraction_of_b": 0.8347,
+      "a": "20211228T2209123959",
+      "b": "20241115T1326321339"
+    },
+    {
+      "cell_m": 100.0,
+      "area_a_km2": 95.58,
+      "area_b_km2": 84.15,
+      "area_overlap_km2": 67.06,
+      "fraction_of_smaller": 0.7969,
+      "fraction_of_a": 0.7016,
+      "fraction_of_b": 0.7969,
+      "a": "20211228T2209123959",
+      "b": "20241115T1525004388"
+    },
+    {
+      "cell_m": 100.0,
+      "area_a_km2": 84.15,
+      "area_b_km2": 92.49,
+      "area_overlap_km2": 64.97,
+      "fraction_of_smaller": 0.7721,
+      "fraction_of_a": 0.7721,
+      "fraction_of_b": 0.7025,
+      "a": "20241115T1525004388",
+      "b": "20251010T0942085687"
+    },
+    {
+      "cell_m": 100.0,
+      "area_a_km2": 83.68,
+      "area_b_km2": 92.49,
+      "area_overlap_km2": 62.11,
+      "fraction_of_smaller": 0.7422,
+      "fraction_of_a": 0.7422,
+      "fraction_of_b": 0.6715,
+      "a": "20241115T1326321339",
+      "b": "20251010T0942085687"
+    },
+    {
+      "cell_m": 100.0,
+      "area_a_km2": 95.58,
+      "area_b_km2": 92.49,
+      "area_overlap_km2": 53.27,
+      "fraction_of_smaller": 0.576,
+      "fraction_of_a": 0.5573,
+      "fraction_of_b": 0.576,
+      "a": "20211228T2209123959",
+      "b": "20251010T0942085687"
+    }
+  ]
+}

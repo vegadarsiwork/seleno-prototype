@@ -2,5 +2,17 @@ __pycache__/
 *.pyc
 node_modules/
 data/raw/
-results/*/
-!results/showcase/
+
+# results/ mixes cited evidence with regenerable bulk, so it is listed
+# explicitly instead of being ignored wholesale. README.md and HANDOFF.md cite
+# results/illumination/ILLUMINATION.md as "the committed figures", and
+# results/experiments/P0_FINDINGS.md is now cited the same way; a blanket
+# results/*/ rule made both of those claims false.
+
+# ~209 MB of LRO NAC mosaic crops, one file over GitHub's 100 MB limit.
+# scripts/exp_reference.py re-fetches any region on demand, so this is a
+# cache, not evidence.
+results/nac_cache/
+
+# resolved PDS redirect, re-derived on first use
+.nac_url

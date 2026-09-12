@@ -1,0 +1,673 @@
+{
+  "pair_id": "ohrc_20241115T1326__20241115T1525_s5888_l88832",
+  "status": "accepted",
+  "transform": [
+    [
+      0.9960919881993578,
+      -0.01901641147708504,
+      77.3485265651337
+    ],
+    [
+      0.22031842707191335,
+      0.9951699515792488,
+      -785.6415893117737
+    ],
+    [
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "model_type": "affine",
+  "confidence": 0.7389,
+  "reasons": [
+    "all acceptance checks passed"
+  ],
+  "metrics": {
+    "candidate_matches": 1068,
+    "inliers": 780,
+    "outliers_rejected": 288,
+    "inlier_ratio": 0.7303,
+    "selected_matches": 780,
+    "runtime_s": {
+      "metadata": 0.0,
+      "overlap": 0.0001,
+      "preprocess": 0.5777,
+      "match": 0.9677,
+      "verify": 0.0012,
+      "select": 0.0053,
+      "subpixel": 0.0,
+      "estimate": 0.12
+    },
+    "runtime_total_s": 1.672,
+    "spatial_coverage": 0.3429,
+    "spatial_coverage_before": 0.1714,
+    "spatial_coverage_all_inliers": 0.3429,
+    "spatial_coverage_whole_window": 0.3333,
+    "matchable_cells": 35,
+    "grid_cells": 36,
+    "spatial_dispersion": 0.4273,
+    "spatial_dispersion_before": 0.4183,
+    "candidates_before_mask": 1068,
+    "dropped_by_mask": 0,
+    "usable_fraction": 0.901,
+    "mask_source": "observed-signal",
+    "mask_is_prediction": false,
+    "mask_is_synthetic_terrain": false,
+    "reprojection": {
+      "rmse_px": 1.2166,
+      "median_px": 0.6156,
+      "p90_px": 2.1601,
+      "max_px": 3.2056
+    },
+    "reprojection_rmse_px_before_subpixel": 1.2562,
+    "heldout": {
+      "rmse_px": 1.3286,
+      "median_px": 0.7966,
+      "p90_px": 2.1783,
+      "max_px": 3.5742
+    },
+    "heldout_count": 234,
+    "ground_truth": null,
+    "ground_truth_available": false,
+    "geometry_prior_disagreement": {
+      "corner_disagreement_px": 678.355,
+      "corner_disagreement_m": 162.81,
+      "max_corner_disagreement_px": 723.628
+    },
+    "ncc_before": -0.0781,
+    "ncc_after": 0.8937,
+    "overlap_fraction": 0.3129,
+    "keypoints_source": 8000,
+    "keypoints_reference": 8000,
+    "fit_count": 546
+  },
+  "stages": [
+    {
+      "name": "Metadata and geometry",
+      "status": "ok",
+      "note": "ohrc pair, 0.240 / 0.240 m/px, ground truth: none, geometry prior: yes",
+      "seconds": 1.7099999240599573e-05,
+      "detail": {
+        "kind": "ohrc",
+        "gsd_source_m": 0.24,
+        "gsd_reference_m": 0.24,
+        "ground_truth_available": false,
+        "ground_truth_origin": "none - real repeat-pass imagery",
+        "geometry_prior_available": true,
+        "geometry_prior_origin": "delivered system-level geometry grids of both products (unrefined; metre-to-decametre absolute accuracy) plus a measured coarse offset of (-439.9, -310.5) m between the two products' geolocation",
+        "sun_source": {
+          "azimuth_deg": 188.57558163565412,
+          "elevation_deg": 0.07472182621392585,
+          "phase_deg": 89.92527817578608,
+          "aspect_deg": 49.08265053581543,
+          "line": 89344,
+          "t_since_start_s": 14.4821
+        },
+        "sun_reference": {
+          "azimuth_deg": 262.23079093329244,
+          "elevation_deg": 1.0213855757603225,
+          "phase_deg": 88.97861442623967,
+          "aspect_deg": 49.18469121062275,
+          "line": 87909,
+          "t_since_start_s": 14.2495
+        },
+        "provenance": {
+          "source_product": "ch2_ohr_ncp_20241115T1326321339_d_img_d18",
+          "reference_product": "ch2_ohr_ncp_20241115T1525004388_d_img_d18",
+          "source_window": {
+            "sample0": 5888,
+            "line0": 88832,
+            "size": 1024
+          },
+          "reference_window": {
+            "sample0": 5107,
+            "line0": 87397,
+            "size": 1024
+          },
+          "coarse_offset_stereo_m": [
+            -439.88,
+            -310.5
+          ],
+          "coarse_alignment": {
+            "ok": true,
+            "a": "20241115T1326321339",
+            "b": "20241115T1525004388",
+            "offset_stereo_m": [
+              -439.88,
+              -310.5
+            ],
+            "offset_m": 538.43,
+            "offset_px_source_gsd": 2243.5,
+            "dx_grid_px": -85,
+            "dy_grid_px": -60,
+            "grid_res_m": 5.175,
+            "template_m": 1500.8,
+            "search_m": 900.5,
+            "peak_ncc": 0.1798,
+            "second_peak_ncc": 0.0695,
+            "peak_margin": 0.1103,
+            "representation": "gradient magnitude",
+            "lit_pixels": 664147,
+            "common_pixels": 3026582,
+            "confident": true,
+            "note": "bulk translation only; with differing roll angles the residual varies along the strip, so this is a prior for the per-window stage and not itself a registration",
+            "from_cache": true
+          },
+          "source_orbit": 23328,
+          "reference_orbit": 23329,
+          "source_time": "2024-11-15T13:26:32.133900+00:00",
+          "reference_time": "2024-11-15T15:25:00.438800+00:00"
+        },
+        "d_azimuth_deg": 73.655,
+        "d_elevation_deg": 0.9467
+      }
+    },
+    {
+      "name": "Reference and overlap estimation",
+      "status": "ok",
+      "note": "source 1024x1024, reference 1024x1024, GSD ratio 1.0",
+      "seconds": 0.0001472000003559515,
+      "detail": {
+        "source_shape": [
+          1024,
+          1024
+        ],
+        "reference_shape": [
+          1024,
+          1024
+        ],
+        "gsd_ratio": 1.0,
+        "footprint_source": {
+          "corners_lon_lat": [
+            [
+              200.026198,
+              -89.936055
+            ],
+            [
+              207.3145,
+              -89.940137
+            ],
+            [
+              204.001053,
+              -89.947998
+            ],
+            [
+              195.983172,
+              -89.943417
+            ]
+          ],
+          "corners_stereo_m": [
+            [
+              -664.03,
+              -1821.77
+            ],
+            [
+              -832.97,
+              -1612.82
+            ],
+            [
+              -641.4,
+              -1440.5
+            ],
+            [
+              -472.47,
+              -1649.44
+            ]
+          ],
+          "center_lon_lat": [
+            201.808102,
+            -89.94206
+          ],
+          "center_stereo_m": [
+            -652.72,
+            -1631.16
+          ]
+        },
+        "footprint_reference": {
+          "corners_lon_lat": [
+            [
+              207.179525,
+              -89.921304
+            ],
+            [
+              213.547246,
+              -89.923354
+            ],
+            [
+              211.890419,
+              -89.93163
+            ],
+            [
+              204.84107,
+              -89.92928
+            ]
+          ],
+          "corners_stereo_m": [
+            [
+              -1090.02,
+              -2122.81
+            ],
+            [
+              -1284.36,
+              -1937.0
+            ],
+            [
+              -1095.25,
+              -1760.24
+            ],
+            [
+              -900.91,
+              -1946.05
+            ]
+          ],
+          "center_lon_lat": [
+            209.36625,
+            -89.926529
+          ],
+          "center_stereo_m": [
+            -1092.52,
+            -1941.6
+          ]
+        },
+        "prior_centre_offset_m": 0.09,
+        "coarse_offset_stereo_m": [
+          -439.88,
+          -310.5
+        ],
+        "coarse_offset_m": 538.43,
+        "coarse_alignment": {
+          "ok": true,
+          "a": "20241115T1326321339",
+          "b": "20241115T1525004388",
+          "offset_stereo_m": [
+            -439.88,
+            -310.5
+          ],
+          "offset_m": 538.43,
+          "offset_px_source_gsd": 2243.5,
+          "dx_grid_px": -85,
+          "dy_grid_px": -60,
+          "grid_res_m": 5.175,
+          "template_m": 1500.8,
+          "search_m": 900.5,
+          "peak_ncc": 0.1798,
+          "second_peak_ncc": 0.0695,
+          "peak_margin": 0.1103,
+          "representation": "gradient magnitude",
+          "lit_pixels": 664147,
+          "common_pixels": 3026582,
+          "confident": true,
+          "note": "bulk translation only; with differing roll angles the residual varies along the strip, so this is a prior for the per-window stage and not itself a registration",
+          "from_cache": true
+        }
+      }
+    },
+    {
+      "name": "Illumination-aware preprocessing",
+      "status": "ok",
+      "note": "grayscale/uint8 normalisation | illumination flattening (divide-by-blur) | CLAHE (clip 2.5, 8x8 tiles) | usable 90.1% of the source window",
+      "seconds": 0.5777387999987695,
+      "detail": {
+        "source": {
+          "mean": 119.88,
+          "std": 70.15,
+          "shape": [
+            1024,
+            1024
+          ]
+        },
+        "reference": {
+          "mean": 123.77,
+          "std": 68.4,
+          "shape": [
+            1024,
+            1024
+          ]
+        },
+        "steps_source": [
+          "grayscale/uint8 normalisation",
+          "illumination flattening (divide-by-blur)",
+          "CLAHE (clip 2.5, 8x8 tiles)"
+        ],
+        "steps_reference": [
+          "grayscale/uint8 normalisation",
+          "illumination flattening (divide-by-blur)",
+          "CLAHE (clip 2.5, 8x8 tiles)"
+        ],
+        "coordinate_scale": 1.0,
+        "mask": {
+          "source": "observed-signal",
+          "is_prediction": false,
+          "is_synthetic_terrain": false,
+          "usable_fraction": 0.901,
+          "mean_confidence": 0.9061,
+          "warnings": [],
+          "window_px": 33,
+          "std_floor": 3.0,
+          "dn_floor": 6,
+          "levels_floor": 6,
+          "note": "measured from the image; no terrain model involved"
+        }
+      }
+    },
+    {
+      "name": "Correspondence",
+      "status": "ok",
+      "note": "sift: 8000 + 8000 keypoints -> 1068 candidates",
+      "seconds": 0.9676522999998269,
+      "detail": {
+        "detector": "sift",
+        "ratio": 0.8,
+        "ratio_test_survivors_fwd": 1158,
+        "mutual_check": true,
+        "ratio_test_survivors_bwd": 1210,
+        "mutual_consistent": 1068,
+        "candidates_before_mask": 1068,
+        "dropped_by_mask": 0,
+        "candidates": 1068
+      }
+    },
+    {
+      "name": "Robust geometric verification",
+      "status": "ok",
+      "note": "1068 candidates -> 780 inliers (73.0%), 288 rejected",
+      "seconds": 0.001181699999506236,
+      "detail": {
+        "estimator": "RANSAC (affine2D)",
+        "threshold_px": 3.0,
+        "confidence": 0.999,
+        "est_scale_x": 1.02,
+        "est_scale_y": 0.9919,
+        "est_rotation_deg": 12.44,
+        "est_shear_det": 0.9919,
+        "est_translation_px": [
+          77.14,
+          -782.39
+        ],
+        "est_perspective": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    {
+      "name": "Correspondence selection",
+      "status": "skipped",
+      "note": "780 inliers -> 780 retained (all verified inliers retained); coverage 34% of 35 matchable cells (top-K by confidence: 17%; whole window: 33%)",
+      "seconds": 0.0052818000003753696,
+      "detail": {
+        "status": "all verified inliers retained",
+        "mode": "all",
+        "thinning_skipped": false,
+        "n_in": 780,
+        "n_out": 780,
+        "budget": 30,
+        "cells_occupied": 11,
+        "cells_eligible": 35,
+        "cells_total": 36,
+        "coverage_denominator": "matchable cells only",
+        "per_cell_quota": 3,
+        "min_separation_px": 42.67,
+        "relaxed_to_min_keep": false
+      }
+    },
+    {
+      "name": "Sub-pixel refinement",
+      "status": "skipped",
+      "note": "disabled",
+      "seconds": 3.499999365885742e-06,
+      "detail": {
+        "enabled": false,
+        "applied": false,
+        "reason": "disabled"
+      }
+    },
+    {
+      "name": "Metrics",
+      "status": "ok",
+      "note": "inlier ratio 73.0%, reprojection RMSE 1.217 px, held-out RMSE 1.329 px, prior disagreement 163 m, coverage 34%",
+      "seconds": 0.01766219999990426,
+      "detail": {}
+    },
+    {
+      "name": "Trust and refusal decision",
+      "status": "ok",
+      "note": "ACCEPTED: all acceptance checks passed",
+      "seconds": 0.0,
+      "detail": {
+        "thresholds": {
+          "min_inliers": 12,
+          "min_inlier_ratio": 0.15,
+          "min_spatial_coverage": 0.15,
+          "max_rmse_multiple_of_threshold": 4.0,
+          "max_heldout_rmse_px": 6.0,
+          "warn_heldout_rmse_px": 3.0,
+          "warn_usable_fraction": 0.1,
+          "max_prior_disagreement_m": 250.0
+        },
+        "calibrated": false
+      }
+    }
+  ],
+  "options": {
+    "matcher": "sift",
+    "ratio": 0.8,
+    "mutual_check": true,
+    "max_features": 8000,
+    "preprocess_enabled": true,
+    "use_clahe": true,
+    "use_flatten": true,
+    "harmonise_gsd": true,
+    "mask_mode": "observed",
+    "terrain_model": "none",
+    "remove_shading": false,
+    "verify_enabled": true,
+    "model_type": "affine",
+    "ransac_threshold": 3.0,
+    "selection_mode": "all",
+    "grid": 6,
+    "per_cell": 3,
+    "subpixel_enabled": false,
+    "holdout_fraction": 0.3,
+    "seed": 0
+  },
+  "pair": {
+    "id": "ohrc_20241115T1326__20241115T1525_s5888_l88832",
+    "name": "OHRC 20241115T1326 -> 20241115T1525",
+    "short": "window (5888, 88832) of 20241115T1326 against the same ground in 20241115T1525",
+    "kind": "ohrc",
+    "difficulty": "real repeat-pass, differing illumination",
+    "source_shape": [
+      1024,
+      1024
+    ],
+    "reference_shape": [
+      1024,
+      1024
+    ],
+    "gsd_source_m": 0.24,
+    "gsd_reference_m": 0.24,
+    "recommended_model": "affine",
+    "ground_truth_available": false,
+    "ground_truth_origin": "none - real repeat-pass imagery",
+    "geometry_prior_available": true,
+    "geometry_prior_origin": "delivered system-level geometry grids of both products (unrefined; metre-to-decametre absolute accuracy) plus a measured coarse offset of (-439.9, -310.5) m between the two products' geolocation",
+    "sun_source": {
+      "azimuth_deg": 188.57558163565412,
+      "elevation_deg": 0.07472182621392585,
+      "phase_deg": 89.92527817578608,
+      "aspect_deg": 49.08265053581543,
+      "line": 89344,
+      "t_since_start_s": 14.4821
+    },
+    "sun_reference": {
+      "azimuth_deg": 262.23079093329244,
+      "elevation_deg": 1.0213855757603225,
+      "phase_deg": 88.97861442623967,
+      "aspect_deg": 49.18469121062275,
+      "line": 87909,
+      "t_since_start_s": 14.2495
+    },
+    "footprint_source": {
+      "corners_lon_lat": [
+        [
+          200.026198,
+          -89.936055
+        ],
+        [
+          207.3145,
+          -89.940137
+        ],
+        [
+          204.001053,
+          -89.947998
+        ],
+        [
+          195.983172,
+          -89.943417
+        ]
+      ],
+      "corners_stereo_m": [
+        [
+          -664.03,
+          -1821.77
+        ],
+        [
+          -832.97,
+          -1612.82
+        ],
+        [
+          -641.4,
+          -1440.5
+        ],
+        [
+          -472.47,
+          -1649.44
+        ]
+      ],
+      "center_lon_lat": [
+        201.808102,
+        -89.94206
+      ],
+      "center_stereo_m": [
+        -652.72,
+        -1631.16
+      ]
+    },
+    "footprint_reference": {
+      "corners_lon_lat": [
+        [
+          207.179525,
+          -89.921304
+        ],
+        [
+          213.547246,
+          -89.923354
+        ],
+        [
+          211.890419,
+          -89.93163
+        ],
+        [
+          204.84107,
+          -89.92928
+        ]
+      ],
+      "corners_stereo_m": [
+        [
+          -1090.02,
+          -2122.81
+        ],
+        [
+          -1284.36,
+          -1937.0
+        ],
+        [
+          -1095.25,
+          -1760.24
+        ],
+        [
+          -900.91,
+          -1946.05
+        ]
+      ],
+      "center_lon_lat": [
+        209.36625,
+        -89.926529
+      ],
+      "center_stereo_m": [
+        -1092.52,
+        -1941.6
+      ]
+    },
+    "provenance": {
+      "source_product": "ch2_ohr_ncp_20241115T1326321339_d_img_d18",
+      "reference_product": "ch2_ohr_ncp_20241115T1525004388_d_img_d18",
+      "source_window": {
+        "sample0": 5888,
+        "line0": 88832,
+        "size": 1024
+      },
+      "reference_window": {
+        "sample0": 5107,
+        "line0": 87397,
+        "size": 1024
+      },
+      "coarse_offset_stereo_m": [
+        -439.88,
+        -310.5
+      ],
+      "coarse_alignment": {
+        "ok": true,
+        "a": "20241115T1326321339",
+        "b": "20241115T1525004388",
+        "offset_stereo_m": [
+          -439.88,
+          -310.5
+        ],
+        "offset_m": 538.43,
+        "offset_px_source_gsd": 2243.5,
+        "dx_grid_px": -85,
+        "dy_grid_px": -60,
+        "grid_res_m": 5.175,
+        "template_m": 1500.8,
+        "search_m": 900.5,
+        "peak_ncc": 0.1798,
+        "second_peak_ncc": 0.0695,
+        "peak_margin": 0.1103,
+        "representation": "gradient magnitude",
+        "lit_pixels": 664147,
+        "common_pixels": 3026582,
+        "confident": true,
+        "note": "bulk translation only; with differing roll angles the residual varies along the strip, so this is a prior for the per-window stage and not itself a registration",
+        "from_cache": true
+      },
+      "source_orbit": 23328,
+      "reference_orbit": 23329,
+      "source_time": "2024-11-15T13:26:32.133900+00:00",
+      "reference_time": "2024-11-15T15:25:00.438800+00:00"
+    },
+    "warnings": [
+      "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+      "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+    ],
+    "d_azimuth_deg": 73.655,
+    "d_elevation_deg": 0.9467
+  },
+  "warnings": [
+    "no ground truth exists for this pair: both windows are real acquisitions and no correct transform between them is known",
+    "illumination differs by 73.7 deg azimuth and 0.95 deg elevation at a grazing incidence - cast shadows move and shading reverses"
+  ],
+  "available_images": [
+    "candidates",
+    "checker",
+    "difference",
+    "footprint",
+    "mask",
+    "overlay",
+    "select_after",
+    "select_before",
+    "verified"
+  ]
+}

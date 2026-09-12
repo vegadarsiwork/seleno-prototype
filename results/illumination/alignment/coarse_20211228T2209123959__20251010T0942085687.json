@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "a": "20211228T2209123959",
+  "b": "20251010T0942085687",
+  "offset_stereo_m": [
+    -817.67,
+    695.49
+  ],
+  "offset_m": 1073.45,
+  "offset_px_source_gsd": 3833.7,
+  "dx_grid_px": -174,
+  "dy_grid_px": 148,
+  "grid_res_m": 4.6993,
+  "template_m": 1503.8,
+  "search_m": 902.3,
+  "peak_ncc": 0.0947,
+  "second_peak_ncc": 0.0924,
+  "peak_margin": 0.0023,
+  "representation": "gradient magnitude",
+  "lit_pixels": 267269,
+  "common_pixels": 2433565,
+  "confident": false,
+  "note": "bulk translation only; with differing roll angles the residual varies along the strip, so this is a prior for the per-window stage and not itself a registration",
+  "from_cache": false
+}

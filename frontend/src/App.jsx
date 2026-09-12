@@ -1,352 +1,518 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getConfig, runPipeline, compare, pairImageUrl, imageUrl } from './api'
-import { Panel, Metric, Stages, Verdict, ImageTabs, Flow, pct, num } from './components'
+import * as api from './api'
+import {
+  Flow, ImageTabs, KV, Metric, Panel, Stages, Verdict,
+  niceTs, num, pct, shortTs,
+} from './components'
+
+const SIZES = [512, 1024, 2048]
 
 export default function App() {
   const [cfg, setCfg] = useState(null)
-  const [pairId, setPairId] = useState(null)
-  const [opts, setOpts] = useState(null)
-  const [result, setResult] = useState(null)
+  const [fatal, setFatal] = useState(null)
+  const [mode, setMode] = useState('ohrc')          // ohrc | legacy
+
+  const [srcTs, setSrcTs] = useState(null)
+  const [refTs, setRefTs] = useState(null)
+  const [size, setSize] = useState(1024)
+  const [useOffset, setUseOffset] = useState(true)
+  const [align, setAlign] = useState(null)
+  const [windows, setWindows] = useState([])
+  const [win, setWin] = useState(null)
+  const [loadingWins, setLoadingWins] = useState(false)
+
+  const [legacyId, setLegacyId] = useState(null)
+  const [preset, setPreset] = useState('seleno')
+  const [opts, setOpts] = useState({})
+
+  const [res, setRes] = useState(null)
   const [running, setRunning] = useState(false)
-  const [error, setError] = useState(null)
   const [cmp, setCmp] = useState(null)
   const [cmpRunning, setCmpRunning] = useState(false)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
-    getConfig()
+    api.getConfig()
       .then((c) => {
         setCfg(c)
-        const first = c.pairs[0]
-        setPairId(first.id)
-        setOpts({ ...c.defaults, model_type: first.recommended_model || c.defaults.model_type })
+        const ps = c.ohrc?.products || []
+        if (ps.length >= 2) {
+          const a = ps.find((p) => p.timestamp.startsWith('20241115T1326')) || ps[0]
+          const b = ps.find((p) => p.timestamp.startsWith('20241115T1525')) || ps[1]
+          setSrcTs(a.timestamp); setRefTs(b.timestamp)
+        } else if (ps.length === 1) {
+          setSrcTs(ps[0].timestamp)
+        }
+        if (!ps.length) setMode('legacy')
+        if (c.legacy_pairs?.length) setLegacyId(c.legacy_pairs[0].id)
       })
-      .catch((e) => setError(String(e)))
+      .catch((e) => setFatal(String(e)))
   }, [])
 
-  const pair = useMemo(() => cfg?.pairs.find((p) => p.id === pairId) || null, [cfg, pairId])
+  // load candidate windows whenever the pair or size changes
+  useEffect(() => {
+    if (mode !== 'ohrc' || !srcTs || !refTs || srcTs === refTs) return
+    let cancelled = false
+    setLoadingWins(true); setWindows([]); setWin(null); setRes(null); setCmp(null)
+    api.getWindows(srcTs, refTs, size, useOffset)
+      .then((d) => {
+        if (cancelled) return
+        setAlign(d.coarse_alignment)
+        setWindows(d.windows || [])
+        setWin((d.windows || [])[0] || null)
+      })
+      .catch((e) => !cancelled && setError(String(e)))
+      .finally(() => !cancelled && setLoadingWins(false))
+    return () => { cancelled = true }
+  }, [mode, srcTs, refTs, size, useOffset])
 
-  function choosePair(p) {
-    setPairId(p.id)
-    setResult(null)
-    setCmp(null)
-    setOpts((o) => ({ ...o, model_type: p.recommended_model || o.model_type }))
-  }
+  const products = cfg?.ohrc?.products || []
+  const srcP = products.find((p) => p.timestamp === srcTs)
+  const refP = products.find((p) => p.timestamp === refTs)
+  const legacy = (cfg?.legacy_pairs || []).find((p) => p.id === legacyId)
 
   const set = (k, v) => setOpts((o) => ({ ...o, [k]: v }))
+  const effective = useMemo(() => ({ ...(res?.options || cfg?.defaults || {}), ...opts }), [res, cfg, opts])
+
+  function payload(extra = {}) {
+    if (mode === 'legacy') return { legacy: legacyId, preset, options: opts, ...extra }
+    return {
+      source: srcTs, reference: refTs,
+      sample0: win?.sample0, line0: win?.line0, size,
+      apply_coarse_offset: useOffset, preset, options: opts, ...extra,
+    }
+  }
 
   async function doRun() {
-    setRunning(true)
-    setError(null)
-    setResult(null)
-    try {
-      setResult(await runPipeline(pairId, opts))
-    } catch (e) {
-      setError(String(e))
-    } finally {
-      setRunning(false)
-    }
+    setRunning(true); setError(null); setRes(null)
+    try { setRes(await api.register(payload())) }
+    catch (e) { setError(String(e)) }
+    finally { setRunning(false) }
   }
 
   async function doCompare() {
-    setCmpRunning(true)
-    setError(null)
-    try {
-      const configs = [
-        {
-          label: 'Naive: no preprocessing, ratio 0.95, no mutual check, no spatial selection',
-          ...opts,
-          preprocess_enabled: false,
-          ratio: 0.95,
-          mutual_check: false,
-          spatial_enabled: false,
-        },
-        { label: 'SIFT baseline (Seleno pipeline)', ...opts, matcher: 'sift' },
-        { label: 'SIFT multi-scale pyramid', ...opts, matcher: 'sift_pyramid' },
-        { label: 'AKAZE', ...opts, matcher: 'akaze' },
-        { label: 'ORB', ...opts, matcher: 'orb' },
-        { label: 'LoFTR (learned)', ...opts, matcher: 'loftr' },
-      ]
-      setCmp(await compare(pairId, configs))
-    } catch (e) {
-      setError(String(e))
-    } finally {
-      setCmpRunning(false)
-    }
+    setCmpRunning(true); setError(null)
+    try { setCmp(await api.compare(payload())) }
+    catch (e) { setError(String(e)) }
+    finally { setCmpRunning(false) }
   }
 
-  if (error && !cfg)
+  if (fatal)
     return (
       <div style={{ padding: 40 }}>
         <h1 className="wordmark">SELE<span>NO</span></h1>
-        <p className="err">Backend unreachable: {error}</p>
-        <p className="muted">Start it with <code>python backend/app.py</code>.</p>
+        <p className="err">Backend unreachable: {fatal}</p>
+        <p className="muted">Start it with <code>python run.py</code>.</p>
       </div>
     )
-  if (!cfg || !opts) return <div style={{ padding: 40 }} className="spinner">loading…</div>
+  if (!cfg) return <div style={{ padding: 40 }} className="spinner">loading…</div>
 
-  const m = result?.metrics
+  const m = res?.metrics
+  const pairMeta = res?.pair
+  const hasGt = pairMeta?.ground_truth_available
   const gt = m?.ground_truth
-  const hasGt = pair?.ground_truth_available
+  const dis = m?.geometry_prior_disagreement
+  const canRun = mode === 'legacy' ? !!legacyId : !!(srcTs && refTs && win)
 
   return (
     <div className="app">
-      {/* ------------------------------------------------------------ rail */}
+      {/* ------------------------------------------------------------- rail */}
       <aside className="rail">
         <div className="masthead">
           <h1 className="wordmark">SELE<span>NO</span></h1>
-          <p className="tagline">Robust Lunar Image Correspondence &amp; Registration</p>
+          <p className="tagline">
+            Geometry-first lunar image registration with predicted unmatchable regions
+            and calibrated refusal
+          </p>
         </div>
 
         <div className="rail-section">
-          <p className="rail-title">Image pair</p>
-          <div className="pair-list">
-            {cfg.pairs.map((p) => (
-              <button
-                key={p.id}
-                className="pair"
-                aria-selected={p.id === pairId}
-                onClick={() => choosePair(p)}
-              >
-                <img src={pairImageUrl(p.id, 'source', 96)} alt="" />
-                <span>
-                  <span className="pair-name">{p.name}</span>
-                  <span className="pair-tag">{p.difficulty}</span>
-                </span>
-              </button>
-            ))}
+          <div className="seg">
+            <button aria-selected={mode === 'ohrc'} onClick={() => setMode('ohrc')}
+                    disabled={!products.length}>
+              OHRC pair
+            </button>
+            <button aria-selected={mode === 'legacy'} onClick={() => setMode('legacy')}
+                    disabled={!(cfg.legacy_pairs || []).length}>
+              Legacy pairs
+            </button>
           </div>
+
+          {mode === 'ohrc' ? (
+            <>
+              {!cfg.ohrc.available && <div className="note bad">{cfg.ohrc.error}</div>}
+              <div className="field">
+                <label>Source product</label>
+                <select value={srcTs || ''} onChange={(e) => setSrcTs(e.target.value)}>
+                  {products.map((p) => (
+                    <option key={p.timestamp} value={p.timestamp}>
+                      {niceTs(p.timestamp)} · el {num(p.sun_elevation_deg, 2)}°
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label>Reference product</label>
+                <select value={refTs || ''} onChange={(e) => setRefTs(e.target.value)}>
+                  {products.map((p) => (
+                    <option key={p.timestamp} value={p.timestamp}
+                            disabled={p.timestamp === srcTs}>
+                      {niceTs(p.timestamp)} · el {num(p.sun_elevation_deg, 2)}°
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label>Window size</label>
+                <select value={size} onChange={(e) => setSize(parseInt(e.target.value))}>
+                  {SIZES.map((s) => (
+                    <option key={s} value={s}>{s} px · {num(s * (srcP?.gsd_m || 0.24), 0)} m</option>
+                  ))}
+                </select>
+              </div>
+              <label className="check">
+                <input type="checkbox" checked={useOffset}
+                       onChange={(e) => setUseOffset(e.target.checked)} />
+                <span>
+                  Apply measured coarse offset
+                  <span className="hint"> — corrects the disagreement between the two
+                  products' delivered geolocation. Turn off to see what happens without it.</span>
+                </span>
+              </label>
+
+              <p className="rail-title" style={{ marginTop: 12 }}>
+                Candidate windows {loadingWins ? '(loading…)' : `(${windows.length})`}
+              </p>
+              <div className="wlist">
+                {windows.map((w) => (
+                  <button key={`${w.sample0}-${w.line0}`} className="witem"
+                          aria-selected={win && w.sample0 === win.sample0 && w.line0 === win.line0}
+                          onClick={() => { setWin(w); setRes(null); setCmp(null) }}>
+                    <span>s{w.sample0} l{w.line0}</span>
+                    <span>sd {num(w.source_std, 0)}/{num(w.reference_std, 0)}</span>
+                  </button>
+                ))}
+                {!windows.length && !loadingWins && (
+                  <span className="muted" style={{ fontSize: 11 }}>no usable window found</span>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="plist">
+              {(cfg.legacy_pairs || []).map((p) => (
+                <button key={p.id} className="pitem" aria-selected={p.id === legacyId}
+                        onClick={() => { setLegacyId(p.id); setRes(null); setCmp(null) }}>
+                  <img src={api.legacyPairImageUrl(p.id, 'source', 96)} alt="" />
+                  <span>
+                    <span className="nm">{p.name}</span>
+                    <span className="tg">{p.difficulty}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="rail-section">
-          <p className="rail-title">Experiment</p>
-
+          <p className="rail-title">Configuration</p>
+          <div className="field">
+            <label>Preset</label>
+            <select value={preset} onChange={(e) => { setPreset(e.target.value); setOpts({}) }}>
+              {cfg.presets.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
           <div className="field">
             <label>Matcher</label>
-            <select value={opts.matcher} onChange={(e) => set('matcher', e.target.value)}>
-              {cfg.matchers.map((mm) => (
-                <option key={mm.id} value={mm.id} disabled={!mm.available}>
-                  {mm.label}
-                  {mm.available ? '' : '  (unavailable)'}
+            <select value={opts.matcher ?? effective.matcher ?? 'sift'}
+                    onChange={(e) => set('matcher', e.target.value)}>
+              {cfg.matchers.map((x) => (
+                <option key={x.id} value={x.id} disabled={!x.available}>
+                  {x.label}{x.available ? '' : '  (unavailable)'}
                 </option>
               ))}
             </select>
           </div>
-
           <div className="field">
-            <label>Transformation model</label>
-            <select value={opts.model_type} onChange={(e) => set('model_type', e.target.value)}>
-              {cfg.models.map((mm) => (
-                <option key={mm.id} value={mm.id}>
-                  {mm.label}
+            <label>Usability mask</label>
+            <select value={opts.mask_mode ?? effective.mask_mode ?? 'none'}
+                    onChange={(e) => set('mask_mode', e.target.value)}>
+              {cfg.mask_modes.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Terrain model</label>
+            <select value={opts.terrain_model ?? effective.terrain_model ?? 'none'}
+                    onChange={(e) => set('terrain_model', e.target.value)}>
+              {cfg.terrain_models.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.label}{x.status === 'synthetic' ? '' : ''}
                 </option>
               ))}
             </select>
           </div>
-
           <div className="field">
-            <label>RANSAC threshold — {opts.ransac_threshold.toFixed(1)} px</label>
-            <input
-              type="range"
-              min="0.5"
-              max="12"
-              step="0.5"
-              value={opts.ransac_threshold}
-              onChange={(e) => set('ransac_threshold', parseFloat(e.target.value))}
-            />
+            <label>Transform model</label>
+            <select value={opts.model_type ?? effective.model_type ?? 'similarity'}
+                    onChange={(e) => set('model_type', e.target.value)}>
+              {cfg.models.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+            </select>
           </div>
-
           <div className="field">
-            <label>Lowe ratio — {opts.ratio.toFixed(2)}</label>
-            <input
-              type="range"
-              min="0.6"
-              max="0.98"
-              step="0.01"
-              value={opts.ratio}
-              onChange={(e) => set('ratio', parseFloat(e.target.value))}
-            />
+            <label>Correspondence selection</label>
+            <select value={opts.selection_mode ?? effective.selection_mode ?? 'grid'}
+                    onChange={(e) => set('selection_mode', e.target.value)}>
+              {cfg.selection_modes.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+            </select>
           </div>
-
           <div className="field">
-            <label>Grid — {opts.grid}×{opts.grid}, max {opts.per_cell} per cell</label>
-            <div className="row">
-              <input
-                type="range"
-                min="2"
-                max="12"
-                step="1"
-                value={opts.grid}
-                onChange={(e) => set('grid', parseInt(e.target.value))}
-                style={{ flex: 1 }}
-              />
-              <input
-                type="number"
-                min="1"
-                max="20"
-                value={opts.per_cell}
-                onChange={(e) => set('per_cell', parseInt(e.target.value) || 1)}
-                style={{ width: 62 }}
-              />
-            </div>
-          </div>
-
-          {[
-            ['preprocess_enabled', 'Preprocessing', 'illumination flattening + CLAHE'],
-            ['harmonise_gsd', 'GSD harmonisation', 'resample the finer image to the coarser scale'],
-            ['mutual_check', 'Mutual-consistency check', 'keep only mutually-best matches'],
-            ['verify_enabled', 'Geometric verification', 'robust estimator; off = accept everything'],
-            ['spatial_enabled', 'Spatial distribution', 'off = top-K by confidence'],
-          ].map(([k, label, hint]) => (
-            <label className="check" key={k}>
-              <input type="checkbox" checked={!!opts[k]} onChange={(e) => set(k, e.target.checked)} />
-              <span>
-                {label}
-                <span className="hint"> — {hint}</span>
-              </span>
+            <label>
+              RANSAC threshold — {num(opts.ransac_threshold ?? effective.ransac_threshold ?? 3, 1)} px
             </label>
-          ))}
+            <input type="range" min="0.5" max="12" step="0.5"
+                   value={opts.ransac_threshold ?? effective.ransac_threshold ?? 3}
+                   onChange={(e) => set('ransac_threshold', parseFloat(e.target.value))} />
+          </div>
+          <label className="check">
+            <input type="checkbox"
+                   checked={opts.subpixel_enabled ?? effective.subpixel_enabled ?? true}
+                   onChange={(e) => set('subpixel_enabled', e.target.checked)} />
+            <span>Sub-pixel refinement<span className="hint"> — local NCC peak fit</span></span>
+          </label>
+          <label className="check">
+            <input type="checkbox"
+                   checked={opts.remove_shading ?? effective.remove_shading ?? false}
+                   onChange={(e) => set('remove_shading', e.target.checked)} />
+            <span>Remove broad terrain shading<span className="hint"> — needs a terrain model</span></span>
+          </label>
 
-          <div className="stack" style={{ marginTop: 14 }}>
-            <button className="btn" onClick={doRun} disabled={running}>
-              {running ? 'RUNNING…' : 'RUN CORRESPONDENCE'}
+          <div className="stack" style={{ marginTop: 13 }}>
+            <button className="btn" onClick={doRun} disabled={running || !canRun}>
+              {running ? 'RUNNING…' : 'RUN REGISTRATION'}
             </button>
-            <button className="btn ghost" onClick={doCompare} disabled={cmpRunning}>
-              {cmpRunning ? 'COMPARING…' : 'RUN MATCHER COMPARISON'}
+            <button className="btn ghost" onClick={doCompare} disabled={cmpRunning || !canRun}>
+              {cmpRunning ? 'COMPARING…' : 'RUN ABLATION'}
             </button>
           </div>
         </div>
-
-        {!cfg.learned_matcher_status.available && (
-          <div className="rail-section">
-            <div className="note warn">
-              <strong>Learned matcher not installed.</strong> The LoFTR interface is implemented and
-              selectable, but this environment has no weights: {cfg.learned_matcher_status.reason}.
-              Selecting it returns an error rather than silently falling back to SIFT.
-            </div>
-          </div>
-        )}
       </aside>
 
-      {/* ------------------------------------------------------------ main */}
+      {/* ------------------------------------------------------------- main */}
       <main className="main">
         <div className="topbar">
           <div>
-            <h2>{pair.name}</h2>
-            <div className="sub">{pair.short}</div>
+            <h2>
+              {mode === 'ohrc'
+                ? `OHRC ${shortTs(srcTs)} → ${shortTs(refTs)}`
+                : legacy?.name || '—'}
+            </h2>
+            <div className="sub">
+              {mode === 'ohrc'
+                ? win
+                  ? `window sample ${win.sample0}, line ${win.line0} · ${size} px · ${num(size * (srcP?.gsd_m || 0.24), 0)} m across`
+                  : 'select a candidate window'
+                : legacy?.short}
+            </div>
           </div>
           <div className="chips">
-            <span className="chip real">REAL: {pair.real_component?.slice(0, 60)}</span>
-            {pair.synthetic_component && pair.synthetic_component !== 'none' && (
-              <span className="chip synth">SYNTHETIC: {pair.synthetic_component.slice(0, 70)}</span>
+            {mode === 'ohrc' && <span className="chip real">REAL REPEAT-PASS OHRC</span>}
+            <span className={'chip ' + (hasGt ? 'real' : 'nogt')}>
+              {hasGt ? 'GROUND TRUTH KNOWN' : 'NO GROUND TRUTH EXISTS'}
+            </span>
+            {pairMeta?.d_azimuth_deg != null && (
+              <span className="chip sun">
+                Δaz {num(pairMeta.d_azimuth_deg, 1)}° · Δel {num(pairMeta.d_elevation_deg, 2)}°
+              </span>
             )}
-            <span className="chip">{hasGt ? 'GROUND TRUTH KNOWN' : 'NO GROUND TRUTH'}</span>
+            {m?.mask_is_synthetic_terrain && <span className="chip synth">SYNTHETIC TERRAIN</span>}
           </div>
         </div>
 
-        {/* inputs */}
+        {error && <div className="note bad" style={{ marginBottom: 14 }}>{error}</div>}
+
+        {/* ------------------------------------------- three-panel main view */}
         <div className="section">
-          <h3>Input</h3>
-          <div className="grid2">
+          <h3>Source · Reference · Registration</h3>
+          <div className="grid3">
             <Panel
               title="Source image"
-              meta={`${pair.source_shape[1]}×${pair.source_shape[0]} px · ${num(pair.gsd_source_m, 3)} m/px`}
-              caption={pair.sensor_source}
+              meta={mode === 'ohrc'
+                ? `${size}×${size} px · ${num(srcP?.gsd_m, 3)} m/px`
+                : `${pairMeta?.source_shape?.[1] || ''}×${pairMeta?.source_shape?.[0] || ''} px`}
+              caption={mode === 'ohrc'
+                ? `${niceTs(srcTs)} · orbit ${srcP?.imaging_orbit} · sun el ${num(pairMeta?.sun_source?.elevation_deg ?? srcP?.sun_elevation_deg, 3)}° az ${num(pairMeta?.sun_source?.azimuth_deg ?? srcP?.sun_azimuth_deg, 1)}°`
+                : legacy?.sensor_source}
             >
-              <img src={pairImageUrl(pair.id, 'source', 700)} alt="source" />
+              {mode === 'ohrc'
+                ? win
+                  ? <img src={api.pairPreviewUrl(srcTs, refTs, win.sample0, win.line0, size, 'source', useOffset)} alt="source" />
+                  : <div className="ph">no window selected</div>
+                : <img src={api.legacyPairImageUrl(legacyId, 'source')} alt="source" />}
             </Panel>
+
             <Panel
               title="Reference image"
-              meta={`${pair.reference_shape[1]}×${pair.reference_shape[0]} px · ${num(pair.gsd_reference_m, 3)} m/px`}
-              caption={pair.sensor_reference}
+              meta={mode === 'ohrc'
+                ? `${size}×${size} px · ${num(refP?.gsd_m, 3)} m/px`
+                : `${pairMeta?.reference_shape?.[1] || ''}×${pairMeta?.reference_shape?.[0] || ''} px`}
+              caption={mode === 'ohrc'
+                ? `${niceTs(refTs)} · orbit ${refP?.imaging_orbit} · sun el ${num(pairMeta?.sun_reference?.elevation_deg ?? refP?.sun_elevation_deg, 3)}° az ${num(pairMeta?.sun_reference?.azimuth_deg ?? refP?.sun_azimuth_deg, 1)}°`
+                : legacy?.sensor_reference}
             >
-              <img src={pairImageUrl(pair.id, 'reference', 700)} alt="reference" />
+              {mode === 'ohrc'
+                ? win
+                  ? <img src={api.pairPreviewUrl(srcTs, refTs, win.sample0, win.line0, size, 'reference', useOffset)} alt="reference" />
+                  : <div className="ph">no window selected</div>
+                : <img src={api.legacyPairImageUrl(legacyId, 'reference')} alt="reference" />}
+            </Panel>
+
+            <Panel
+              title="Registration result"
+              meta={res ? res.status.toUpperCase() : '—'}
+              caption={res
+                ? 'Reference in green, registered source in magenta. Grey means agreement; coloured fringes are residual misalignment. A display-only gain/bias match is applied so radiometry does not mask geometry.'
+                : 'run the pipeline to produce this'}
+            >
+              {res?.run_id && (res.available_images || []).includes('overlay')
+                ? <img src={api.imageUrl(res.run_id, 'overlay')} alt="overlay" />
+                : <div className="ph">{running ? 'running…' : 'no result yet'}</div>}
             </Panel>
           </div>
-          <div className="note" style={{ marginTop: 12 }}>
-            <strong>Footprint</strong> {num(pair.footprint_m, 0)} m across ·{' '}
-            {pair.geo?.center_lon_lat
-              ? `centre ${pair.geo.center_lon_lat[1].toFixed(4)}°, ${pair.geo.center_lon_lat[0].toFixed(4)}° (lat, lon)`
-              : pair.geo?.source
-                ? `source centre ${pair.geo.source.center_lon_lat[1].toFixed(4)}°, reference centre ${pair.geo.reference.center_lon_lat[1].toFixed(4)}° lat`
-                : ''}
-            {pair.separation_km != null && ` · ground separation ${pair.separation_km} km`}
-            <br />
-            Selenographic coordinates are interpolated from the geometry grid ISRO ships with the
-            product, not from a projection we invented.
-          </div>
         </div>
 
-        {error && <div className="err" style={{ marginBottom: 16 }}>{error}</div>}
+        {/* ------------------------------------------------ geometry / sun */}
+        {mode === 'ohrc' && (
+          <div className="section">
+            <h3>Geometry, illumination and the coarse offset</h3>
+            <div className="grid3">
+              <Panel title="Delivered geolocation">
+                <KV items={[
+                  ['source corners refined', String(srcP?.corners_refined)],
+                  ['reference corners refined', String(refP?.corners_refined)],
+                  ['reference data used', srcP?.reference_data_used],
+                  ['prior origin', pairMeta?.geometry_prior_origin ? 'measured' : '—'],
+                ]} />
+                <div className="caption">
+                  Both products report <code>reference_data_used = System</code> and their
+                  "refined" corners are byte-identical to the system-predicted ones — no
+                  photogrammetric refinement has been applied, so this geolocation is a
+                  prior, never truth.
+                </div>
+              </Panel>
 
-        {/* stages */}
+              <Panel title="Coarse offset between products"
+                     meta={align?.confident ? 'CONFIDENT' : align?.ok ? 'NOT CONFIDENT' : 'FAILED'}>
+                {align?.ok ? (
+                  <>
+                    <KV items={[
+                      ['offset', `${num(align.offset_m, 0)} m`],
+                      ['in source pixels', num(align.offset_px_source_gsd, 0)],
+                      ['components (x, y)', `${align.offset_stereo_m?.map((v) => num(v, 0)).join(', ')} m`],
+                      ['peak NCC', num(align.peak_ncc, 3)],
+                      ['runner-up', num(align.second_peak_ncc, 3)],
+                      ['margin', num(align.peak_margin, 3)],
+                      ['on', align.representation],
+                    ]} />
+                    <div className="caption">
+                      The two products' delivered geolocation disagrees by{' '}
+                      <strong>{num(align.offset_m, 0)} m</strong> — about{' '}
+                      {num(align.offset_px_source_gsd, 0)} pixels. Without correcting it a
+                      window and its geometry-predicted counterpart share almost no ground,
+                      and any matcher looks broken for the wrong reason.
+                    </div>
+                  </>
+                ) : (
+                  <div className="caption">{align?.reason || 'not measured'}</div>
+                )}
+              </Panel>
+
+              <Panel title="Illumination change">
+                <KV items={[
+                  ['source elevation', `${num(pairMeta?.sun_source?.elevation_deg ?? srcP?.sun_elevation_deg, 3)}°`],
+                  ['reference elevation', `${num(pairMeta?.sun_reference?.elevation_deg ?? refP?.sun_elevation_deg, 3)}°`],
+                  ['source azimuth', `${num(pairMeta?.sun_source?.azimuth_deg ?? srcP?.sun_azimuth_deg, 1)}°`],
+                  ['reference azimuth', `${num(pairMeta?.sun_reference?.azimuth_deg ?? refP?.sun_azimuth_deg, 1)}°`],
+                  ['Δ azimuth', pairMeta?.d_azimuth_deg != null ? `${num(pairMeta.d_azimuth_deg, 1)}°` : undefined],
+                  ['Δ elevation', pairMeta?.d_elevation_deg != null ? `${num(pairMeta.d_elevation_deg, 3)}°` : undefined],
+                ]} />
+                <div className="caption">
+                  Solar incidence is 89–91° throughout this archive. At these grazing
+                  elevations one metre of relief casts tens to hundreds of metres of shadow,
+                  so an azimuth change of this size moves cast shadows bodily rather than
+                  just rescaling brightness.
+                </div>
+              </Panel>
+            </div>
+          </div>
+        )}
+
+        {/* --------------------------------------------------------- stages */}
         <div className="section">
           <h3>Pipeline execution</h3>
-          <Stages stages={result?.stages} running={running} />
+          <Stages stages={res?.stages} running={running} />
         </div>
 
-        {result && m && (
+        {/* -------------------------------------------------------- results */}
+        {res && m && (
           <>
             <div className="section">
-              <h3>Results</h3>
+              <h3>Diagnostics</h3>
               <ImageTabs
-                runId={result.run_id}
+                runId={res.run_id}
                 tabs={[
                   {
-                    key: 'candidates',
-                    label: `1 · Candidate matches (${m.candidate_matches})`,
-                    caption:
-                      'Every correspondence surviving descriptor matching, before any geometric reasoning. ' +
-                      'Shown on the preprocessed images the matcher actually saw.',
+                    key: 'mask', label: '1 · Usability mask',
+                    available: (res.available_images || []).includes('mask'),
+                    caption: `Regions judged unmatchable are tinted. Source: ${m.mask_source}. ` +
+                      `${pct(m.usable_fraction)} of the window was kept.` +
+                      (m.mask_is_prediction
+                        ? ' This mask is a PREDICTION from a terrain model.'
+                        : ' This mask is MEASURED from the image itself — no terrain model involved.'),
                   },
                   {
-                    key: 'verified',
-                    label: `2 · Verified (${m.inliers} in / ${m.outliers_rejected} out)`,
-                    caption:
-                      'The robust estimator splits the candidates into a geometrically self-consistent set and the rest.',
+                    key: 'candidates', label: `2 · Candidates (${m.candidate_matches})`,
+                    available: (res.available_images || []).includes('candidates'),
+                    caption: 'Correspondences surviving descriptor matching, before any geometric reasoning.' +
+                      (m.dropped_by_mask ? ` ${m.dropped_by_mask} were dropped as unmatchable.` : ''),
+                  },
+                  {
+                    key: 'verified', label: `3 · Verified (${m.inliers} in / ${m.outliers_rejected} out)`,
+                    available: (res.available_images || []).includes('verified'),
+                    caption: 'The robust estimator splits candidates into a geometrically self-consistent set and the rest.',
                     legend: (
                       <>
-                        <span><i style={{ background: 'var(--good)' }} />inlier</span>
-                        <span><i style={{ background: 'var(--bad)' }} />rejected outlier</span>
+                        <span><i style={{ background: 'var(--accepted)' }} />inlier</span>
+                        <span><i style={{ background: 'var(--refused)' }} />rejected outlier</span>
                       </>
                     ),
                   },
                   {
-                    key: 'spatial_before',
-                    label: '3a · Ranked by confidence',
-                    caption:
-                      `The ${m.selected_matches} highest-confidence inliers, with no spatial constraint. ` +
-                      `They occupy ${pct(m.spatial_coverage_before)} of the grid cells — the clustering this stage exists to fix.`,
+                    key: 'select_before', label: '4a · Ranked by confidence',
+                    available: (res.available_images || []).includes('select_before'),
+                    caption: `The same budget of matches chosen by confidence alone, reaching ` +
+                      `${pct(m.spatial_coverage_before)} of the ${m.matchable_cells} matchable cells.`,
                   },
                   {
-                    key: 'spatial_after',
-                    label: '3b · Spatially selected',
-                    caption:
-                      `The same budget of ${m.selected_matches} matches chosen under a grid quota and a minimum separation, ` +
-                      `reaching ${pct(m.spatial_coverage)} cell coverage.`,
+                    key: 'select_after', label: '4b · Selected',
+                    available: (res.available_images || []).includes('select_after'),
+                    caption: `The set the pipeline used, reaching ${pct(m.spatial_coverage)} of the ` +
+                      `${m.matchable_cells} matchable cells (${pct(m.spatial_coverage_whole_window)} of the whole window). ` +
+                      'Cells with nothing matchable in them are excluded from the denominator, otherwise a good ' +
+                      'registration over shadowed terrain would be penalised for the wrong reason.',
                   },
                   {
-                    key: 'overlay',
-                    label: '4 · Registered overlay',
-                    caption:
-                      'Reference in green, registered source in magenta. Grey means the two agree; coloured fringes are residual misalignment. ' +
-                      'A single global gain and bias is fitted to the warped image for display only, so the radiometric difference between the two products does not mask the geometry — no metric uses it.',
+                    key: 'checker', label: '5 · Checkerboard',
+                    available: (res.available_images || []).includes('checker'),
+                    caption: 'Alternating tiles from each image. Crater rims should run straight across every seam.',
                   },
                   {
-                    key: 'checker',
-                    label: '4b · Checkerboard',
-                    caption:
-                      'Alternating tiles from each image. Crater rims and ridges should run straight across every seam.',
+                    key: 'difference', label: '6 · Difference',
+                    available: (res.available_images || []).includes('difference'),
+                    caption: 'Absolute difference inside the overlap after a display-only gain/bias match. ' +
+                      'Residual structure is geometric error plus any radiometric difference a global gain cannot absorb.',
                   },
                   {
-                    key: 'difference',
-                    label: '4c · Difference',
-                    caption:
-                      'Absolute difference inside the overlap, contrast-stretched, after the same display-only gain/bias match. ' +
-                      'Remaining structure is geometric residual plus any radiometric difference a global gain and bias cannot absorb.',
-                  },
-                  {
-                    key: 'footprint',
-                    label: '4d · Footprint',
+                    key: 'footprint', label: '7 · Footprint',
+                    available: (res.available_images || []).includes('footprint'),
                     caption: 'Where the source lands in the reference frame under the estimated transform.',
                   },
                 ]}
@@ -354,141 +520,138 @@ export default function App() {
             </div>
 
             <div className="section">
-              <h3>Metrics — computed from this run</h3>
+              <h3>Metrics — computed by this run</h3>
               <div className="metrics">
-                <Metric label="Candidate matches" value={m.candidate_matches} />
+                <Metric label="Candidates" value={m.candidate_matches}
+                        sub={m.candidates_before_mask != null
+                          ? `${m.candidates_before_mask} before masking` : null} />
                 <Metric label="Inliers" value={m.inliers} tone="good" />
                 <Metric label="Outliers rejected" value={m.outliers_rejected} tone="bad" />
-                <Metric
-                  label="Inlier ratio"
-                  value={pct(m.inlier_ratio)}
-                  tone={m.inlier_ratio > 0.5 ? 'good' : m.inlier_ratio > 0.15 ? 'warn' : 'bad'}
-                />
-                <Metric label="Retained matches" value={m.selected_matches} sub="after spatial selection" />
-                <Metric
-                  label="Reprojection RMSE"
-                  value={num(m.reprojection.rmse_px)}
-                  unit="px"
-                  sub={
-                    m.reprojection.rmse_m != null
-                      ? `${num(m.reprojection.rmse_m)} m · self-consistency only`
-                      : 'self-consistency only'
-                  }
-                />
-                <Metric
-                  label="Spatial coverage"
-                  value={pct(m.spatial_coverage)}
-                  sub={`vs ${pct(m.spatial_coverage_before)} by confidence alone`}
-                  tone={m.spatial_coverage > 0.6 ? 'good' : 'warn'}
-                />
-                <Metric
-                  label="Overlap NCC"
-                  value={num(m.ncc_after, 3)}
-                  sub={`before registration: ${num(m.ncc_before, 3)}`}
-                  tone={m.ncc_after > 0.7 ? 'good' : 'warn'}
-                />
-                <Metric label="Runtime" value={num(m.runtime_total_s, 2)} unit="s" />
+                <Metric label="Inlier ratio" value={pct(m.inlier_ratio)}
+                        tone={m.inlier_ratio > 0.5 ? 'good' : m.inlier_ratio > 0.15 ? 'warn' : 'bad'} />
+                <Metric label="Retained" value={m.selected_matches} sub="after selection" />
+                <Metric label="Reprojection RMSE" value={num(m.reprojection?.rmse_px)} unit="px"
+                        sub="self-consistency, not accuracy" />
+                <Metric label="Held-out RMSE" value={num(m.heldout?.rmse_px)} unit="px"
+                        sub={`${m.heldout_count || 0} points excluded from the fit`}
+                        tone={m.heldout?.rmse_px == null ? undefined
+                          : m.heldout.rmse_px < 3 ? 'good' : m.heldout.rmse_px < 6 ? 'warn' : 'bad'} />
                 {hasGt && gt?.corner_error_px != null ? (
-                  <>
-                    <Metric
-                      label="GT corner error"
-                      value={num(gt.corner_error_px)}
-                      unit="px"
-                      sub={gt.corner_error_m != null ? `${num(gt.corner_error_m)} m on the ground` : null}
-                      tone="good"
-                    />
-                    <Metric label="GT RMSE" value={num(gt.gt_rmse_px)} unit="px" tone="good" />
-                  </>
+                  <Metric label="Ground-truth error" value={num(gt.corner_error_px)} unit="px"
+                          sub={gt.corner_error_m != null ? `${num(gt.corner_error_m)} m` : null}
+                          tone="good" />
                 ) : (
-                  <Metric label="Ground truth" value="none" sub="no absolute accuracy figure for this pair" />
+                  <Metric label="Ground-truth error" value="none exists" tone="nogt"
+                          sub="both windows are real acquisitions" />
                 )}
+                <Metric label="vs delivered geometry"
+                        value={num(dis?.corner_disagreement_m, 0)} unit="m"
+                        sub="independent check, not truth" />
+                <Metric label="Matchable area" value={pct(m.usable_fraction)}
+                        sub={m.mask_source} />
+                <Metric label="Coverage" value={pct(m.spatial_coverage)}
+                        sub={`of ${m.matchable_cells} matchable cells · by confidence ${pct(m.spatial_coverage_before)}`}
+                        tone={m.spatial_coverage > 0.6 ? 'good' : 'warn'} />
+                <Metric label="Frame overlap" value={pct(m.overlap_fraction, 0)}
+                        sub="warped source over the reference frame"
+                        tone={m.overlap_fraction == null ? undefined
+                          : m.overlap_fraction >= 0.5 ? 'good' : 'warn'} />
+                <Metric label="Overlap NCC" value={num(m.ncc_after, 3)}
+                        sub={`before: ${num(m.ncc_before, 3)}`}
+                        tone={m.ncc_after > 0.7 ? 'good' : 'warn'} />
+                <Metric label="Runtime" value={num(m.runtime_total_s, 2)} unit="s" />
               </div>
-              <div className="note" style={{ marginTop: 12 }}>
-                <strong>Reading these numbers.</strong> Reprojection RMSE measures whether the retained
-                correspondences agree with the fitted model. It can be small for a model that is
-                completely wrong, so it is not a registration accuracy figure.
-                {hasGt
-                  ? ' The GT rows compare the estimated transform against the transform used to build this pair, and are the accuracy figure.'
-                  : ' This pair has no known transform, so no absolute accuracy can be reported at all.'}
+              <div className="note" style={{ marginTop: 11 }}>
+                <strong>Four different error concepts, never merged.</strong>{' '}
+                <em>Reprojection RMSE</em> says the retained correspondences agree with the
+                fitted model — a wrong model can score well. <em>Held-out RMSE</em> evaluates
+                the fit on points it never saw, so it tests generalisation.{' '}
+                <em>Ground-truth error</em> exists only where a correct transform is known by
+                construction{hasGt ? '' : ', which is not the case for this pair'}.{' '}
+                <em>Disagreement with the delivered geometry</em> compares against ISRO's
+                system-level geolocation, itself only accurate to metres-to-decametres.
               </div>
             </div>
 
             <div className="section">
-              <h3>Verdict</h3>
-              <Verdict verdict={result.verdict} warnings={result.warnings} />
+              <h3>Decision</h3>
+              <Verdict status={res.status} reasons={res.reasons} confidence={res.confidence}
+                       warnings={res.warnings} calibrated={cfg.thresholds_calibrated} />
             </div>
           </>
         )}
 
+        {/* ------------------------------------------------------ ablation */}
         {cmp && (
           <div className="section">
-            <h3>Matcher comparison — every row is a real run on this pair</h3>
+            <h3>Ablation — every row is a real run on this pair</h3>
             <div className="panel">
               <div className="panel-body" style={{ overflowX: 'auto' }}>
                 <table className="data">
                   <thead>
                     <tr>
-                      <th>Configuration</th>
-                      <th>Candidates</th>
-                      <th>Inliers</th>
-                      <th>Inlier ratio</th>
-                      <th>Retained</th>
-                      <th>Reproj RMSE</th>
-                      <th>GT error</th>
-                      <th>Coverage</th>
-                      <th>Runtime</th>
-                      <th>Verdict</th>
+                      <th>Arm</th><th>Configuration</th><th>Cand.</th><th>Inliers</th>
+                      <th>Ratio</th><th>Retained</th><th>Reproj RMSE</th><th>Held-out</th>
+                      <th>GT error</th><th>Coverage</th><th>Matchable</th><th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {cmp.rows.map((r, i) => (
                       <tr key={i}>
+                        <td>{r.code}</td>
                         <td>{r.label}</td>
                         {r.metrics ? (
                           <>
                             <td>{r.metrics.candidate_matches}</td>
                             <td>{r.metrics.inliers}</td>
-                            <td>{pct(r.metrics.inlier_ratio)}</td>
+                            <td>{pct(r.metrics.inlier_ratio, 0)}</td>
                             <td>{r.metrics.selected_matches}</td>
-                            <td>{num(r.metrics.reprojection.rmse_px)}</td>
-                            <td>{num(r.metrics.ground_truth?.corner_error_px)}</td>
-                            <td>{pct(r.metrics.spatial_coverage)}</td>
-                            <td>{num(r.metrics.runtime_total_s, 2)} s</td>
-                            <td style={{ color: r.verdict?.registered ? 'var(--good)' : 'var(--bad)' }}>
-                              {r.verdict?.registered ? 'accepted' : 'rejected'}
-                            </td>
+                            <td>{num(r.metrics.reprojection?.rmse_px)}</td>
+                            <td>{num(r.metrics.heldout?.rmse_px)}</td>
+                            <td>{r.metrics.ground_truth?.corner_error_px != null
+                              ? num(r.metrics.ground_truth.corner_error_px) : 'none'}</td>
+                            <td>{pct(r.metrics.spatial_coverage, 0)}</td>
+                            <td>{pct(r.metrics.usable_fraction, 0)}</td>
+                            <td className={'st-' + r.status}>{r.status}</td>
                           </>
                         ) : (
-                          <td colSpan={9} className="err">{r.error}</td>
+                          <td colSpan={10} className="err">{r.error}</td>
                         )}
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 <div className="caption">
-                  Configurations that fail are shown failing. A matcher that is not installed reports
-                  the import error rather than being quietly replaced.
+                  Arm E (observed usability mask, no DEM) is the <strong>control</strong> for
+                  arms F and G. Excluding dark pixels helps a matcher whether or not a shadow
+                  <em> prediction</em> was any good, so a predicted mask that does not beat the
+                  observed mask has demonstrated nothing. Where a synthetic terrain model was
+                  used, the row is not evidence about the real surface.
                 </div>
               </div>
             </div>
           </div>
         )}
 
+        {/* -------------------------------------------------------- pipeline */}
         <div className="section">
-          <h3>Pipeline</h3>
-          <Flow result={result} />
+          <h3>Architecture</h3>
+          <Flow options={res?.options || effective}
+                maskSummary={{ is_synthetic_terrain: m?.mask_is_synthetic_terrain }} />
         </div>
 
         <div className="section">
           <h3>Scope</h3>
           <div className="note">
-            Seleno is a proof of concept. It does not claim sub-pixel geodetic accuracy,
-            state-of-the-art performance, a novel architecture, or any validation by ISRO.
-            Feature matching on lunar data is established work — see RESEARCH.md, in particular
-            Makharia et al. (2025), which benchmarks SIFT, ASIFT, AKAZE, RIFT2 and SuperGlue on
-            Chandrayaan-2 data. What this prototype demonstrates is the engineering path: measured
-            preprocessing, geometric verification, spatially distributed selection, and metrics that
-            distinguish self-consistency from accuracy. IIRS cross-modal matching is not implemented.
+            Seleno is a proof of concept. The proposed contribution — using delivered Sun
+            geometry and a coarse terrain model to predict which regions cannot be matched,
+            then refusing registration on calibrated evidence — is <strong>implemented but
+            not yet validated</strong>. No digital elevation model ships with this repository,
+            so predicted-shadow results come from a synthetic terrain model and are labelled
+            as such. The decision thresholds are hand-picked, not calibrated, and no
+            precision/recall for the refusal decision has been measured. Matcher choice is not
+            claimed as a contribution: SIFT/AKAZE/ORB comparisons on Chandrayaan-2 data are
+            established work (see RESEARCH.md). IIRS cross-modal matching is not implemented.
           </div>
         </div>
       </main>
