@@ -1,0 +1,1411 @@
+{
+ "generated": "2026-09-18T10:30:18",
+ "dem": "ldem_875s_5m.lbl",
+ "tile": "P892S2250",
+ "coarse_res_m": 32.011,
+ "fine_res_m": 8.0,
+ "sub_solar_lat_deg": -1.5,
+ "reference_control": [
+  {
+   "bin": "045",
+   "dx": -32.0,
+   "dy": 0.0,
+   "magnitude_m": 32.0,
+   "margin": 0.1581,
+   "lit_fraction": 0.144,
+   "shadow_mask_correlation": 0.826,
+   "locked": true
+  },
+  {
+   "bin": "115",
+   "dx": 0.0,
+   "dy": 0.0,
+   "magnitude_m": 0.0,
+   "margin": 0.1279,
+   "lit_fraction": 0.256,
+   "shadow_mask_correlation": 0.701,
+   "locked": true
+  },
+  {
+   "bin": "355",
+   "dx": 32.0,
+   "dy": 0.0,
+   "magnitude_m": 32.0,
+   "margin": 0.0287,
+   "lit_fraction": 0.127,
+   "shadow_mask_correlation": 0.527,
+   "locked": true
+  }
+ ],
+ "strips": {
+  "20211228T2209": {
+   "product": "20211228T2209",
+   "sub_solar_lon_deg": 115.57,
+   "bin": "115",
+   "coarse_res_m": 32.003,
+   "coarse_search_m": 8000.0,
+   "ohrc_usable_fraction": 0.05,
+   "arms": {
+    "direct_nac": {
+     "coarse": {
+      "agree": false,
+      "n": 2,
+      "n_in_cluster": 1,
+      "families_in_cluster": [
+       "ncc"
+      ],
+      "consensus_dx": 1184.1,
+      "consensus_dy": 7392.8,
+      "consensus_magnitude_m": 7487.0,
+      "consensus_bearing_deg": 80.9,
+      "cluster_spread_m": 0.0,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        1184.1,
+        7392.8
+       ]
+      },
+      "outliers": {
+       "ncc[raw]": [
+        6528.7,
+        3360.4
+       ]
+      },
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)"
+       },
+       {
+        "method": "sift[raw]",
+        "reason": "too few mutual matches"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "too few mutual matches"
+       },
+       {
+        "method": "akaze[raw]",
+        "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": 1184.1,
+        "dy": 7392.8,
+        "magnitude_m": 7487.0,
+        "bearing_deg": 80.9,
+        "detail": {
+         "peak": 0.2635,
+         "second": 0.2483,
+         "margin": 0.0152,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": 6528.7,
+        "dy": 3360.4,
+        "magnitude_m": 7342.8,
+        "bearing_deg": 27.2,
+        "detail": {
+         "peak": 0.3497,
+         "second": 0.3488,
+         "margin": 0.0009,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 9
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "too few mutual matches",
+         "mutual": 3,
+         "n_src": 103,
+         "n_ref": 3686
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "too few mutual matches",
+         "mutual": 3,
+         "n_src": 152,
+         "n_ref": 6083
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 9
+        }
+       }
+      ]
+     }
+    },
+    "dem_relight": {
+     "coarse": {
+      "agree": false,
+      "n": 2,
+      "n_in_cluster": 1,
+      "families_in_cluster": [
+       "ncc"
+      ],
+      "consensus_dx": 2880.3,
+      "consensus_dy": -1344.1,
+      "consensus_magnitude_m": 3178.5,
+      "consensus_bearing_deg": 335.0,
+      "cluster_spread_m": 0.0,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        2880.3,
+        -1344.1
+       ]
+      },
+      "outliers": {
+       "ncc[raw]": [
+        1984.2,
+        -6848.7
+       ]
+      },
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (1 votes of 5, need >=4 and >=12%)"
+       },
+       {
+        "method": "sift[raw]",
+        "reason": "too few mutual matches"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "too few mutual matches"
+       },
+       {
+        "method": "akaze[raw]",
+        "reason": "peak too weak (1 votes of 8, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": 2880.3,
+        "dy": -1344.1,
+        "magnitude_m": 3178.5,
+        "bearing_deg": 335.0,
+        "detail": {
+         "peak": 0.3196,
+         "second": 0.3014,
+         "margin": 0.0182,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": 1984.2,
+        "dy": -6848.7,
+        "magnitude_m": 7130.4,
+        "bearing_deg": 286.2,
+        "detail": {
+         "peak": 0.4953,
+         "second": 0.4665,
+         "margin": 0.0288,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 5, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 5
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "too few mutual matches",
+         "mutual": 1,
+         "n_src": 103,
+         "n_ref": 1169
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "too few mutual matches",
+         "mutual": 2,
+         "n_src": 152,
+         "n_ref": 1357
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 8, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 8
+        }
+       }
+      ]
+     }
+    }
+   },
+   "runtime_s": 12.3
+  },
+  "20241115T1326": {
+   "product": "20241115T1326",
+   "sub_solar_lon_deg": 357.19,
+   "bin": "355",
+   "coarse_res_m": 31.995,
+   "coarse_search_m": 8000.0,
+   "ohrc_usable_fraction": 0.066,
+   "arms": {
+    "direct_nac": {
+     "coarse": {
+      "agree": true,
+      "n": 4,
+      "n_in_cluster": 4,
+      "families_in_cluster": [
+       "akaze",
+       "ncc",
+       "sift"
+      ],
+      "consensus_dx": -2526.5,
+      "consensus_dy": -3798.4,
+      "consensus_magnitude_m": 4561.9,
+      "consensus_bearing_deg": 236.4,
+      "cluster_spread_m": 51.4,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        -2495.6,
+        -3839.4
+       ],
+       "ncc[raw]": [
+        -2527.6,
+        -3775.5
+       ],
+       "sift[raw]": [
+        -2526.0,
+        -3788.2
+       ],
+       "akaze[raw]": [
+        -2556.9,
+        -3790.5
+       ]
+      },
+      "outliers": {},
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (2 votes of 19, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "peak too weak (2 votes of 15, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": -2495.6,
+        "dy": -3839.4,
+        "magnitude_m": 4579.2,
+        "bearing_deg": 237.0,
+        "detail": {
+         "peak": 0.4299,
+         "second": 0.3162,
+         "margin": 0.1137,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": -2527.6,
+        "dy": -3775.5,
+        "magnitude_m": 4543.5,
+        "bearing_deg": 236.2,
+        "detail": {
+         "peak": 0.7739,
+         "second": 0.7312,
+         "margin": 0.0427,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (2 votes of 19, need >=4 and >=12%)",
+         "votes": 2,
+         "mutual": 19
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": -2526.0,
+        "dy": -3788.2,
+        "magnitude_m": 4553.1,
+        "bearing_deg": 236.3,
+        "detail": {
+         "votes": 11,
+         "mutual": 15,
+         "expected_by_chance": 0.03,
+         "significance": 356.82,
+         "scatter_m": 47.2,
+         "n_src": 135,
+         "n_ref": 1853,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (2 votes of 15, need >=4 and >=12%)",
+         "votes": 2,
+         "mutual": 15
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": -2556.9,
+        "dy": -3790.5,
+        "magnitude_m": 4572.3,
+        "bearing_deg": 236.0,
+        "detail": {
+         "votes": 18,
+         "mutual": 25,
+         "expected_by_chance": 0.06,
+         "significance": 291.65,
+         "scatter_m": 86.3,
+         "n_src": 182,
+         "n_ref": 1593,
+         "representation": "raw"
+        }
+       }
+      ]
+     },
+     "fine": {
+      "agree": true,
+      "n": 5,
+      "n_in_cluster": 5,
+      "families_in_cluster": [
+       "akaze",
+       "ncc",
+       "sift"
+      ],
+      "consensus_dx": -23.6,
+      "consensus_dy": 36.3,
+      "consensus_magnitude_m": 43.3,
+      "consensus_bearing_deg": 123.1,
+      "cluster_spread_m": 44.3,
+      "tol_m": 150.0,
+      "cluster": {
+       "ncc[grad]": [
+        -24.0,
+        -8.0
+       ],
+       "ncc[raw]": [
+        -8.0,
+        56.0
+       ],
+       "sift[raw]": [
+        -26.0,
+        64.6
+       ],
+       "akaze[grad]": [
+        -32.0,
+        9.0
+       ],
+       "akaze[raw]": [
+        -28.0,
+        59.6
+       ]
+      },
+      "outliers": {},
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (10 votes of 102, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": -24.0,
+        "dy": -8.0,
+        "magnitude_m": 25.3,
+        "bearing_deg": 198.4,
+        "detail": {
+         "peak": 0.2295,
+         "second": 0.2082,
+         "margin": 0.0212,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": -8.0,
+        "dy": 56.0,
+        "magnitude_m": 56.6,
+        "bearing_deg": 98.1,
+        "detail": {
+         "peak": 0.6879,
+         "second": 0.6846,
+         "margin": 0.0033,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (10 votes of 102, need >=4 and >=12%)",
+         "votes": 10,
+         "mutual": 102
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": -26.0,
+        "dy": 64.6,
+        "magnitude_m": 69.7,
+        "bearing_deg": 111.9,
+        "detail": {
+         "votes": 84,
+         "mutual": 137,
+         "expected_by_chance": 0.14,
+         "significance": 585.13,
+         "scatter_m": 51.9,
+         "n_src": 1870,
+         "n_ref": 3797,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": -32.0,
+        "dy": 9.0,
+        "magnitude_m": 33.3,
+        "bearing_deg": 164.3,
+        "detail": {
+         "votes": 72,
+         "mutual": 131,
+         "expected_by_chance": 0.08,
+         "significance": 852.53,
+         "scatter_m": 43.2,
+         "n_src": 2941,
+         "n_ref": 5111,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": -28.0,
+        "dy": 59.6,
+        "magnitude_m": 65.9,
+        "bearing_deg": 115.2,
+        "detail": {
+         "votes": 181,
+         "mutual": 274,
+         "expected_by_chance": 0.26,
+         "significance": 704.91,
+         "scatter_m": 55.1,
+         "n_src": 1500,
+         "n_ref": 2270,
+         "representation": "raw"
+        }
+       }
+      ],
+      "fine_res_m": 8.0,
+      "fine_box_m": 4096.0,
+      "fine_search_m": 600.0,
+      "box_centre": [
+       -4392.6,
+       -5139.7
+      ],
+      "total_dx": -2550.1,
+      "total_dy": -3762.1
+     }
+    },
+    "dem_relight": {
+     "coarse": {
+      "agree": false,
+      "n": 2,
+      "n_in_cluster": 1,
+      "families_in_cluster": [
+       "ncc"
+      ],
+      "consensus_dx": 160.0,
+      "consensus_dy": -2815.6,
+      "consensus_magnitude_m": 2820.1,
+      "consensus_bearing_deg": 273.3,
+      "cluster_spread_m": 0.0,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        160.0,
+        -2815.6
+       ]
+      },
+      "outliers": {
+       "ncc[raw]": [
+        -2559.6,
+        -3711.5
+       ]
+      },
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (1 votes of 8, need >=4 and >=12%)"
+       },
+       {
+        "method": "sift[raw]",
+        "reason": "peak too weak (2 votes of 7, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[raw]",
+        "reason": "peak too weak (2 votes of 12, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": 160.0,
+        "dy": -2815.6,
+        "magnitude_m": 2820.1,
+        "bearing_deg": 273.3,
+        "detail": {
+         "peak": 0.2062,
+         "second": 0.2007,
+         "margin": 0.0054,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": -2559.6,
+        "dy": -3711.5,
+        "magnitude_m": 4508.5,
+        "bearing_deg": 235.4,
+        "detail": {
+         "peak": 0.8126,
+         "second": 0.792,
+         "margin": 0.0206,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 8, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 8
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (2 votes of 7, need >=4 and >=12%)",
+         "votes": 2,
+         "mutual": 7
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 13
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (2 votes of 12, need >=4 and >=12%)",
+         "votes": 2,
+         "mutual": 12
+        }
+       }
+      ]
+     }
+    }
+   },
+   "runtime_s": 17.5
+  },
+  "20241115T1525": {
+   "product": "20241115T1525",
+   "sub_solar_lon_deg": 358.31,
+   "bin": "355",
+   "coarse_res_m": 31.987,
+   "coarse_search_m": 8000.0,
+   "ohrc_usable_fraction": 0.0698,
+   "arms": {
+    "direct_nac": {
+     "coarse": {
+      "agree": true,
+      "n": 4,
+      "n_in_cluster": 4,
+      "families_in_cluster": [
+       "akaze",
+       "ncc",
+       "sift"
+      ],
+      "consensus_dx": -1950.3,
+      "consensus_dy": -3402.2,
+      "consensus_magnitude_m": 3921.6,
+      "consensus_bearing_deg": 240.2,
+      "cluster_spread_m": 37.1,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        -1919.2,
+        -3422.6
+       ],
+       "ncc[raw]": [
+        -1983.2,
+        -3390.6
+       ],
+       "sift[raw]": [
+        -1952.5,
+        -3397.3
+       ],
+       "akaze[raw]": [
+        -1946.1,
+        -3398.5
+       ]
+      },
+      "outliers": {},
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": -1919.2,
+        "dy": -3422.6,
+        "magnitude_m": 3924.0,
+        "bearing_deg": 240.7,
+        "detail": {
+         "peak": 0.514,
+         "second": 0.3587,
+         "margin": 0.1554,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": -1983.2,
+        "dy": -3390.6,
+        "magnitude_m": 3928.0,
+        "bearing_deg": 239.7,
+        "detail": {
+         "peak": 0.8166,
+         "second": 0.7471,
+         "margin": 0.0694,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 9
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": -1952.5,
+        "dy": -3397.3,
+        "magnitude_m": 3918.4,
+        "bearing_deg": 240.1,
+        "detail": {
+         "votes": 13,
+         "mutual": 21,
+         "expected_by_chance": 0.05,
+         "significance": 284.56,
+         "scatter_m": 70.2,
+         "n_src": 184,
+         "n_ref": 1851,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 13
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": -1946.1,
+        "dy": -3398.5,
+        "magnitude_m": 3916.2,
+        "bearing_deg": 240.2,
+        "detail": {
+         "votes": 24,
+         "mutual": 35,
+         "expected_by_chance": 0.05,
+         "significance": 463.6,
+         "scatter_m": 76.7,
+         "n_src": 211,
+         "n_ref": 1591,
+         "representation": "raw"
+        }
+       }
+      ]
+     },
+     "fine": {
+      "agree": true,
+      "n": 5,
+      "n_in_cluster": 5,
+      "families_in_cluster": [
+       "akaze",
+       "ncc",
+       "sift"
+      ],
+      "consensus_dx": -99.3,
+      "consensus_dy": 10.4,
+      "consensus_magnitude_m": 99.8,
+      "consensus_bearing_deg": 174.0,
+      "cluster_spread_m": 26.5,
+      "tol_m": 150.0,
+      "cluster": {
+       "ncc[grad]": [
+        -96.0,
+        8.0
+       ],
+       "ncc[raw]": [
+        -88.0,
+        8.0
+       ],
+       "sift[raw]": [
+        -117.3,
+        14.3
+       ],
+       "akaze[grad]": [
+        -73.0,
+        6.8
+       ],
+       "akaze[raw]": [
+        -122.0,
+        14.9
+       ]
+      },
+      "outliers": {},
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (9 votes of 89, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": -96.0,
+        "dy": 8.0,
+        "magnitude_m": 96.3,
+        "bearing_deg": 175.2,
+        "detail": {
+         "peak": 0.2276,
+         "second": 0.2211,
+         "margin": 0.0065,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": -88.0,
+        "dy": 8.0,
+        "magnitude_m": 88.4,
+        "bearing_deg": 174.8,
+        "detail": {
+         "peak": 0.7079,
+         "second": 0.7038,
+         "margin": 0.0041,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (9 votes of 89, need >=4 and >=12%)",
+         "votes": 9,
+         "mutual": 89
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": -117.3,
+        "dy": 14.3,
+        "magnitude_m": 118.2,
+        "bearing_deg": 173.0,
+        "detail": {
+         "votes": 107,
+         "mutual": 152,
+         "expected_by_chance": 0.11,
+         "significance": 930.76,
+         "scatter_m": 50.6,
+         "n_src": 2042,
+         "n_ref": 3722,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": -73.0,
+        "dy": 6.8,
+        "magnitude_m": 73.3,
+        "bearing_deg": 174.7,
+        "detail": {
+         "votes": 40,
+         "mutual": 102,
+         "expected_by_chance": 0.06,
+         "significance": 639.69,
+         "scatter_m": 44.9,
+         "n_src": 3023,
+         "n_ref": 5029,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": -122.0,
+        "dy": 14.9,
+        "magnitude_m": 122.9,
+        "bearing_deg": 173.0,
+        "detail": {
+         "votes": 195,
+         "mutual": 286,
+         "expected_by_chance": 0.4,
+         "significance": 484.11,
+         "scatter_m": 55.8,
+         "n_src": 1470,
+         "n_ref": 2281,
+         "representation": "raw"
+        }
+       }
+      ],
+      "fine_res_m": 8.0,
+      "fine_box_m": 4096.0,
+      "fine_search_m": 600.0,
+      "box_centre": [
+       -4903.9,
+       -5309.9
+      ],
+      "total_dx": -2049.6,
+      "total_dy": -3391.8
+     }
+    },
+    "dem_relight": {
+     "coarse": {
+      "agree": false,
+      "n": 2,
+      "n_in_cluster": 1,
+      "families_in_cluster": [
+       "ncc"
+      ],
+      "consensus_dx": 831.7,
+      "consensus_dy": -2335.0,
+      "consensus_magnitude_m": 2478.7,
+      "consensus_bearing_deg": 289.6,
+      "cluster_spread_m": 0.0,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        831.7,
+        -2335.0
+       ]
+      },
+      "outliers": {
+       "ncc[raw]": [
+        -2047.2,
+        -3358.6
+       ]
+      },
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)"
+       },
+       {
+        "method": "sift[raw]",
+        "reason": "peak too weak (2 votes of 10, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "peak too weak (1 votes of 5, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[raw]",
+        "reason": "peak too weak (1 votes of 8, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": 831.7,
+        "dy": -2335.0,
+        "magnitude_m": 2478.7,
+        "bearing_deg": 289.6,
+        "detail": {
+         "peak": 0.2719,
+         "second": 0.2672,
+         "margin": 0.0047,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": -2047.2,
+        "dy": -3358.6,
+        "magnitude_m": 3933.4,
+        "bearing_deg": 238.6,
+        "detail": {
+         "peak": 0.83,
+         "second": 0.7971,
+         "margin": 0.0329,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 9, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 9
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (2 votes of 10, need >=4 and >=12%)",
+         "votes": 2,
+         "mutual": 10
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 5, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 5
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 8, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 8
+        }
+       }
+      ]
+     }
+    }
+   },
+   "runtime_s": 151.6
+  },
+  "20251010T0942": {
+   "product": "20251010T0942",
+   "sub_solar_lon_deg": 42.88,
+   "bin": "045",
+   "coarse_res_m": 32.022,
+   "coarse_search_m": 8000.0,
+   "ohrc_usable_fraction": 0.0965,
+   "arms": {
+    "direct_nac": {
+     "coarse": {
+      "agree": false,
+      "n": 2,
+      "n_in_cluster": 1,
+      "families_in_cluster": [
+       "ncc"
+      ],
+      "consensus_dx": -1409.0,
+      "consensus_dy": -3906.7,
+      "consensus_magnitude_m": 4153.0,
+      "consensus_bearing_deg": 250.2,
+      "cluster_spread_m": 0.0,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        -1409.0,
+        -3906.7
+       ]
+      },
+      "outliers": {
+       "ncc[raw]": [
+        6884.8,
+        -3298.3
+       ]
+      },
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (1 votes of 15, need >=4 and >=12%)"
+       },
+       {
+        "method": "sift[raw]",
+        "reason": "peak too weak (1 votes of 6, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[raw]",
+        "reason": "peak too weak (2 votes of 11, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": -1409.0,
+        "dy": -3906.7,
+        "magnitude_m": 4153.0,
+        "bearing_deg": 250.2,
+        "detail": {
+         "peak": 0.2548,
+         "second": 0.2367,
+         "margin": 0.0181,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": 6884.8,
+        "dy": -3298.3,
+        "magnitude_m": 7634.1,
+        "bearing_deg": 334.4,
+        "detail": {
+         "peak": 0.5399,
+         "second": 0.5319,
+         "margin": 0.008,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 15, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 15
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 6, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 6
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 13
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (2 votes of 11, need >=4 and >=12%)",
+         "votes": 2,
+         "mutual": 11
+        }
+       }
+      ]
+     }
+    },
+    "dem_relight": {
+     "coarse": {
+      "agree": false,
+      "n": 2,
+      "n_in_cluster": 1,
+      "families_in_cluster": [
+       "ncc"
+      ],
+      "consensus_dx": -2081.4,
+      "consensus_dy": -6212.3,
+      "consensus_magnitude_m": 6551.7,
+      "consensus_bearing_deg": 251.5,
+      "cluster_spread_m": 0.0,
+      "tol_m": 500.0,
+      "cluster": {
+       "ncc[grad]": [
+        -2081.4,
+        -6212.3
+       ]
+      },
+      "outliers": {
+       "ncc[raw]": [
+        -1921.3,
+        -4002.8
+       ]
+      },
+      "dropped": [
+       {
+        "method": "sift[grad]",
+        "reason": "peak too weak (1 votes of 18, need >=4 and >=12%)"
+       },
+       {
+        "method": "sift[raw]",
+        "reason": "peak too weak (2 votes of 8, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[grad]",
+        "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)"
+       },
+       {
+        "method": "akaze[raw]",
+        "reason": "peak too weak (1 votes of 18, need >=4 and >=12%)"
+       }
+      ],
+      "estimates": [
+       {
+        "method": "ncc[grad]",
+        "dx": -2081.4,
+        "dy": -6212.3,
+        "magnitude_m": 6551.7,
+        "bearing_deg": 251.5,
+        "detail": {
+         "peak": 0.2285,
+         "second": 0.2192,
+         "margin": 0.0093,
+         "at_search_edge": false,
+         "representation": "grad"
+        }
+       },
+       {
+        "method": "ncc[raw]",
+        "dx": -1921.3,
+        "dy": -4002.8,
+        "magnitude_m": 4440.0,
+        "bearing_deg": 244.4,
+        "detail": {
+         "peak": 0.5153,
+         "second": 0.5009,
+         "margin": 0.0144,
+         "at_search_edge": false,
+         "representation": "raw"
+        }
+       },
+       {
+        "method": "sift[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 18, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 18
+        }
+       },
+       {
+        "method": "sift[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (2 votes of 8, need >=4 and >=12%)",
+         "votes": 2,
+         "mutual": 8
+        }
+       },
+       {
+        "method": "akaze[grad]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 13, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 13
+        }
+       },
+       {
+        "method": "akaze[raw]",
+        "dx": null,
+        "dy": null,
+        "magnitude_m": null,
+        "bearing_deg": null,
+        "detail": {
+         "reason": "peak too weak (1 votes of 18, need >=4 and >=12%)",
+         "votes": 1,
+         "mutual": 18
+        }
+       }
+      ]
+     }
+    }
+   },
+   "runtime_s": 13.0
+  }
+ },
+ "conventions": {
+  "product": "20241115T1525",
+  "longitude_0_360_vs_180": {
+   "delta_m": 0.0,
+   "must_be": "0",
+   "pass": true
+  },
+  "reference_row_order_flipped": {
+   "delta_m": 9183.5,
+   "must_be": "large",
+   "pass": true
+  }
+ }
+}

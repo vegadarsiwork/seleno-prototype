@@ -1,0 +1,119 @@
+{
+ "summary": {
+  "sift": {
+   "runs": 30,
+   "solved": 0,
+   "rate": 0.0,
+   "median_error_px": null,
+   "median_inliers": 0
+  },
+  "akaze": {
+   "runs": 30,
+   "solved": 0,
+   "rate": 0.0,
+   "median_error_px": null,
+   "median_inliers": 0
+  },
+  "orb": {
+   "runs": 30,
+   "solved": 0,
+   "rate": 0.0,
+   "median_error_px": null,
+   "median_inliers": 0
+  },
+  "disk_lightglue": {
+   "runs": 30,
+   "solved": 7,
+   "rate": 0.233,
+   "median_error_px": 1.26,
+   "median_inliers": 367
+  }
+ },
+ "stratified": {
+  "sift": {
+   "0-45": {
+    "runs": 0,
+    "solved": 0
+   },
+   "45-90": {
+    "runs": 12,
+    "solved": 0
+   },
+   "90-135": {
+    "runs": 12,
+    "solved": 0
+   },
+   "135-180": {
+    "runs": 6,
+    "solved": 0
+   }
+  },
+  "akaze": {
+   "0-45": {
+    "runs": 0,
+    "solved": 0
+   },
+   "45-90": {
+    "runs": 12,
+    "solved": 0
+   },
+   "90-135": {
+    "runs": 12,
+    "solved": 0
+   },
+   "135-180": {
+    "runs": 6,
+    "solved": 0
+   }
+  },
+  "orb": {
+   "0-45": {
+    "runs": 0,
+    "solved": 0
+   },
+   "45-90": {
+    "runs": 12,
+    "solved": 0
+   },
+   "90-135": {
+    "runs": 12,
+    "solved": 0
+   },
+   "135-180": {
+    "runs": 6,
+    "solved": 0
+   }
+  },
+  "disk_lightglue": {
+   "0-45": {
+    "runs": 0,
+    "solved": 0
+   },
+   "45-90": {
+    "runs": 12,
+    "solved": 7
+   },
+   "90-135": {
+    "runs": 12,
+    "solved": 0
+   },
+   "135-180": {
+    "runs": 6,
+    "solved": 0
+   }
+  }
+ },
+ "res_m": 32.01099488134059,
+ "tile": "P892S2250",
+ "patch_px": 512,
+ "pass_px": 3.0,
+ "bins": [
+  "005",
+  "065",
+  "125",
+  "185",
+  "245",
+  "305"
+ ],
+ "n_patches": 2
+}

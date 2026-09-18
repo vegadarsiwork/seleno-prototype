@@ -1,0 +1,35 @@
+{
+ "box": [
+  141.6,
+  -16.6,
+  141.9,
+  -16.3
+ ],
+ "tmc2": "ch2_tmc_ncn_20260813T0627378557_d_img_d18",
+ "arms": {
+  "evening": {
+   "sift": {
+    "status": "no_consensus",
+    "n": 8,
+    "inliers": 0
+   },
+   "akaze": {
+    "status": "no_consensus",
+    "n": 14,
+    "inliers": 0
+   },
+   "orb": {
+    "status": "no_consensus",
+    "n": 18,
+    "inliers": 0
+   },
+   "disk_lightglue": null
+  },
+  "morning": {
+   "sift": null,
+   "akaze": null,
+   "orb": null,
+   "disk_lightglue": null
+  }
+ }
+}
