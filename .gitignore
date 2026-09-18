@@ -16,3 +16,20 @@ results/nac_cache/
 
 # resolved PDS redirect, re-derived on first use
 .nac_url
+
+# LROC full-resolution range-read cache (scripts/fetch_lroc_pairs.py)
+results/lroc_cache/
+
+# Phase 1 data layer. Heavy, regenerable, and provenance lives in
+# data/manifest.jsonl which IS tracked.
+data/index/
+data/processed/
+
+# Training checkpoints: 138 MB each, regenerable, and the shipping path does not
+# need one. history.json is small but lives alongside them, so the whole
+# directory is ignored and the curve is quoted in docs/TRAINING.md instead.
+results/train/
+results/illumination_bench/raw.json
+
+# Ephemeral outputs from registration tool runs and tests
+outputs/

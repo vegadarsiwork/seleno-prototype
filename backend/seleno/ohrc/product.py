@@ -25,23 +25,29 @@ from .geometry import GeometryGrid, footprint_overlap
 from .label import OhrcLabel, parse_label, verify_raster_size
 from .sun import SunSeries, line_time_seconds
 
-# ch2_ohr_ncp_20241115T1326321339_d_img_d18.img
-_STEM = re.compile(r"^(?P<mission>ch2)_(?P<inst>ohr)_(?P<mode>\w+?)_"
+# ch2_ohr_ncp_20241115T1326321339_d_img_d18.img   (OHRC)
+# ch2_tmc_ncn_20260813T0627378557_d_img_d18.img   (TMC-2)
+# The instrument field was hardcoded to `ohr`; TMC-2 products are byte-identical
+# in layout and parse with the same code, so it is a group rather than a literal.
+_STEM = re.compile(r"^(?P<mission>ch2)_(?P<inst>ohr|tmc|iir)_(?P<mode>\w+?)_"
                    r"(?P<timestamp>\d{8}T\d{10,16})_(?P<p>\w)_(?P<prd>\w{3})_(?P<stn>\w+)$")
+INSTRUMENTS = {"ohr": "OHRC", "tmc": "TMC-2", "iir": "IIRS"}
 
 
 def default_dataset_root() -> str | None:
     """Locate the OHRC archive.
 
-    Honours ``SELENO_OHRC_ROOT`` first, then looks for the in-repo
-    ``datasettesting/dataset`` beside the prototype directory.
+    Honours ``SELENO_OHRC_ROOT`` first, then ``data/raw/ch2/ohrc`` inside the
+    repository (where Phase 1 extracts the ISSDC bundle), then the legacy
+    ``datasettesting/dataset`` layout beside the prototype directory.
     """
     env = os.environ.get("SELENO_OHRC_ROOT")
     if env and os.path.isdir(env):
         return os.path.abspath(env)
     here = os.path.dirname(os.path.abspath(__file__))
     proto = os.path.abspath(os.path.join(here, "..", "..", ".."))     # prototype/
-    for cand in (os.path.join(proto, "..", "datasettesting", "dataset"),
+    for cand in (os.path.join(proto, "data", "raw", "ch2", "ohrc"),
+                 os.path.join(proto, "..", "datasettesting", "dataset"),
                  os.path.join(proto, "datasettesting", "dataset")):
         if os.path.isdir(cand):
             return os.path.abspath(cand)
@@ -56,6 +62,7 @@ class OhrcProduct:
     timestamp: str                        # 20241115T1326321339
     img_path: str
     label_path: str
+    instrument: str = "OHRC"              # OHRC | TMC-2 | IIRS, from the stem
     geometry_csv: str | None = None
     spm_path: str | None = None
     oat_path: str | None = None
@@ -95,11 +102,16 @@ class OhrcProduct:
         ok, why = self.verify()
         if not ok:
             raise ValueError("refusing to memmap %s: %s" % (self.img_path, why))
-        return np.memmap(self.img_path, dtype=np.uint8, mode="r", shape=self.shape)
+        return np.memmap(self.img_path, dtype=np.dtype(self.label.numpy_dtype),
+                         mode="r", shape=self.shape)
 
     def read_tile(self, sample0: int, line0: int, width: int, height: int,
                   step: int = 1) -> np.ndarray:
-        """A copied (height, width) uint8 window. Clipped to the raster.
+        """A copied (height, width) window in the label's own dtype. Clipped to
+        the raster.
+
+        The dtype is whatever the label declares - uint8 for OHRC, uint16 for
+        TMC-2 - never a hardcoded assumption.
 
         `step` decimates by simple striding, which is what makes whole-strip
         thumbnails cheap: the OS pages in only the rows actually touched.
@@ -111,7 +123,7 @@ class OhrcProduct:
         s1 = int(min(self.samples, s0 + width))
         l1 = int(min(self.lines, l0 + height))
         step = max(1, int(step))
-        return np.array(self._map[l0:l1:step, s0:s1:step], dtype=np.uint8, copy=True)
+        return np.array(self._map[l0:l1:step, s0:s1:step], copy=True)
 
     def read_rows(self, line0: int, count: int, step: int = 1) -> np.ndarray:
         """Full-width rows. Use sparingly - one row is 12 000 bytes."""
@@ -123,7 +135,7 @@ class OhrcProduct:
         Cost is bounded by `max_side**2` bytes read, not by the file size.
         """
         step = max(1, int(np.ceil(max(self.shape) / float(max_side))))
-        return np.array(self._map[::step, ::step], dtype=np.uint8, copy=True)
+        return np.array(self._map[::step, ::step], copy=True)
 
     def close(self) -> None:
         """Drop the memmap. Safe to call repeatedly."""
@@ -243,8 +255,12 @@ def _find_sibling(root: str, subdir: str, timestamp: str, suffixes) -> str | Non
     return None
 
 
-def discover(root: str | None = None) -> list[OhrcProduct]:
-    """Find every OHRC product under `root`, newest timestamp last.
+def discover(root: str | None = None, instrument: str | None = None) -> list[OhrcProduct]:
+    """Find every Chandrayaan-2 imaging product under `root`, newest timestamp last.
+
+    `instrument` filters to one of "OHRC", "TMC-2", "IIRS"; the default returns
+    everything found, which for a root holding only OHRC is the previous
+    behaviour unchanged.
 
     A product is defined by a `data/**/*.img` plus its sibling `.xml`. Missing
     optional companions (geometry, sun, browse) are recorded on the product
@@ -260,10 +276,13 @@ def discover(root: str | None = None) -> list[OhrcProduct]:
         if not m:
             continue
         ts = m.group("timestamp")
+        inst = INSTRUMENTS.get(m.group("inst"), m.group("inst").upper())
+        if instrument and inst != instrument:
+            continue
         label = os.path.splitext(img)[0] + ".xml"
         if not os.path.exists(label):
             continue
-        p = OhrcProduct(product_id=stem, timestamp=ts, img_path=img,
+        p = OhrcProduct(product_id=stem, timestamp=ts, instrument=inst, img_path=img,
                         label_path=label, root=root)
         p.geometry_csv = _find_sibling(root, "geometry", ts, (".csv",))
         p.spm_path = _find_sibling(root, "miscellaneous", ts, (".spm",))

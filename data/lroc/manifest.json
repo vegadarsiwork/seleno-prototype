@@ -1,0 +1,918 @@
+{
+ "generated_by": "scripts/fetch_lroc_pairs.py",
+ "source": {
+  "product": "LROC NAC_POLE_SOUTH_CM_XXX controlled illumination mosaics, tile P892S2250",
+  "url": "https://pds.mcp.nasa.gov/data/store/img/lunar_reconnaissance_orbiter/pds4/lroc/lro-l-lroc-5-rdr/LROLRC_2001/DATA/BDR/NAC_POLE/",
+  "gsd_m": 1.0,
+  "control": "ISIS jigsaw, 18 323 NAC images, LOLA-tied, 0.8 px at 2 sigma",
+  "citation": "Archinal et al. (2023), LPSC 54, abstract #2333"
+ },
+ "pairs": [
+  {
+   "id": "lroc_005_055_r6144_c27648",
+   "name": "LROC NAC sun 005 vs 055 (d-az 50 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 50 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 005",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 055, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 50,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 6144,
+    "col0": 27648,
+    "row0_b": 6144,
+    "col0_b": 27648
+   },
+   "lit_fraction_browse": [
+    0.87,
+    0.763
+   ],
+   "warp": {
+    "deg": 0.8554295190025094,
+    "scale": 1.020768369401266,
+    "shift_px": [
+     -3.4869843213295297,
+     -35.61024689463854
+    ],
+    "persp": [
+     1.72554153720316e-06,
+     -1.8537823195152674e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_005_055_r6144_c27648_source.png",
+   "reference_file": "lroc_005_055_r6144_c27648_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     1.0128138751567475,
+     -0.02445578023332753,
+     -1.8661950315266993
+    ],
+    [
+     0.01592452227788518,
+     1.0031880438903942,
+     -49.461593312349805
+    ],
+    [
+     1.7108150326560028e-06,
+     -1.8379613536508177e-05,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_005_055_r4096_c23552",
+   "name": "LROC NAC sun 005 vs 055 (d-az 50 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 50 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 005",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 055, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 50,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 4096,
+    "col0": 23552,
+    "row0_b": 4096,
+    "col0_b": 23552
+   },
+   "lit_fraction_browse": [
+    0.794,
+    0.684
+   ],
+   "warp": {
+    "deg": 4.503797142798035,
+    "scale": 0.9031400935640663,
+    "shift_px": [
+     -37.47725077416844,
+     42.946807744934986
+    ],
+    "persp": [
+     -2.5428081943931144e-05,
+     -1.7934585333274554e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_005_055_r4096_c23552_source.png",
+   "reference_file": "lroc_005_055_r4096_c23552_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     0.8689920249184706,
+     -0.07770442343079442,
+     59.07711149106679
+    ],
+    [
+     0.05557415113904278,
+     0.8710595840922833,
+     68.45718107208526
+    ],
+    [
+     -2.4875797311822215e-05,
+     -1.7545055525849274e-05,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_095_145_r4096_c43008",
+   "name": "LROC NAC sun 095 vs 145 (d-az 50 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 50 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 095",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 145, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 50,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 4096,
+    "col0": 43008,
+    "row0_b": 4096,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    0.896,
+    0.873
+   ],
+   "warp": {
+    "deg": -4.767153620675364,
+    "scale": 0.9714378675341895,
+    "shift_px": [
+     29.713478048182935,
+     -13.260969707410617
+    ],
+    "persp": [
+     -9.7721287920278e-06,
+     3.2936717717774404e-06
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_095_145_r4096_c43008_source.png",
+   "reference_file": "lroc_095_145_r4096_c43008_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     0.959600679073433,
+     0.08224428661872926,
+     6.497948646239107
+    ],
+    [
+     -0.08532358831399402,
+     0.9665141239257229,
+     45.92064279135912
+    ],
+    [
+     -9.739822094390224e-06,
+     3.2827828794682186e-06,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_095_145_r9216_c43008",
+   "name": "LROC NAC sun 095 vs 145 (d-az 50 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 50 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 095",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 145, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 50,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 9216,
+    "col0": 43008,
+    "row0_b": 9216,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    0.929,
+    0.854
+   ],
+   "warp": {
+    "deg": -12.489705269254664,
+    "scale": 0.9513411620437645,
+    "shift_px": [
+     -0.6384807373378436,
+     19.294986898102238
+    ],
+    "persp": [
+     1.512677170056461e-05,
+     1.3385872088380607e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_095_145_r9216_c43008_source.png",
+   "reference_file": "lroc_095_145_r9216_c43008_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     0.9504377491921805,
+     0.21573545651639522,
+     -78.14347088311982
+    ],
+    [
+     -0.20063318859633086,
+     0.9498051114238847,
+     155.58996285336218
+    ],
+    [
+     1.535087098569234e-05,
+     1.3584180387414787e-05,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_145_235_r9216_c41984",
+   "name": "LROC NAC sun 145 vs 235 (d-az 90 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 90 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 145",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 235, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 90,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 9216,
+    "col0": 41984,
+    "row0_b": 9216,
+    "col0_b": 41984
+   },
+   "lit_fraction_browse": [
+    0.728,
+    0.674
+   ],
+   "warp": {
+    "deg": -19.9647818903714,
+    "scale": 0.9260302624255263,
+    "shift_px": [
+     -43.38271616416904,
+     -14.32144356633151
+    ],
+    "persp": [
+     7.240428291479256e-06,
+     2.0225566074959104e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_145_235_r9216_c41984_source.png",
+   "reference_file": "lroc_145_235_r9216_c41984_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     0.8862340545582972,
+     0.3303091169181596,
+     -147.5688537749305
+    ],
+    [
+     -0.31704107820318644,
+     0.8930020710812657,
+     209.88500002518433
+    ],
+    [
+     7.343699723276154e-06,
+     2.0514046684582968e-05,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_235_325_r1024_c43008",
+   "name": "LROC NAC sun 235 vs 325 (d-az 90 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 90 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 235",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 325, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 90,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 1024,
+    "col0": 43008,
+    "row0_b": 1024,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    0.851,
+    0.989
+   ],
+   "warp": {
+    "deg": -6.523142657087021,
+    "scale": 1.020171388759931,
+    "shift_px": [
+     -24.260244070898935,
+     -31.49130663653122
+    ],
+    "persp": [
+     1.7986191369944363e-05,
+     -9.897290688281077e-06
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_235_325_r1024_c43008_source.png",
+   "reference_file": "lroc_235_325_r1024_c43008_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     1.026591075420592,
+     0.11153068878605409,
+     -92.95020419767857
+    ],
+    [
+     -0.1076996031099314,
+     1.0130064998626216,
+     18.989873259318465
+    ],
+    [
+     1.806099127503808e-05,
+     -9.938450953338941e-06,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_235_325_r3072_c41984",
+   "name": "LROC NAC sun 235 vs 325 (d-az 90 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 90 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 235",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 325, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 90,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 3072,
+    "col0": 41984,
+    "row0_b": 3072,
+    "col0_b": 41984
+   },
+   "lit_fraction_browse": [
+    0.971,
+    1.0
+   ],
+   "warp": {
+    "deg": -17.15100250156457,
+    "scale": 1.0631960690355888,
+    "shift_px": [
+     17.151421550238865,
+     -36.408570620682184
+    ],
+    "persp": [
+     5.329127611000196e-06,
+     2.3720229097099588e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_235_325_r3072_c41984_source.png",
+   "reference_file": "lroc_235_325_r3072_c41984_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     1.034117311104416,
+     0.33100164197482473,
+     -161.8004470415738
+    ],
+    [
+     -0.31568779461449037,
+     1.0427062793643282,
+     110.53836120120704
+    ],
+    [
+     5.409585845298131e-06,
+     2.4078352957064152e-05,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_055_145_r8192_c43008",
+   "name": "LROC NAC sun 055 vs 145 (d-az 90 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 90 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 055",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 145, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 90,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 8192,
+    "col0": 43008,
+    "row0_b": 8192,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    1.0,
+    1.0
+   ],
+   "warp": {
+    "deg": -13.30989003781525,
+    "scale": 1.0626101495457558,
+    "shift_px": [
+     -33.908060494290986,
+     58.052334545863275
+    ],
+    "persp": [
+     2.8991296448592437e-05,
+     2.065654130009507e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_055_145_r8192_c43008_source.png",
+   "reference_file": "lroc_055_145_r8192_c43008_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     1.0752608417173857,
+     0.26114565169633136,
+     -193.6782529830486
+    ],
+    [
+     -0.23405472658316387,
+     1.073121258615821,
+     155.31877835478156
+    ],
+    [
+     2.974746794922733e-05,
+     2.119531982145291e-05,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_055_145_r5120_c43008",
+   "name": "LROC NAC sun 055 vs 145 (d-az 90 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 90 deg apart.",
+   "difficulty": "moderate",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 055",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 145, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 90,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 5120,
+    "col0": 43008,
+    "row0_b": 5120,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    1.0,
+    1.0
+   ],
+   "warp": {
+    "deg": -17.73998151786243,
+    "scale": 0.9653831175345724,
+    "shift_px": [
+     -54.01782455121621,
+     -26.240829788840905
+    ],
+    "persp": [
+     1.9550752348645146e-05,
+     6.538648981747595e-06
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_055_145_r5120_c43008_source.png",
+   "reference_file": "lroc_055_145_r5120_c43008_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     0.9410018597815114,
+     0.3011675892071184,
+     -171.80813611797703
+    ],
+    [
+     -0.2885069290536276,
+     0.9351459504829579,
+     161.25649971189264
+    ],
+    [
+     1.9815442541544055e-05,
+     6.627173260988284e-06,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_145_325_r3072_c43008",
+   "name": "LROC NAC sun 145 vs 325 (d-az 180 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 180 deg apart.",
+   "difficulty": "hard",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 145",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 325, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 180,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 3072,
+    "col0": 43008,
+    "row0_b": 3072,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    0.567,
+    0.432
+   ],
+   "warp": {
+    "deg": -16.20030868153711,
+    "scale": 1.0071611462473689,
+    "shift_px": [
+     50.1212079736153,
+     57.77590186665637
+    ],
+    "persp": [
+     2.0929172348741682e-05,
+     1.476869135774374e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_145_325_r3072_c43008_source.png",
+   "reference_file": "lroc_145_325_r3072_c43008_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     0.9971590890159306,
+     0.2946820005746435,
+     -88.83609022937672
+    ],
+    [
+     -0.27407869497252496,
+     0.9937468349995671,
+     211.91366575844836
+    ],
+    [
+     2.1318823005005554e-05,
+     1.5043648732254988e-05,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_145_325_r12288_c32768",
+   "name": "LROC NAC sun 145 vs 325 (d-az 180 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 180 deg apart.",
+   "difficulty": "hard",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 145",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 325, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 180,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 12288,
+    "col0": 32768,
+    "row0_b": 12288,
+    "col0_b": 32768
+   },
+   "lit_fraction_browse": [
+    0.365,
+    0.468
+   ],
+   "warp": {
+    "deg": -8.635006385982535,
+    "scale": 1.0126647071018793,
+    "shift_px": [
+     -34.48798384152123,
+     -50.15532230139993
+    ],
+    "persp": [
+     -2.3831500183667518e-05,
+     -6.140187287947109e-06
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_145_325_r12288_c32768_source.png",
+   "reference_file": "lroc_145_325_r12288_c32768_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     0.9748466436817375,
+     0.14685531241960034,
+     -104.01630070930177
+    ],
+    [
+     -0.16058311707146183,
+     0.9832615279238364,
+     33.65320554808635
+    ],
+    [
+     -2.3471320934719612e-05,
+     -6.047387085327556e-06,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_055_235_r10240_c43008",
+   "name": "LROC NAC sun 055 vs 235 (d-az 180 deg)",
+   "short": "Same controlled ground under two sub-solar longitudes 180 deg apart.",
+   "difficulty": "hard",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 055",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 235, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 180,
+   "negative": false,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 10240,
+    "col0": 43008,
+    "row0_b": 10240,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    0.414,
+    0.423
+   ],
+   "warp": {
+    "deg": -7.7471806691744405,
+    "scale": 1.0561293368755986,
+    "shift_px": [
+     -31.387629653558918,
+     43.248081416044656
+    ],
+    "persp": [
+     -3.764151929468477e-07,
+     9.911252173759315e-06
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "known similarity + perspective warp applied to the reference; truth also carries the ~0.8 px control residual",
+   "source_file": "lroc_055_235_r10240_c43008_source.png",
+   "reference_file": "lroc_055_235_r10240_c43008_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": true,
+   "gt_homography": [
+    [
+     1.051441606127089,
+     0.14785379801406187,
+     -131.06909524245089
+    ],
+    [
+     -0.14327698819002072,
+     1.0571536047225425,
+     90.06718189269816
+    ],
+    [
+     -3.7826180524718675e-07,
+     9.959874653719657e-06,
+     1.0
+    ]
+   ]
+  },
+  {
+   "id": "lroc_005_235_r6144_c27648_neg",
+   "name": "LROC NAC 005 vs 235 - different ground (negative)",
+   "short": "Two windows of different terrain; the correct answer is a refusal.",
+   "difficulty": "negative",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 005",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 235, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 130,
+   "negative": true,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 6144,
+    "col0": 27648,
+    "row0_b": 10240,
+    "col0_b": 43008
+   },
+   "lit_fraction_browse": [
+    0.87,
+    0.423
+   ],
+   "warp": {
+    "deg": 11.779716612247512,
+    "scale": 0.9157958943148512,
+    "shift_px": [
+     20.719150955612307,
+     -6.291779114003255
+    ],
+    "persp": [
+     1.272680962425552e-05,
+     -1.562876601227895e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "none - different ground, no transform exists",
+   "source_file": "lroc_005_235_r6144_c27648_neg_source.png",
+   "reference_file": "lroc_005_235_r6144_c27648_neg_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": false,
+   "gt_homography": null
+  },
+  {
+   "id": "lroc_005_325_r4096_c23552_neg",
+   "name": "LROC NAC 005 vs 325 - different ground (negative)",
+   "short": "Two windows of different terrain; the correct answer is a refusal.",
+   "difficulty": "negative",
+   "sensor_source": "LRO NAC controlled mosaic, sub-solar lon bin 005",
+   "sensor_reference": "LRO NAC controlled mosaic, sub-solar lon bin 325, warped",
+   "gsd_source_m": 1.0,
+   "gsd_reference_m": 1.0,
+   "footprint_m": 1024.0,
+   "recommended_model": "homography",
+   "delta_sun_lon_deg": 40,
+   "negative": true,
+   "window": {
+    "tile": "P892S2250",
+    "row0": 4096,
+    "col0": 23552,
+    "row0_b": 12288,
+    "col0_b": 32768
+   },
+   "lit_fraction_browse": [
+    0.794,
+    0.468
+   ],
+   "warp": {
+    "deg": -2.579039935088005,
+    "scale": 1.017140461060083,
+    "shift_px": [
+     47.755776838204795,
+     59.10967685006287
+    ],
+    "persp": [
+     6.836234429831484e-07,
+     -1.6022195501394536e-05
+    ]
+   },
+   "real_component": "all pixels are delivered LROC NAC mosaic data; the illumination change between source and reference is real",
+   "synthetic_component": "none - different ground, no transform exists",
+   "source_file": "lroc_005_325_r4096_c23552_neg_source.png",
+   "reference_file": "lroc_005_325_r4096_c23552_neg_reference.png",
+   "source_shape": [
+    1024,
+    1024
+   ],
+   "reference_shape": [
+    1024,
+    1024
+   ],
+   "ground_truth_available": false,
+   "gt_homography": null
+  }
+ ]
+}

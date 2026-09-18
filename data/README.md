@@ -228,3 +228,26 @@ Use is governed by ISRO/ISSDC's terms — see
 <https://pradan.issdc.gov.in/ch2/ack.xhtml>. Users are asked to acknowledge
 ISRO. This prototype is a non-commercial academic demonstration for the Smart
 India Hackathon (SIH26166) and claims no rights over the imagery.
+
+---
+
+## 3. `data/lroc/` — LROC real-illumination pairs (ground truth by control network)
+
+Built by `scripts/fetch_lroc_pairs.py`; evaluated by `scripts/evaluate_lroc.py`
+→ `results/lroc/LROC.md`.
+
+- **Source:** LROC `NAC_POLE_SOUTH_CM_XXX` controlled south-polar mosaics, tile
+  `P892S2250` (1 m/px, polar stereographic, 1 737 400 m radius), one mosaic per
+  10° bin of sub-solar longitude. Public NASA PDS, no credentials; read by HTTP
+  range requests. Citation: Archinal et al. (2023), LPSC 54, #2333.
+- **Why the truth is real:** every bin comes from one ISIS jigsaw network
+  (18 323 NAC images, LOLA-tied, 0.8 px at 2σ) on one grid, so the same pixel
+  in two bins is the same ground. Checked: gradient phase correlation between
+  unwarped bins gives shifts ≤ 0.4 px.
+- **Real:** all pixels, and the illumination change (Δ sub-solar longitude 50°,
+  90°, 180°; different NAC images, different cast shadows).
+- **Synthetic:** a known similarity + mild perspective warp on the reference
+  window (±20°, ×0.9–1.1, ±60 px), stored as `gt_homography`.
+- **Negatives:** two pairs of different ground (`*_neg`); the right answer is a
+  refusal.
+- Per-window percentile stretch to 8 bit; windows with > 2 % nodata dropped.

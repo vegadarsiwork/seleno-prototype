@@ -131,7 +131,27 @@ class OhrcLabel:
 
     @property
     def expected_bytes(self) -> int:
-        return self.lines * self.samples          # uint8, offset 0
+        return self.lines * self.samples * self.item_bytes
+
+    # PDS4 sample types this loader can memory-map. OHRC delivers UnsignedByte;
+    # TMC-2 delivers UnsignedLSB2, and reading that as uint8 would not fail
+    # loudly - it would return an image of half the declared line count made of
+    # interleaved high and low bytes. So the mapping is explicit and anything
+    # absent from it is refused rather than guessed.
+    DTYPES = {"UnsignedByte": "u1", "SignedByte": "i1",
+              "UnsignedLSB2": "<u2", "SignedLSB2": "<i2",
+              "UnsignedMSB2": ">u2", "SignedMSB2": ">i2",
+              "UnsignedLSB4": "<u4", "SignedLSB4": "<i4",
+              "IEEE754LSBSingle": "<f4", "IEEE754MSBSingle": ">f4"}
+
+    @property
+    def numpy_dtype(self) -> str | None:
+        return self.DTYPES.get(self.data_type)
+
+    @property
+    def item_bytes(self) -> int:
+        d = self.numpy_dtype
+        return 1 if d is None else int(d[-1])
 
     @property
     def dwell_seconds(self) -> float | None:
@@ -262,8 +282,9 @@ def verify_raster_size(lab: OhrcLabel, img_path: str) -> tuple[bool, str]:
     if not os.path.exists(img_path):
         return False, "image file missing: %s" % img_path
     actual = os.path.getsize(img_path)
-    if lab.data_type != "UnsignedByte":
-        return False, "unexpected data_type %r (loader assumes uint8)" % lab.data_type
+    if lab.numpy_dtype is None:
+        return False, ("unsupported data_type %r; known: %s"
+                       % (lab.data_type, ", ".join(sorted(lab.DTYPES))))
     if lab.offset != 0:
         return False, "unexpected offset %d (loader assumes headerless)" % lab.offset
     if actual != lab.expected_bytes:
@@ -272,4 +293,5 @@ def verify_raster_size(lab: OhrcLabel, img_path: str) -> tuple[bool, str]:
     if lab.declared_file_size is not None and lab.declared_file_size != actual:
         return False, ("label file_size %d disagrees with %d bytes on disk"
                        % (lab.declared_file_size, actual))
-    return True, "ok: %d bytes == %d lines x %d samples" % (actual, lab.lines, lab.samples)
+    return True, ("ok: %d bytes == %d lines x %d samples x %d B (%s)"
+                  % (actual, lab.lines, lab.samples, lab.item_bytes, lab.data_type))
