@@ -1,16 +1,40 @@
 # Seleno prototype - runtime
 # Verified against Python 3.14.3 on Windows 11.
-opencv-python-headless>=4.8      # SIFT, AKAZE, ORB, USAC_MAGSAC, warping
+opencv-python-headless>=4.8,<5   # SIFT, AKAZE, ORB, USAC_MAGSAC, warping (5.0 dropped AKAZE)
 numpy>=1.24
 fastapi>=0.110
 uvicorn>=0.27
 pydantic>=2.0
+scipy>=1.10                      # illumination/geometry interpolation
+matplotlib>=3.7                  # figures in scripts/
 
 # Only needed by scripts/fetch_products.py to pull the ISRO products.
 remotezip>=0.12
 
-# Optional - enables the LoFTR matcher, which is otherwise reported as
-# unavailable rather than silently replaced. Not installed in the environment
-# this prototype was built and benchmarked in.
-# torch>=2.2
-# kornia>=0.7
+# Learned matchers. CPU-only wheels; there is no CUDA on the target machine, so
+# install from the PyTorch CPU index to avoid pulling ~2 GB of GPU runtime:
+#   pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
+# DISK and LightGlue are Apache-2.0; SuperPoint/SuperGlue weights are
+# non-commercial only and are deliberately NOT used.
+torch>=2.4                       # 2.14.0+cpu verified on CPython 3.14
+torchvision>=0.19
+kornia>=0.7                      # 0.8.3 verified: DISK, LightGlue, LoFTR
+
+# ---------------------------------------------------------------------------
+# Phase 1 data layer. All resolve as wheels on CPython 3.14; `fiona` does NOT
+# (it builds from source and wants gdal-config), so GeoPackage I/O goes through
+# pyogrio instead.
+rasterio>=1.4                    # GeoTIFF + PDS3 readers, /vsicurl range reads
+pyproj>=3.6                      # the lunar polar stereographic CRS
+shapely>=2.0                     # footprint polygons and intersections
+pyogrio>=0.8                     # GeoPackage writer (geopandas' fiona-free engine)
+geopandas>=1.0                   # the footprint index
+pandas>=2.0                      # pairs.csv
+psutil>=5.9                      # memory assertions in tests/test_ohrc_dataset.py
+
+scikit-image>=0.24               # masked normalised cross-correlation (seleno.align)
+pyyaml>=6.0                      # training config (scripts/train_lightglue.py)
+
+# Not yet used, listed so a later phase does not re-discover the resolution:
+# pds4_tools>=1.4                # PDS4 labels (Chandrayaan-2)
+# pvl>=1.3                       # PDS3 labels (LROC, SELENE)

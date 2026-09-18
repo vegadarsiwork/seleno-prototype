@@ -1,0 +1,44 @@
+# Fine-tune LightGlue on LROC illumination pairs. See scripts/train_lightglue.py.
+#
+# The pretrained CPU path is the product; this produces an OPTIONAL checkpoint.
+# Nothing breaks if training is never run or the checkpoint is discarded.
+
+data:
+  corpus: data/processed/nac_illum
+  chip: 512
+  min_valid: 0.5
+  split: [0.7, 0.15, 0.15]        # by TILE, never by pair
+  train_samples: 4000
+  val_samples: 400
+  # Sun-azimuth sampling weights: (lo, hi, weight). Deliberately biased towards
+  # 90-180 deg, the band where every matcher in Phase 2 scored zero. Uniform
+  # sampling over bin pairs buries those cases under near-duplicates.
+  daz_weights:
+    - [0, 45, 0.5]
+    - [45, 90, 1.0]
+    - [90, 135, 2.0]
+    - [135, 181, 2.0]
+
+model:
+  n_features: 1024                # DISK keypoints per image
+
+train:
+  device: null                    # null -> cuda if available, else cpu
+  seed: 1337
+  epochs: 30
+  overfit_epochs: 40
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  grad_accum: 4                   # effective batch 4 on 8 GB
+  amp: true
+  clip_grad: 1.0
+  gt_thresh_px: 3.0               # keypoints this close under the identity are a true match
+  min_gt_matches: 8
+  dustbin_weight: 1.0
+  patience: 5                     # epochs without CROSS-SENSOR improvement
+  out_dir: results/train/lightglue
+
+eval:
+  tolerance_px: 3.0
+  val_pairs: 200
+  cross_per_strip: 8

@@ -88,6 +88,67 @@ def cell_coverage(pts: np.ndarray, shape: tuple[int, int], grid: tuple[int, int]
     return float(len(occupied)) / denom
 
 
+def extrapolation_fraction(pts: np.ndarray, shape: tuple[int, int],
+                           grid: tuple[int, int], eligible: set | None = None) -> float:
+    """Fraction of eligible grid cells lying OUTSIDE the tie-point convex hull.
+
+    Coverage counts cells that hold a match; this counts the cells the fitted
+    transform is *extrapolated* over. The two come apart exactly where it
+    matters. Tie points crowded into one lit strip can score respectable
+    coverage against a small eligible set while leaving most of the frame
+    unconstrained, and extrapolation beyond the hull is where a fitted
+    transform's error grows fastest - an affine fit that is sub-pixel among its
+    own points can be many pixels out a frame-width away. Reporting it is what
+    "uniform distribution" has to mean operationally.
+    """
+    gy, gx = grid
+    cells = sorted(eligible) if eligible is not None else [
+        (i, j) for i in range(gx) for j in range(gy)]
+    if not cells:
+        return 0.0
+    hull = _convex_hull(np.asarray(pts, float).reshape(-1, 2))
+    if len(hull) < 3:
+        return 1.0
+    h, w = shape[:2]
+    idx = np.asarray(cells, float)
+    cx = (idx[:, 0] + 0.5) * w / gx
+    cy = (idx[:, 1] + 0.5) * h / gy
+    # hull is counter-clockwise, so a point is inside when it is left of every
+    # edge; one cross product per edge over all cells at once
+    inside = np.ones(len(cells), bool)
+    for k in range(len(hull)):
+        x0, y0 = hull[k]
+        x1, y1 = hull[(k + 1) % len(hull)]
+        inside &= ((x1 - x0) * (cy - y0) - (y1 - y0) * (cx - x0)) >= -1e-9
+    return float((~inside).sum()) / len(cells)
+
+
+def _convex_hull(p: np.ndarray) -> np.ndarray:
+    """Counter-clockwise convex hull, monotone chain. Kept local to avoid
+    pulling OpenCV or SciPy into this module for twenty lines of geometry."""
+    if len(p) < 3:
+        return p
+    p = np.unique(p, axis=0)
+    if len(p) < 3:
+        return p
+    p = p[np.lexsort((p[:, 1], p[:, 0]))]
+
+    def half(points):
+        out = []
+        for q in points:
+            while len(out) >= 2:
+                a, b = out[-2], out[-1]
+                if (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]) <= 0:
+                    out.pop()
+                else:
+                    break
+            out.append(q)
+        return out
+
+    lower, upper = half(p), half(p[::-1])
+    return np.asarray(lower[:-1] + upper[:-1], float)
+
+
 def dispersion(pts: np.ndarray, shape: tuple[int, int]) -> float:
     """Normalised spread: mean distance from the centroid over the image half-diagonal.
 

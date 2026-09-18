@@ -7,6 +7,7 @@ unavailable matcher is never silently swapped for another one.
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -144,6 +145,59 @@ def pyramid_match(img_src, img_ref, *, detector="sift", ratio=0.80, n_features=8
 
 
 # --------------------------------------------------------------------------- #
+# radiation-insensitive matcher: phase congruency + RIFT-style descriptor
+# --------------------------------------------------------------------------- #
+
+def rift_match(img_src, img_ref, *, ratio=0.95, n_features=3000, norient=6,
+               rotation_invariant=False, mutual_check=True, **_):
+    """RIFT2-style matching on phase congruency.
+
+    Deterministic, no GPU, no training. Keypoints are found on the phase
+    congruency map and described by histograms of the maximum index map, so
+    neither stage keys on intensity gradient - which is the thing a Sun-azimuth
+    change reverses.
+
+    With `rotation_invariant`, the reference is described `norient` times under
+    cyclic shifts of the orientation labels and the best shift wins, which is how
+    RIFT recovers rotation without recomputing the filters.
+    """
+    from . import phasecong as _pc
+
+    p1, d1, _, _ = _pc.rift_features(img_src, n_features=n_features, norient=norient)
+    p2, d2, pc2, mim2 = _pc.rift_features(img_ref, n_features=n_features, norient=norient)
+    if len(d1) < 8 or len(d2) < 8:
+        return MatchResult(np.zeros((0, 2), np.float32), np.zeros((0, 2), np.float32),
+                           np.zeros((0,), np.float32), len(p1), len(p2),
+                           {"detector": "rift", "reason": "too few descriptors"})
+
+    shifts = range(norient) if rotation_invariant else (0,)
+    best = None
+    for sh in shifts:
+        if sh:
+            d2s, p2s = _pc.describe_mim(mim2, p2, norient=norient, shift=sh, weight=pc2)
+        else:
+            d2s, p2s = d2, p2
+        if len(d2s) < 8:
+            continue
+        mutual, stats = _match_descriptors(d1.astype(np.float32), d2s.astype(np.float32),
+                                           False, ratio, mutual_check)
+        if best is None or len(mutual) > len(best[0]):
+            best = (mutual, stats, p2s, sh)
+    if best is None or not best[0]:
+        return MatchResult(np.zeros((0, 2), np.float32), np.zeros((0, 2), np.float32),
+                           np.zeros((0,), np.float32), len(p1), len(p2),
+                           {"detector": "rift", "reason": "no mutual matches"})
+    mutual, stats, p2s, sh = best
+    a = np.float32([p1[i] for i, _, _ in mutual])
+    b = np.float32([p2s[j] for _, j, _ in mutual])
+    sc = np.float32([s for _, _, s in mutual])
+    detail = {"detector": "rift", "ratio": ratio, "norient": norient,
+              "rotation_invariant": rotation_invariant, "best_orientation_shift": sh}
+    detail.update(stats)
+    return MatchResult(a, b, sc, len(p1), len(p2), detail)
+
+
+# --------------------------------------------------------------------------- #
 # learned matcher slot - probed, never faked
 # --------------------------------------------------------------------------- #
 
@@ -191,6 +245,95 @@ def loftr_match(img_src, img_ref, *, max_side=640, **_):
                        len(p1), len(p2), {"detector": "loftr", "max_side": max_side})
 
 
+def _finetuned_checkpoint() -> str | None:
+    """Optional fine-tuned LightGlue weights.
+
+    The product is the pretrained CPU path. A checkpoint is an *upgrade* that
+    loads if present and is silently absent otherwise - never a dependency, so a
+    demo cannot break because training did not finish or produced a bad model.
+    Point `SELENO_LIGHTGLUE_CKPT` elsewhere, or set it to "none" to force
+    pretrained weights even when a checkpoint exists.
+    """
+    env = os.environ.get("SELENO_LIGHTGLUE_CKPT")
+    if env:
+        return None if env.lower() in ("none", "off", "0") else (env if os.path.exists(env) else None)
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.abspath(os.path.join(here, "..", ".."))
+    p = os.path.join(root, "results", "train", "lightglue", "lightglue_finetuned.pt")
+    return p if os.path.exists(p) else None
+
+
+def disk_lightglue_match(img_src, img_ref, *, max_side=1024, n_features=2048,
+                         device=None, **_):
+    """DISK keypoints matched by LightGlue, both pretrained, CPU by default.
+
+    DISK and LightGlue are chosen over SuperPoint+SuperGlue deliberately: the
+    SuperPoint/SuperGlue weights are released for non-commercial research only,
+    while DISK (Apache-2.0) and LightGlue (Apache-2.0) are not.
+
+    `device="cuda"` is honoured when a GPU is present; on this machine there is
+    none, so it runs on CPU and is slow but usable.
+    """
+    if not LEARNED_AVAILABLE:
+        raise RuntimeError("learned matchers unavailable: " + LEARNED_REASON)
+    import torch
+    import kornia.feature as KF
+
+    dev = device or os.environ.get("SELENO_DEVICE") or "cpu"
+    if dev == "cuda" and not torch.cuda.is_available():
+        dev = "cpu"
+
+    def prep(g):
+        h, w = g.shape[:2]
+        s = min(1.0, max_side / float(max(h, w)))
+        r = cv2.resize(g, (0, 0), fx=s, fy=s, interpolation=cv2.INTER_AREA) if s < 1 else g
+        t = torch.from_numpy(np.ascontiguousarray(r)).float()[None, None] / 255.0
+        return t.repeat(1, 3, 1, 1).to(dev), s
+
+    t1, s1 = prep(img_src)
+    t2, s2 = prep(img_ref)
+    global _DISK, _LG, _LG_SRC, _LG_DEV
+    ckpt = _finetuned_checkpoint()
+    if _DISK is None or _LG_DEV != dev or _LG_SRC != ckpt:
+        _DISK = KF.DISK.from_pretrained("depth").to(dev).eval()
+        _LG = KF.LightGlue("disk").to(dev).eval()
+        if ckpt:
+            state = torch.load(ckpt, map_location=dev)
+            _LG.load_state_dict(state["model"] if "model" in state else state)
+        _LG_SRC, _LG_DEV = ckpt, dev
+    with torch.no_grad():
+        f1 = _DISK(t1, n_features, pad_if_not_divisible=True)[0]
+        f2 = _DISK(t2, n_features, pad_if_not_divisible=True)[0]
+        out = _LG({"image0": {"keypoints": f1.keypoints[None],
+                              "descriptors": f1.descriptors[None],
+                              "image_size": torch.tensor([[t1.shape[-1], t1.shape[-2]]],
+                                                         device=dev).float()},
+                   "image1": {"keypoints": f2.keypoints[None],
+                              "descriptors": f2.descriptors[None],
+                              "image_size": torch.tensor([[t2.shape[-1], t2.shape[-2]]],
+                                                         device=dev).float()}})
+    idx = out["matches"][0].cpu().numpy()
+    if len(idx) == 0:
+        return MatchResult(np.zeros((0, 2), np.float32), np.zeros((0, 2), np.float32),
+                           np.zeros((0,), np.float32), len(f1.keypoints), len(f2.keypoints),
+                           {"detector": "disk_lightglue", "reason": "no matches",
+                            "weights": "finetuned" if ckpt else "pretrained", "device": dev})
+    k1 = f1.keypoints.cpu().numpy()[idx[:, 0]] / s1
+    k2 = f2.keypoints.cpu().numpy()[idx[:, 1]] / s2
+    sc = out["scores"][0].cpu().numpy() if "scores" in out else np.ones(len(idx), np.float32)
+    return MatchResult(k1.astype(np.float32), k2.astype(np.float32), sc.astype(np.float32),
+                       len(f1.keypoints), len(f2.keypoints),
+                       {"detector": "disk_lightglue", "max_side": max_side, "device": dev,
+                        "weights": "finetuned" if ckpt else "pretrained",
+                        "checkpoint": ckpt})
+
+
+_LG_SRC = None
+_LG_DEV = None
+_DISK = None
+_LG = None
+
+
 MATCHERS: dict[str, dict[str, Any]] = {
     "sift": {
         "fn": lambda a, b, **k: classical_match(a, b, detector="sift", **k),
@@ -205,16 +348,39 @@ MATCHERS: dict[str, dict[str, Any]] = {
     "akaze": {
         "fn": lambda a, b, **k: classical_match(a, b, detector="akaze", **k),
         "label": "AKAZE (nonlinear scale space)",
-        "kind": "classical", "available": True,
+        # OpenCV 5.0 moved AKAZE out of the main package
+        "kind": "classical", "available": hasattr(cv2, "AKAZE_create"),
+        "reason": "cv2.AKAZE_create missing (OpenCV %s); use OpenCV 4.x" % cv2.__version__,
     },
     "orb": {
         "fn": lambda a, b, **k: classical_match(a, b, detector="orb", **k),
         "label": "ORB (fast binary baseline)",
         "kind": "classical", "available": True,
     },
+    "rift": {
+        "fn": rift_match,
+        "label": "RIFT2-style: phase congruency + max-index-map descriptor",
+        "kind": "radiation-insensitive", "available": True,
+        # Measured on co-registered LROC illumination bins (truth = identity):
+        # the phase-congruency DETECTOR repeats better than SIFT's across a 30 deg
+        # Sun-azimuth change (54.6% vs 43.1% of keypoints within 3 px), but this
+        # descriptor is not discriminative enough to turn that into matches - a
+        # 0.85 ratio test returns zero, and looser thresholds return noise.
+        # The failure is in our descriptor, NOT in the method: do not quote this
+        # as evidence about RIFT2. Porting the authors' reference descriptor is
+        # the open task.
+        "validated": False,
+        "caveat": "descriptor under-performs; detector half is sound. See "
+                  "reports/PHASE2.md before quoting any RIFT number.",
+    },
     "loftr": {
         "fn": loftr_match,
         "label": "LoFTR (kornia, outdoor weights)",
+        "kind": "learned", "available": LEARNED_AVAILABLE, "reason": LEARNED_REASON,
+    },
+    "disk_lightglue": {
+        "fn": lambda a, b, **k: disk_lightglue_match(a, b, **k),
+        "label": "DISK + LightGlue (kornia, pretrained; both Apache-2.0/BSD)",
         "kind": "learned", "available": LEARNED_AVAILABLE, "reason": LEARNED_REASON,
     },
 }
