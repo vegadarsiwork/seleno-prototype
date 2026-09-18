@@ -1,0 +1,18 @@
+name: nac
+instrument: NAC
+gsd_m: 1.0
+bit_depth: 8
+normalise:
+  method: percentile
+  low: 2.0
+  high: 98.0
+clahe:
+  enabled: false
+  clip: 2.5
+  tiles: 8
+shadow_threshold: 0.08
+texture_threshold: 0.015
+nodata: 0
+# Controlled polar mosaics: ISIS jigsaw over 18 323 NAC images tied to LOLA,
+# 0.8 px at 2 sigma. This is the geodetic reference, not a product to correct.
+expected_geolocation_error_m: 1

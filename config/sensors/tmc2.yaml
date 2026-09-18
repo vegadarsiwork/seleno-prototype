@@ -1,0 +1,20 @@
+name: tmc2
+instrument: TMC-2
+gsd_m: 5.48
+bit_depth: 16
+normalise:
+  method: percentile
+  low: 2.0
+  high: 98.0
+clahe:
+  enabled: false
+  clip: 2.5
+  tiles: 8
+shadow_threshold: 0.06
+texture_threshold: 0.012
+nodata: 0
+# 16-bit UnsignedLSB2. Reading it as uint8 silently halves the line count.
+normalise_scope: window
+# reference_data_used = SELENE with a populated refined-corner block; measured
+# agreement with SELENE TC is ~60 m (reports/TMC2_SELENE.md), not kilometres.
+expected_geolocation_error_m: 200

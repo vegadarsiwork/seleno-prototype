@@ -1,0 +1,20 @@
+name: selene_tc
+instrument: SELENE-TC
+gsd_m: 7.403
+bit_depth: 16
+normalise:
+  method: percentile
+  low: 2.0
+  high: 98.0
+clahe:
+  enabled: false
+  clip: 2.5
+  tiles: 8
+shadow_threshold: 0.05
+texture_threshold: 0.012
+nodata: 0
+# Photometrically normalised to STANDARD_GEOMETRY = (30, 0, 30), so brightness
+# differences between the morning and evening maps are largely removed while
+# topographic shading and cast shadow remain.
+photometrically_normalised: true
+expected_geolocation_error_m: 100

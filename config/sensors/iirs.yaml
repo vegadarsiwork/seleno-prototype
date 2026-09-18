@@ -1,0 +1,15 @@
+name: iirs
+instrument: IIRS
+gsd_m: 80.0
+bit_depth: 16
+normalise:
+  method: percentile
+  low: 2.0
+  high: 98.0
+clahe:
+  enabled: false
+  clip: 2.5
+  tiles: 8
+shadow_threshold: 0.05
+texture_threshold: 0.010
+nodata: 0

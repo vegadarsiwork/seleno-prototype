@@ -1,0 +1,67 @@
+name: tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  adversarial:
+    # The Phase 8 suite: every way the registration tool could return a
+    # confident wrong answer or crash on input it will genuinely meet.
+    # It builds its own synthetic rasters, so it needs no archive data and
+    # runs on a stock runner in a couple of minutes.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # The package lives under backend/ rather than at the repo root.
+      PYTHONPATH: ${{ github.workspace }}/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Cache pretrained matcher weights
+        # DISK and LightGlue weights are fetched by kornia on first use.
+        # Without this the suite re-downloads them on every run.
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/torch
+          key: torch-weights-v1
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # CPU wheels only: the GPU runtime is ~2 GB and nothing here uses CUDA.
+          pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
+          pip install -r requirements.txt
+
+      - name: Adversarial registration tests
+        run: python tests/test_tool.py
+
+      - name: Archive dataset tests
+        # Skips cleanly when SELENO_OHRC_ROOT is unset, which it is on CI -
+        # the Chandrayaan-2 products are far too large to ship to a runner.
+        run: python tests/test_ohrc_dataset.py
+
+      - name: CLI smoke test
+        # Proves the documented entry point actually runs, not just the library.
+        run: |
+          python - <<'PY'
+          import numpy as np, cv2
+          rng = np.random.default_rng(0)
+          a = cv2.GaussianBlur(rng.random((256, 256)).astype(np.float32), (0, 0), 4.0)
+          a = (a - a.min()) / (np.ptp(a) + 1e-6)
+          cv2.imwrite("/tmp/ci_ref.png", (a * 255).astype(np.uint8))
+          cv2.imwrite("/tmp/ci_src.png", (np.roll(a, (5, -3), (0, 1)) * 255).astype(np.uint8))
+          PY
+          python -m seleno register --source /tmp/ci_src.png --reference /tmp/ci_ref.png \
+                                    --out /tmp/ci_out --max-side 512 --json
+          find /tmp/ci_out -name metrics.json | grep -q . \
+            || { echo "no metrics.json written"; exit 1; }

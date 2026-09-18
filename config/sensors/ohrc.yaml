@@ -1,0 +1,22 @@
+name: ohrc
+instrument: OHRC
+gsd_m: 0.25
+bit_depth: 8
+normalise:
+  method: percentile
+  low: 2.0
+  high: 98.0
+clahe:
+  enabled: false
+  clip: 2.5
+  tiles: 8
+shadow_threshold: 0.10
+texture_threshold: 0.015
+nodata: 0
+# Measured on the four polar products: column means swing by 30-45 DN across the
+# 12 000-sample swath, so normalisation must be per-window and never per-strip.
+normalise_scope: window
+# Every delivered polar product carries corners_refined = False and the measured
+# geolocation error is 3.9-4.6 km (reports/GEOLOCATION.md). A search radius
+# smaller than this cannot find the answer.
+expected_geolocation_error_m: 4600

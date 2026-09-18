@@ -1,0 +1,23 @@
+# Fallback profile. Applied when no other profile matches, i.e. for an arbitrary
+# image with no recognisable label. Everything here is deliberately conservative
+# and nothing is assumed about geometry.
+name: unknown
+instrument: unknown
+gsd_m: null                 # unknown -> the tool works in pixel space, not metres
+bit_depth: null
+# Radiometric normalisation before matching. Percentile clipping is used rather
+# than min/max because a single hot pixel otherwise sets the whole scale.
+normalise:
+  method: percentile
+  low: 2.0
+  high: 98.0
+clahe:
+  enabled: false            # local contrast with no model of the surface; measured
+  clip: 2.5                 # to HURT on this project's low-illumination pair
+  tiles: 8
+# Fraction of the dynamic range below which a pixel is treated as shadow/noise.
+shadow_threshold: 0.08
+# Minimum local standard deviation (in normalised units) for a pixel to count as
+# carrying usable texture.
+texture_threshold: 0.015
+nodata: 0
