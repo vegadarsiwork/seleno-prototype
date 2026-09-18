@@ -38,6 +38,7 @@ from seleno import (alignment, illumination, matchers, ohrc, pairs,   # noqa: E4
                     pipeline, registration, store, verify, viz)
 from seleno.experiments import ABLATION, PRESETS, build_options       # noqa: E402
 from seleno.ohrc import tiles as T                                    # noqa: E402
+from tool_routes import router as tool_router                         # noqa: E402
 
 DATA = os.path.join(ROOT, "data")
 DIST = os.path.join(ROOT, "frontend", "dist")
@@ -47,6 +48,7 @@ ALIGN_CACHE = os.path.join(ROOT, "results", "illumination")
 app = FastAPI(title="Seleno", version="0.2.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                    allow_headers=["*"])
+app.include_router(tool_router)      # /api/tool/* - the Phase 7 registration tool
 
 try:
     STORE = store.Store(DATA)
@@ -439,7 +441,16 @@ def docs_md(name: str):
                "ASSUMPTIONS": "ASSUMPTIONS.md", "HANDOFF": "HANDOFF.md",
                "DATA": os.path.join("data", "README.md"),
                "ILLUMINATION": os.path.join("results", "illumination", "ILLUMINATION.md"),
-               "DATASET": os.path.join("results", "dataset", "dataset_summary.json")}
+               "DATASET": os.path.join("results", "dataset", "dataset_summary.json"),
+               # Phase 0-2 reports. The UI had no way to show any of these, so the
+               # strongest results in the project were invisible to anyone who only
+               # ran the demo.
+               "AUDIT": os.path.join("docs", "AUDIT.md"),
+               "DATA_INVENTORY": os.path.join("docs", "DATA_INVENTORY.md"),
+               "TRAINING": os.path.join("docs", "TRAINING.md"),
+               "PHASE2": os.path.join("reports", "PHASE2.md"),
+               "GEOLOCATION": os.path.join("reports", "GEOLOCATION.md"),
+               "TMC2_SELENE": os.path.join("reports", "TMC2_SELENE.md")}
     if name not in allowed:
         raise HTTPException(404, "unknown document")
     path = os.path.join(ROOT, allowed[name])

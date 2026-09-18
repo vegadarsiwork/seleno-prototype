@@ -35,3 +35,11 @@ export const pairPreviewUrl = (a, b, s0, l0, size, which, offset = true, maxSide
   `&size=${size}&which=${which}&apply_coarse_offset=${offset}&max_side=${maxSide}`
 export const legacyPairImageUrl = (pairId, which, maxSide = 640) =>
   `${BASE}/api/pair-image/${pairId}/${which}?max_side=${maxSide}`
+
+// --- Phase 7 registration tool ------------------------------------------- //
+export const toolFiles = () => jget('/api/tool/files')
+export const toolRegister = (payload) => jpost('/api/tool/register', payload)
+export const toolJob = (id) => jget(`/api/tool/jobs/${id}`)
+export const toolFile = (id, name) => jget(`/api/tool/jobs/${id}/file/${name}`)
+export const toolFileUrl = (id, name) => `${BASE}/api/tool/jobs/${id}/file/${name}`
+export const toolDownloadUrl = (id) => `${BASE}/api/tool/jobs/${id}/download`

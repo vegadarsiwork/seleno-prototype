@@ -7,7 +7,7 @@ import {
 
 const SIZES = [512, 1024, 2048]
 
-export default function App() {
+export default function App({ view, setView }) {
   const [cfg, setCfg] = useState(null)
   const [fatal, setFatal] = useState(null)
   const [mode, setMode] = useState('ohrc')          // ohrc | legacy
@@ -124,6 +124,17 @@ export default function App() {
             Geometry-first lunar image registration with predicted unmatchable regions
             and calibrated refusal
           </p>
+        </div>
+
+        <div className="rail-section">
+          <div className="seg">
+            <button aria-selected={view === 'tool'} onClick={() => setView('tool')}>
+              Registration tool
+            </button>
+            <button aria-selected={view === 'study'} onClick={() => setView('study')}>
+              Phase 2 study
+            </button>
+          </div>
         </div>
 
         <div className="rail-section">
