@@ -116,6 +116,46 @@ def _cap_max_side(max_side: int, budget_fraction: float = 0.5) -> tuple[int, str
                              100 * budget_fraction))
 
 
+_AA_MAX_TAPS = 4
+
+
+def _boxcar_decimate(arr, r0, r1, c0, c1, step, nodata, scale, offset, taps=4):
+    """Decimate a raster by `step`, averaging instead of dropping pixels.
+
+    Plain striding (`arr[r0:r1:step]`) keeps one pixel in `step` and throws the
+    rest away, which is aliasing, not downsampling. It matters here because the
+    two sides are almost never decimated by the same factor: a 1 m NAC mosaic
+    read at native resolution against an OHRC strip nearest-sampled from 0.24 m
+    is a smooth image against a noise field, and every matcher fails on it -
+    measured, at native resolution: DISK 0 candidates, SIFT 0, AKAZE 3.
+
+    Averaging a few offsets is not a proper anti-aliasing filter, but it is
+    within one read of free and removes most of the noise floor. `taps` caps the
+    work so a 16x decimation does not become 256 reads.
+    """
+    base = np.asarray(arr[r0:r1:step, c0:c1:step], np.float32)
+    if step <= 1:
+        return base * scale + offset
+    k = int(min(step, taps))
+    h, w = base.shape
+    acc = np.zeros((h, w), np.float32)
+    cnt = np.zeros((h, w), np.float32)
+    for dy in range(k):
+        for dx in range(k):
+            blk = np.asarray(arr[r0 + dy:r1:step, c0 + dx:c1:step], np.float32)
+            blk = blk[:h, :w]
+            if blk.shape != (h, w):            # ragged tail; skip this offset
+                continue
+            blk = blk * scale + offset
+            good = np.isfinite(blk) & (blk > -1e30)
+            if nodata is not None and scale == 1.0 and offset == 0.0:
+                good &= blk != nodata
+            acc += np.where(good, blk, 0.0)
+            cnt += good
+    out = np.where(cnt > 0, acc / np.maximum(cnt, 1.0), np.nan)
+    return out.astype(np.float32)
+
+
 def _target_grid(ref: Scene, max_side: int, window=None):
     """The reference's pixel grid, optionally cropped, decimated only if needed.
 
@@ -132,15 +172,84 @@ def _target_grid(ref: Scene, max_side: int, window=None):
     if r1 - r0 < 32 or c1 - c0 < 32:
         r0, c0, r1, c1 = 0, 0, h, w
     step = max(1, int(math.ceil(max(r1 - r0, c1 - c0) / float(max_side))))
-    sub = np.asarray(ref.array[r0:r1:step, c0:c1:step], np.float32)
-    sub = sub * ref.meta_scale + ref.meta_offset
+    sub = _boxcar_decimate(ref.array, r0, r1, c0, c1, step, ref.nodata,
+                           ref.meta_scale, ref.meta_offset)
     v = np.isfinite(sub) & (sub > -1e30)
-    if ref.nodata is not None and ref.meta_scale == 1.0 and ref.meta_offset == 0.0:
-        v &= sub != ref.nodata
-    return step, (r0, c0), sub, v
+    return step, (r0, c0), np.nan_to_num(sub).astype(np.float32), v
 
 
-def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None):
+def _source_window(src: Scene, ref: Scene, pad_frac: float = 0.35,
+                   pad_min_px: int = 256):
+    """Where the source lands in the reference, as a full-resolution pixel box.
+
+    Without this, a small source against a GLOBAL reference is hopeless. The
+    WAC mosaic is 109164 x 54582; decimating it to a 2048 px working grid is
+    54x, and a 734 km IIRS strip lands on it about three pixels wide. Nothing
+    can be matched there, and the second pass that would have rescued it needs
+    an overlap it can no longer detect.
+
+    The padding is deliberately generous: the whole premise of this project is
+    that the source geometry is wrong by kilometres, so the box has to be large
+    enough to still contain the truth.
+    """
+    if ref.transform is None or not ref.georeferenced:
+        return None
+    try:
+        lon = lat = None
+        if src.lonlat is not None:
+            g = src.lonlat
+            st = max(1, g.lon.shape[0] // 64)
+            lon = np.asarray(g.lon[::st, ::st], float).ravel()
+            lat = np.asarray(g.lat[::st, ::st], float).ravel()
+            ok = np.isfinite(lon) & np.isfinite(lat)
+            lon, lat = lon[ok], lat[ok]
+            if lon.size < 4:
+                return None
+            if ref.crs is not None and not ref.crs.is_geographic:
+                from rasterio.warp import transform as warp_transform
+                xs, ys = warp_transform("+proj=longlat +R=1737400 +no_defs", ref.crs,
+                                        lon.tolist(), lat.tolist())
+                xs, ys = np.asarray(xs), np.asarray(ys)
+            else:
+                xs, ys = lon, lat
+        elif src.georeferenced and src.transform is not None:
+            h, w = src.array.shape[:2]
+            t = src.transform
+            cx = np.array([0, w, 0, w], float)
+            cy = np.array([0, 0, h, h], float)
+            xs = t.a * cx + t.b * cy + t.c
+            ys = t.d * cx + t.e * cy + t.f
+            if str(src.crs) != str(ref.crs):
+                from rasterio.warp import transform as warp_transform
+                xs, ys = warp_transform(src.crs, ref.crs, xs.tolist(), ys.tolist())
+                xs, ys = np.asarray(xs), np.asarray(ys)
+        else:
+            return None
+
+        inv = ~ref.transform
+        cols = inv.a * xs + inv.b * ys + inv.c
+        rows = inv.d * xs + inv.e * ys + inv.f
+        cols, rows = cols[np.isfinite(cols)], rows[np.isfinite(rows)]
+        if cols.size < 4 or rows.size < 4:
+            return None
+        H, W = ref.array.shape[:2]
+        pad_c = max(pad_min_px, pad_frac * (cols.max() - cols.min()))
+        pad_r = max(pad_min_px, pad_frac * (rows.max() - rows.min()))
+        r0 = int(max(0, np.floor(rows.min() - pad_r)))
+        c0 = int(max(0, np.floor(cols.min() - pad_c)))
+        r1 = int(min(H, np.ceil(rows.max() + pad_r)))
+        c1 = int(min(W, np.ceil(cols.max() + pad_c)))
+        if r1 - r0 < 32 or c1 - c0 < 32:
+            return None
+        if (r1 - r0) * (c1 - c0) >= 0.9 * H * W:
+            return None                      # no useful narrowing
+        return (r0, c0, r1, c1)
+    except Exception:                                                 # noqa: BLE001
+        return None
+
+
+def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=None,
+             prewarp=None):
     """Put the source on the reference's grid using whatever geometry exists.
 
     Returns ``(src_on_grid, src_valid, ref_grid, ref_valid, back_x, back_y, info)``
@@ -148,22 +257,32 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None):
     it came from - so match points can always be reported in the source's own
     coordinates, whatever route was taken to get here.
     """
+    if window is None:
+        window = _source_window(src, ref)
     step, (orow, ocol), R, Rv = _target_grid(ref, max_side, window)
     H, W = R.shape
     info = {"target_shape": [H, W], "reference_decimation": step,
             "reference_origin": [orow, ocol], "route": None, "notes": []}
+    if window is not None:
+        info["reference_window"] = list(window)
 
     # --- route 1: the source carries a lon/lat lattice and the reference a CRS
     if src.lonlat is not None and ref.georeferenced:
-        f_s, f_l = _lattice_interpolators(src.lonlat)
+        projected = ref.crs is not None and not ref.crs.is_geographic
+        f_s, f_l, prep = _lattice_interpolators(src.lonlat,
+                                                ref.crs if projected else None,
+                                                cache=cache)
         S = np.empty((H, W), np.float64)
         L = np.empty((H, W), np.float64)
         for r0b in range(0, H, _CHUNK_ROWS):
             r1b = min(r0b + _CHUNK_ROWS, H)
-            lon, lat = _grid_lonlat(ref, orow, ocol, step, r0b, r1b, W)
-            S[r0b:r1b] = f_s(lon, lat)
-            L[r0b:r1b] = f_l(lon, lat)
-        info["route"] = "source lon/lat lattice -> reference CRS"
+            a, b = (_grid_xy if projected else _grid_lonlat)(
+                ref, orow, ocol, step, r0b, r1b, W, prewarp)
+            a, b = prep(a, b)
+            S[r0b:r1b] = f_s(a, b)
+            L[r0b:r1b] = f_l(a, b)
+        info["route"] = ("source geometry lattice -> reference %s"
+                         % ("projected plane" if projected else "lon/lat"))
         return _sample(src, S, L, R, Rv, info)
 
     # --- route 2: both georeferenced
@@ -175,7 +294,7 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None):
         same = str(src.crs) == str(ref.crs)
         for r0b in range(0, H, _CHUNK_ROWS):
             r1b = min(r0b + _CHUNK_ROWS, H)
-            xs, ys = _grid_xy(ref, orow, ocol, step, r0b, r1b, W)
+            xs, ys = _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp)
             if not same:
                 xs, ys = warp_transform(ref.crs, src.crs, xs.ravel().tolist(),
                                         ys.ravel().tolist())
@@ -199,27 +318,49 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None):
                              "registered in pixel space at native sampling. No "
                              "metre-scale accuracy can be reported.")
     cols, rows = np.meshgrid(np.arange(W), np.arange(H))
+    if prewarp is not None:
+        P = np.asarray(prewarp, float)
+        den = P[2, 0] * cols + P[2, 1] * rows + P[2, 2]
+        den = np.where(np.abs(den) < 1e-12, 1e-12, den)
+        cols, rows = ((P[0, 0] * cols + P[0, 1] * rows + P[0, 2]) / den,
+                      (P[1, 0] * cols + P[1, 1] * rows + P[1, 2]) / den)
     S = cols / max(scale, 1e-9)
     L = rows / max(scale, 1e-9)
     info["route"] = "pixel space (scale %.4f)" % scale
     return _sample(src, S, L, R, Rv, info)
 
 
-def _grid_xy(ref, orow, ocol, step, r0b, r1b, W):
-    """Projected (x, y) of a block of target pixel centres, as arrays."""
+def _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp=None):
+    """Projected (x, y) of a block of target pixel centres, as arrays.
+
+    `prewarp` maps full-resolution reference pixel coordinates through a known
+    correction before the geometry is consulted. The fine stage needs it: the
+    source is placed from its own geometry, and when that geometry is wrong -
+    an unrefined OHRC strip is kilometres out, which is the whole reason this
+    project exists - a native window positioned on a reference feature is
+    filled with ground from kilometres away and nothing in it matches. Passing
+    the inverse of the coarse solution here asks the geometry for the source
+    pixel the coarse solve says belongs at each reference pixel.
+    """
     t = ref.transform
     cols = ocol + (np.arange(W) + 0.5) * step
     rows = orow + (np.arange(r0b, r1b) + 0.5) * step
     C, Rr = np.meshgrid(cols, rows)
+    if prewarp is not None:
+        P = np.asarray(prewarp, float)
+        den = P[2, 0] * C + P[2, 1] * Rr + P[2, 2]
+        den = np.where(np.abs(den) < 1e-12, 1e-12, den)
+        C, Rr = ((P[0, 0] * C + P[0, 1] * Rr + P[0, 2]) / den,
+                 (P[1, 0] * C + P[1, 1] * Rr + P[1, 2]) / den)
     x = t.a * C + t.b * Rr + t.c
     y = t.d * C + t.e * Rr + t.f
     return x, y
 
 
-def _grid_lonlat(ref, orow, ocol, step, r0b, r1b, W):
+def _grid_lonlat(ref, orow, ocol, step, r0b, r1b, W, prewarp=None):
     """Same block, converted to lon/lat on the Moon."""
     from rasterio.warp import transform as warp_transform
-    x, y = _grid_xy(ref, orow, ocol, step, r0b, r1b, W)
+    x, y = _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp)
     if ref.crs is not None and not ref.crs.is_geographic:
         lon, lat = warp_transform(ref.crs, "+proj=longlat +R=1737400 +no_defs",
                                   x.ravel().tolist(), y.ravel().tolist())
@@ -227,22 +368,72 @@ def _grid_lonlat(ref, orow, ocol, step, r0b, r1b, W):
     return x, y                                  # already degrees
 
 
-def _lattice_interpolators(grid):
-    """(lon, lat) -> (sample, line), built once and reused across blocks."""
+def _lattice_interpolators(grid, crs=None, cache=None):
+    """Geometry lattice -> (sample, line), built once and reused across blocks.
+
+    Returns ``(f_sample, f_line, prep)``. `prep` maps a block of reference-frame
+    coordinates into whatever space the interpolators were built in, so the
+    caller does not have to know which that was.
+
+    The space matters. A south-polar strip's lattice spans the whole 0-360
+    longitude range, so a triangulation built in lon/lat carries a seam at the
+    antimeridian: a query on the far side of it falls outside every triangle and
+    comes back NaN. An OHRC strip against a NAC polar mosaic lands squarely on
+    that seam and the run reports `no_overlap` for two images that plainly
+    overlap. Near the pole the same triangulation is degenerate anyway - every
+    meridian converges, so the triangles are slivers. When the reference is
+    projected, interpolate in its own plane instead: polar stereographic is
+    continuous across the antimeridian and well conditioned at the pole.
+    """
     from scipy.interpolate import LinearNDInterpolator
+    # The Delaunay build dominates this function, and the fine stage places the
+    # source dozens of times over different windows of the same reference. The
+    # triangulation does not depend on the window, so build it once.
+    key = ("lattice", id(grid), str(crs))
+    if cache is not None and key in cache:
+        return cache[key]
     step = max(1, grid.lon.shape[0] // 200)      # the lattice is far finer than needed
-    pts = np.column_stack([grid.lon[::step, ::step].ravel(),
-                           grid.lat[::step, ::step].ravel()])
+    lon = grid.lon[::step, ::step].ravel()
+    lat = grid.lat[::step, ::step].ravel()
     SS, LL = np.meshgrid(grid.pixels[::step], grid.scans[::step])
-    return (LinearNDInterpolator(pts, SS.ravel()),
-            LinearNDInterpolator(pts, LL.ravel()))
+
+    if crs is not None and not crs.is_geographic:
+        from rasterio.warp import transform as warp_transform
+        x, y = warp_transform("+proj=longlat +R=1737400 +no_defs", crs,
+                              lon.tolist(), lat.tolist())
+        pts = np.column_stack([np.asarray(x, float), np.asarray(y, float)])
+
+        def prep(a, b):
+            return a, b                           # already the reference plane
+    else:
+        pts = np.column_stack([lon, lat])
+        # Geographic reference: match the lattice's own longitude convention
+        # rather than assume one. Lattices in this archive run 0-360; rasterio
+        # hands back -180..180.
+        wrap360 = float(lon.max()) > 180.0
+
+        def prep(a, b):
+            return ((a % 360.0) if wrap360 else ((a + 180.0) % 360.0 - 180.0)), b
+
+    out = (LinearNDInterpolator(pts, SS.ravel()),
+           LinearNDInterpolator(pts, LL.ravel()), prep)
+    if cache is not None:
+        cache[key] = out
+    return out
 
 
 def _sample(src: Scene, S, L, R, Rv, info):
-    """Nearest-neighbour lift of the source onto the target grid.
+    """Lift the source onto the target grid, averaging when it is being reduced.
 
     Validity is evaluated on the SAMPLED values, so no source-wide boolean mask
     is ever allocated.
+
+    When one target pixel spans several source pixels - OHRC at 0.24 m onto a
+    1 m reference grid spans about seventeen - taking the nearest one is
+    aliasing, and what lands on the grid is noise rather than a smaller picture
+    of the same ground. The reduction factor is measured from the sampling map
+    itself rather than from metadata, so it is right even when the geometry came
+    from a lattice and no GSD was declared.
     """
     h, w = src.array.shape
     ok = np.isfinite(S) & np.isfinite(L) & (S >= 0) & (S < w) & (L >= 0) & (L < h)
@@ -251,13 +442,55 @@ def _sample(src: Scene, S, L, R, Rv, info):
     if ok.any():
         si = np.clip(np.nan_to_num(S).astype(np.int64), 0, w - 1)
         li = np.clip(np.nan_to_num(L).astype(np.int64), 0, h - 1)
-        vals = np.asarray(src.array[li[ok], si[ok]], np.float32)
-        vals = vals * src.meta_scale + src.meta_offset
-        out[ok] = vals
-        good = np.isfinite(vals) & (vals > -1e30)
-        if src.nodata is not None and src.meta_scale == 1.0 and src.meta_offset == 0.0:
-            good &= vals != src.nodata
-        ov[ok] = good
+
+        # Source pixels per target pixel, measured from the map itself on a
+        # cheap subsample. The subsample stride has to be divided back out:
+        # diffing every 16th row measures the step over 16 target pixels, not
+        # one, and leaving it in inflated the factor 16x - which quietly kept
+        # the filter below switched off everywhere.
+        _st = 16
+        Ss, Ls = S[::_st, ::_st], L[::_st, ::_st]
+        with np.errstate(invalid="ignore"):
+            fx = (np.nanmedian(np.abs(np.diff(Ss, axis=1))) / _st
+                  if Ss.shape[1] > 1 else 1.0)
+            fy = (np.nanmedian(np.abs(np.diff(Ls, axis=0))) / _st
+                  if Ls.shape[0] > 1 else 1.0)
+        f = float(np.nanmax([fx, fy, 1.0]))
+        # Average only when the taps we can afford actually COVER the footprint,
+        # i.e. when they land about a source pixel apart. Spreading four taps
+        # across a seventeen-pixel footprint is a sparse comb, not a box filter:
+        # it band-limits nothing and adds its own structure. Measured on the
+        # coarse OHRC/NAC pass, where the reduction is 16.7x, the comb cost
+        # AKAZE 442 inliers -> 70. Past that point nearest sampling is both
+        # cheaper and better, so take it and record that the grid is aliased.
+        k = int(np.clip(round(f), 1, _AA_MAX_TAPS))
+        aa = f <= _AA_MAX_TAPS + 0.5
+        info["source_oversample"] = round(f, 3)
+        info["source_taps"] = k if aa else 1
+        if not aa:
+            info.setdefault("notes", []).append(
+                "source reduced %.1fx onto the working grid and sampled without "
+                "anti-aliasing; a filter wide enough to band-limit it costs more "
+                "reads than the stage is worth" % f)
+
+        acc = np.zeros(int(ok.sum()), np.float32)
+        cnt = np.zeros(int(ok.sum()), np.float32)
+        offs = ((np.arange(k) - (k - 1) / 2.0) * (f / max(k, 1))) if aa else np.zeros(1)
+        for dy in offs:
+            lj = np.clip(li[ok] + int(round(dy)), 0, h - 1)
+            for dx in offs:
+                ii = np.clip(si[ok] + int(round(dx)), 0, w - 1)
+                v = np.asarray(src.array[lj, ii], np.float32)
+                v = v * src.meta_scale + src.meta_offset
+                g = np.isfinite(v) & (v > -1e30)
+                if src.nodata is not None and src.meta_scale == 1.0 \
+                        and src.meta_offset == 0.0:
+                    g &= v != src.nodata
+                acc += np.where(g, v, 0.0)
+                cnt += g
+        vals = np.where(cnt > 0, acc / np.maximum(cnt, 1.0), np.nan)
+        out[ok] = np.nan_to_num(vals)
+        ov[ok] = cnt > 0
     back_x = np.where(ok, np.nan_to_num(S), np.nan).astype(np.float32)
     back_y = np.where(ok, np.nan_to_num(L), np.nan).astype(np.float32)
     info["source_coverage"] = round(float(ov.mean()), 4)
@@ -291,6 +524,7 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
              model: str = "auto", max_side: int = 2048, grid=(8, 8),
              holdout: float = 0.35, seed: int = 0, profiles: Profiles | None = None,
              segments: int = 0, subpixel: bool = True,
+             fine: bool = True, fine_tiles: int = 0,
              progress=None, verbose: bool = True) -> Result:
     """Register `source` onto `reference`. Always writes an artifact set.
 
@@ -329,8 +563,10 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     degraded = ["source: " + d for d in S.degraded] + ["reference: " + d for d in R.degraded]
 
     # ---- 2. common frame ---------------------------------------------------
+    cache: dict = {}          # lattice triangulation, reused by the fine stage
     try:
-        A_raw, Am, B_raw, Bm, back_x, back_y, frame = prealign(S, R, max_side=max_side)
+        A_raw, Am, B_raw, Bm, back_x, back_y, frame = prealign(S, R, max_side=max_side,
+                                                               cache=cache)
         # Second pass: having found where the source actually lands, redo the
         # placement at the finest sampling that fits inside `max_side` over just
         # that region. Without this the reported RMSE is floored by the whole-frame
@@ -340,9 +576,9 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             st, (orow, ocol) = frame["reference_decimation"], frame["reference_origin"]
             win = (orow + bb[0] * st, ocol + bb[1] * st,
                    orow + bb[2] * st, ocol + bb[3] * st)
-            fine = prealign(S, R, max_side=max_side, window=win)
-            if fine[6]["reference_decimation"] < st and (fine[1] & fine[3]).sum() > 4096:
-                A_raw, Am, B_raw, Bm, back_x, back_y, frame = fine
+            finer = prealign(S, R, max_side=max_side, window=win, cache=cache)
+            if finer[6]["reference_decimation"] < st and (finer[1] & finer[3]).sum() > 4096:
+                A_raw, Am, B_raw, Bm, back_x, back_y, frame = finer
                 frame["notes"].append(
                     "refined: re-placed at %d x decimation over the overlap instead of "
                     "%d x over the whole reference" % (frame["reference_decimation"], st))
@@ -437,8 +673,53 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                         d.get("est_rotation_deg", float("nan"))),
                      {"attempts": attempts, "decomposition": d, "degraded": degraded})
 
-    # ---- 6. held-out accuracy ---------------------------------------------
+    # ---- 5b. fine stage at native reference resolution ---------------------
+    # The coarse residual is floored by the working grid's decimation, so a
+    # "sub-pixel" claim made there is a claim about a pixel several times wider
+    # than either input's own. Re-measure at native resolution before believing
+    # any number.
     corr, vr = best["corr"], best["vr"]
+    step0 = int(frame.get("reference_decimation", 1) or 1)
+    orow0, ocol0 = frame.get("reference_origin", [0, 0])
+    fine_info = {"attempted": False}
+    per_point_back = None
+    if fine:
+        fine_plan = [best["name"]] + [p for p in plan if p != best["name"]]
+        fcorr, fine_info = _fine_stage(S, R, corr, vr, frame, fine_plan, max_side,
+                                       grid, log, cache, Hcoarse=Hm,
+                                       tiles=fine_tiles)
+        if fcorr is not None:
+            # Back onto the working grid, where every downstream stage already
+            # lives. The positions are now measured at native resolution, so
+            # these are sub-working-pixel by construction.
+            w_src = np.column_stack([(fcorr.src[:, 0] - ocol0) / step0,
+                                     (fcorr.src[:, 1] - orow0) / step0]).astype(np.float32)
+            w_ref = np.column_stack([(fcorr.ref[:, 0] - ocol0) / step0,
+                                     (fcorr.ref[:, 1] - orow0) / step0]).astype(np.float32)
+            fvr = V.verify(w_src, w_ref, model_type=best["model"], threshold=3.0 / step0)
+            if fvr.model is not None and fvr.n_inliers >= max(8, V._min_points(best["model"])):
+                corr = M.Correspondences(src=w_src, ref=w_ref,
+                                         confidence=fcorr.confidence,
+                                         method=fcorr.method, kind=fcorr.kind,
+                                         detail=dict(fcorr.detail))
+                vr = fvr
+                Hm = fvr.model
+                d = V.decompose(Hm)
+                per_point_back = (fcorr.detail["back_x"], fcorr.detail["back_y"])
+                fine_info["adopted"] = True
+                fine_info["inliers"] = int(fvr.n_inliers)
+                log("fine      : %d points from %d native windows, %d verified inliers"
+                    % (fine_info["points"], fine_info["windows_used"], fvr.n_inliers))
+            else:
+                fine_info["adopted"] = False
+                fine_info["note"] = ("native points did not verify (%d inliers); the "
+                                     "coarse solution was kept" % fvr.n_inliers)
+                log("fine      : %s" % fine_info["note"])
+        elif fine_info.get("attempted"):
+            log("fine      : not used (%s)" % fine_info.get("note"))
+    fine_info.setdefault("adopted", False)
+
+    # ---- 6. held-out accuracy ---------------------------------------------
     idx = np.nonzero(vr.inlier_mask)[0]
     rng = np.random.default_rng(seed)
     perm = rng.permutation(len(idx))
@@ -506,9 +787,10 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     warped, wvalid = _warp(A_raw, Am, Hm, B_raw.shape, best["model"])
     seg = _segment_fit(corr, vr, best["model"], B.shape, segments)
 
-    _write_matches(job_dir, corr, vr, back_x, back_y, frame)
+    conv = _unit_conversions(S, R, frame)
+    _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back)
     _write_registered(job_dir, warped, wvalid, R, frame)
-    tj = _write_transform(job_dir, Hm, best["model"], d, seg, frame, best["name"])
+    tj = _write_transform(job_dir, Hm, best["model"], d, seg, frame, best["name"], conv)
     ov_cov = spatial.cell_coverage(corr.ref[vr.inlier_mask], B.shape, grid,
                                    eligible=eligible)
     ov_disp = spatial.dispersion(corr.ref[vr.inlier_mask], B.shape)
@@ -516,7 +798,8 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                                                grid, eligible=eligible)
     metrics = _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best,
                              vr, acc, ov_cov, ov_disp, m_per_px, degraded, warn, d,
-                             time.time() - t_start, grid, eligible, ov_extrap)
+                             time.time() - t_start, grid, eligible, ov_extrap,
+                             conv, fine_info)
     _write_overlay(job_dir, A, Am, B, Bm, warped, wvalid, corr, vr)
     _write_preview_json(job_dir, A, B, corr, vr)
     _write_report(job_dir, job_id, S, R, metrics, tj, attempts)
@@ -530,6 +813,250 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
 # --------------------------------------------------------------------------- #
 # pieces
 # --------------------------------------------------------------------------- #
+
+def _unit_conversions(S: Scene, R: Scene, frame: dict) -> dict:
+    """How to express one reference pixel in the other units that matter.
+
+    The problem statement asks for sub-pixel accuracy *of the source image*, so
+    an error has to be convertible into source pixels, not only into whatever
+    grid the solver happened to run on. Anything that cannot be derived honestly
+    is None rather than 1.0 - a bare PNG has no scale, and inventing one turns a
+    pixel count into a fake distance.
+    """
+    step = int(frame.get("reference_decimation", 1) or 1)
+    m_per_ref = None
+    if R.gsd_m and (R.georeferenced or R.reader in ("pds4", "pds3")):
+        m_per_ref = float(R.gsd_m)
+    src_per_ref = None
+    if S.gsd_m and R.gsd_m:
+        src_per_ref = float(R.gsd_m) / float(S.gsd_m)
+    elif str(frame.get("route", "")).startswith("pixel space"):
+        # Registered in pixel space: the source was resampled onto the reference
+        # grid by the frame's own scale factor, so that factor IS the ratio.
+        try:
+            src_per_ref = 1.0 / float(str(frame["route"]).split("scale ")[1].rstrip(")"))
+        except Exception:                                             # noqa: BLE001
+            src_per_ref = None
+    return {"reference_decimation": step, "metres_per_reference_px": m_per_ref,
+            "source_px_per_reference_px": src_per_ref,
+            "metres_per_working_px": (m_per_ref * step) if m_per_ref else None}
+
+
+def _rmse_units(rmse_ref_px, conv: dict) -> dict:
+    """One error, reported in every unit it can honestly be reported in."""
+    if rmse_ref_px is None:
+        return {"rmse_reference_px": None, "rmse_working_px": None,
+                "rmse_source_px": None, "rmse_m": None}
+    r = float(rmse_ref_px)
+    m = conv["metres_per_reference_px"]
+    sp = conv["source_px_per_reference_px"]
+    return {"rmse_reference_px": round(r, 4),
+            "rmse_working_px": round(r / conv["reference_decimation"], 4),
+            "rmse_source_px": (round(r * sp, 4) if sp else None),
+            "rmse_m": (round(r * m, 3) if m else None)}
+
+
+def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
+                grid, log, cache, Hcoarse=None, tiles: int = 0):
+    """Re-measure the surviving tie points at NATIVE reference resolution.
+
+    The coarse solve runs on a decimated working grid, so the residual it can
+    report is floored by that decimation, not by the method. A TMC-2 strip
+    against a 3-degree SELENE tile decimates 6x: every reported pixel is 44 m
+    wide, and "1.3 px" is 59 m and 10.8 SOURCE pixels. No sub-pixel claim
+    survives that, whatever the internal flag says.
+
+    Whole-frame native placement is not affordable - that is why the grid was
+    decimated in the first place - so this re-places the source over a handful
+    of native-resolution WINDOWS positioned on the tie points the coarse stage
+    already found, and re-correlates inside each. Peak memory is one window, the
+    same as one coarse pass; the windows are walked in sequence.
+
+    Returns ``(Correspondences in FULL-RESOLUTION reference pixels, info)``, with
+    `back` carrying the original source pixel for each point. Both sides live on
+    the reference's own native grid, so residuals come out in reference pixels
+    and convert cleanly into metres and source pixels.
+    """
+    info = {"attempted": True, "windows": 0, "windows_used": 0, "points": 0,
+            "native": False, "note": None, "method": None, "probe": []}
+    step = int(frame.get("reference_decimation", 1) or 1)
+    if step <= 1:
+        info.update(attempted=False, native=True,
+                    note="the coarse grid was already at native reference resolution")
+        return None, info
+
+    orow, ocol = frame.get("reference_origin", [0, 0])
+
+    # The coarse model, expressed in full-resolution reference pixels, inverted:
+    # this is what tells each native window which source ground belongs in it.
+    prewarp = None
+    if Hcoarse is not None:
+        try:
+            Hw = np.eye(3)
+            Hw[:2, :] = np.asarray(Hcoarse, float)[:2, :]
+            if np.asarray(Hcoarse).shape == (3, 3):
+                Hw = np.asarray(Hcoarse, float)
+            T = np.array([[1.0 / step, 0, -ocol / float(step)],
+                          [0, 1.0 / step, -orow / float(step)],
+                          [0, 0, 1.0]])
+            prewarp = np.linalg.inv(np.linalg.inv(T) @ Hw @ T)
+        except np.linalg.LinAlgError:
+            prewarp = None
+
+    idx = np.nonzero(vr.inlier_mask)[0]
+    if len(idx) < 4:
+        info.update(attempted=False, note="too few coarse inliers to place windows on")
+        return None, info
+
+    # Full-resolution reference position of every surviving tie point.
+    pts = np.column_stack([ocol + corr.ref[idx, 0] * step,
+                           orow + corr.ref[idx, 1] * step])
+
+    # Spread the windows over the tie points rather than over the frame - an
+    # empty window costs a placement and returns nothing - and spread them
+    # EVENLY over the whole extent of those points. Walking greedily from one
+    # end instead packs the windows into that end and the distribution the
+    # coarse stage achieved is thrown away: the first version of this scored
+    # 0.36 coverage against the coarse stage's 0.87 on the same pair, which is a
+    # real loss of constraint, not a reporting artefact.
+    x0, y0 = pts.min(axis=0)
+    x1, y1 = pts.max(axis=0)
+    # Size the window so the overlap gets tiled a few times across rather than
+    # swallowed by one or two boxes; coverage is a deliverable, and two windows
+    # spanning a 3400 px overlap scored 0.15 where the coarse stage managed
+    # 0.21 on the same pair.
+    side = int(np.clip(max(x1 - x0, y1 - y0) / 3.0, 512, max_side))
+    half = max(256, side // 2)
+    win = 2.0 * half
+    # Tile the overlap in BOTH axes. Laying windows out along the long axis only
+    # leaves the cross-axis uncovered whenever the overlap is wider than one
+    # window, and the coverage the coarse stage achieved is lost: on this
+    # TMC-2 strip, bands-only placement scored 0.62 against the coarse 0.87,
+    # because a square window spans about 60% of the strip's width.
+    nx = max(1, int(math.ceil((x1 - x0) / win)))
+    ny = max(1, int(math.ceil((y1 - y0) / win)))
+    cand = []
+    for jy in range(ny):
+        for ix in range(nx):
+            cx = x0 + (ix + 0.5) * (x1 - x0) / nx
+            cy = y0 + (jy + 0.5) * (y1 - y0) / ny
+            near = int(np.count_nonzero((np.abs(pts[:, 0] - cx) < half)
+                                        & (np.abs(pts[:, 1] - cy) < half)))
+            if near:
+                cand.append((cx, cy, near))
+    if not cand:
+        info.update(attempted=False, note="no window contained a coarse tie point")
+        return None, info
+    budget = tiles if tiles and tiles > 0 else min(24, len(cand))
+    if len(cand) > budget:
+        # Thin evenly rather than by point count, so the survivors still span
+        # the overlap instead of crowding where the texture happens to be.
+        keep = np.linspace(0, len(cand) - 1, budget).round().astype(int)
+        cand = [cand[i] for i in sorted(set(keep.tolist()))]
+    centres = [(c[0], c[1]) for c in cand]
+    info["windows"] = len(centres)
+    info["placement"] = ("%d windows tiling %.0f x %.0f reference px (%d x %d grid)"
+                         % (len(centres), x1 - x0, y1 - y0, nx, ny))
+
+    H, W = R.array.shape
+    # With the coarse solve applied, what is left is its residual - a few
+    # working pixels at most - so the search does not need to be wide.
+    max_shift = max(16, 4 * step) if prewarp is None else max(12, 2 * step)
+    plan = [plan] if isinstance(plan, str) else list(plan)
+    method = None                 # chosen by probing the first usable window
+    src_all, ref_all, conf_all, bx_all, by_all = [], [], [], [], []
+    for cx, cy in centres:
+        r0 = int(np.clip(cy - half, 0, max(0, H - 2 * half)))
+        c0 = int(np.clip(cx - half, 0, max(0, W - 2 * half)))
+        win = (r0, c0, min(H, r0 + 2 * half), min(W, c0 + 2 * half))
+        try:
+            A, Am, B, Bm, bx, by, fr = prealign(S, R, max_side=max_side,
+                                                window=win, cache=cache,
+                                                prewarp=prewarp)
+        except Exception as exc:                                      # noqa: BLE001
+            log("fine      : window at (%d, %d) could not be placed: %s" % (c0, r0, exc))
+            continue
+        if fr["reference_decimation"] != 1:
+            info["note"] = ("windows still decimated %dx; raise --max-side or lower "
+                            "--fine-tiles" % fr["reference_decimation"])
+        both_w = Am & Bm
+        if both_w.sum() < 4096:
+            continue
+        if method is None:
+            # Do NOT assume the coarse winner still wins. The whole point of
+            # this stage is that it runs at a different resolution, and the
+            # ranking moves with resolution: on the OHRC/NAC pair AKAZE won at
+            # 4 m/px and then produced 4 usable points at 1 m/px, because
+            # downsampling had been suppressing the fine shadow structure that
+            # breaks descriptors. Probe the plan once, on the first usable
+            # window, and carry the winner across the rest.
+            for name in plan:
+                try:
+                    ci, _ = _run_one(name, A, Am, B, Bm, max_shift, grid)
+                except Exception:                                     # noqa: BLE001
+                    ci = None
+                n_i = 0 if ci is None else len(ci)
+                vi = None
+                if n_i >= 4:
+                    vi = V.verify(ci.src, ci.ref, model_type="affine", threshold=3.0)
+                info["probe"].append({"method": name, "candidates": n_i,
+                                      "inliers": (0 if vi is None else int(vi.n_inliers))})
+                if vi is not None and vi.n_inliers >= 8:
+                    method, c = name, ci
+                    break
+            else:
+                continue                  # this window suits nothing; try the next
+            info["method"] = method
+            log("fine      : native probe -> %s  (%s)" % (
+                method, ", ".join("%s %d/%d" % (x["method"], x["inliers"], x["candidates"])
+                                  for x in info["probe"])))
+        else:
+            c, why = _run_one(method, A, Am, B, Bm, max_shift, grid)
+        if c is None or len(c) == 0:
+            continue
+        wr0, wc0 = fr["reference_origin"]
+        st = fr["reference_decimation"]
+        # window-local -> full-resolution reference pixels
+        ref_all.append(np.column_stack([wc0 + c.ref[:, 0] * st, wr0 + c.ref[:, 1] * st]))
+        src_all.append(np.column_stack([wc0 + c.src[:, 0] * st, wr0 + c.src[:, 1] * st]))
+        conf_all.append(np.asarray(c.confidence, np.float32))
+        # original source pixel behind each point, for matches.csv
+        sj = np.clip(np.round(c.src[:, 1]).astype(int), 0, bx.shape[0] - 1)
+        si = np.clip(np.round(c.src[:, 0]).astype(int), 0, bx.shape[1] - 1)
+        bx_all.append(bx[sj, si])
+        by_all.append(by[sj, si])
+        info["windows_used"] += 1
+
+    if not ref_all:
+        info["note"] = info["note"] or "no native window produced a tie point"
+        return None, info
+
+    src_pts = np.vstack(src_all)
+    if prewarp is not None:
+        # In a prewarped window the source arrives already carrying the coarse
+        # solution, so these positions measure only the residual. Map them back
+        # through the same prewarp to recover where the source geometry actually
+        # put each point; refitting on those gives the FULL transform rather
+        # than the leftover correction to it.
+        P = np.asarray(prewarp, float)
+        den = P[2, 0] * src_pts[:, 0] + P[2, 1] * src_pts[:, 1] + P[2, 2]
+        den = np.where(np.abs(den) < 1e-12, 1e-12, den)
+        src_pts = np.column_stack([
+            (P[0, 0] * src_pts[:, 0] + P[0, 1] * src_pts[:, 1] + P[0, 2]) / den,
+            (P[1, 0] * src_pts[:, 0] + P[1, 1] * src_pts[:, 1] + P[1, 2]) / den])
+
+    out = M.Correspondences(
+        src=src_pts.astype(np.float32),
+        ref=np.vstack(ref_all).astype(np.float32),
+        confidence=np.concatenate(conf_all),
+        method=(method or "?") + "@native", kind="dense",
+        detail={"stage": "fine", "windows": info["windows_used"]})
+    out.detail["back_x"] = np.concatenate(bx_all)
+    out.detail["back_y"] = np.concatenate(by_all)
+    info["points"] = len(out)
+    info["native"] = True
+    return out, info
+
 
 def _search_radius_px(S: Scene, R: Scene, sp: dict, frame: dict) -> int:
     """How far to search, from the profile's declared geolocation error.
@@ -592,7 +1119,7 @@ _ECC_MOTION = {"translation": cv2.MOTION_TRANSLATION,
 
 
 def _ecc_polish(A, Am, B, Bm, H0, model, iters=60, eps=1e-6,
-                max_corner_shift_px=3.0):
+                max_corner_shift=None):
     """Sub-pixel refinement of a verified model by ECC, warm-started from H0.
 
     The discrete stages cannot beat the sampling they search on. Dense NCC
@@ -610,7 +1137,11 @@ def _ecc_polish(A, Am, B, Bm, H0, model, iters=60, eps=1e-6,
     so one criterion covers both sides of that flip.
 
     Returns (H, info). The caller decides whether to adopt it; this function
-    refuses only warps that have clearly run away from the verified model.
+    refuses only warps that have clearly run away from the verified model. That
+    guard is proportional to the frame, not a fixed pixel count: a fixed budget
+    is strict on a large working grid and loose on a small one, which is the
+    wrong way round. The decisive test is the held-out RMSE the caller applies;
+    this is only a rail against divergence.
     """
     motion = _ECC_MOTION.get(model)
     info = {"attempted": True, "converged": False, "adopted": False,
@@ -673,6 +1204,8 @@ def _ecc_polish(A, Am, B, Bm, H0, model, iters=60, eps=1e-6,
         return None, info
 
     h, w = A.shape[:2]
+    if max_corner_shift is None:
+        max_corner_shift = max(3.0, 0.005 * float(np.hypot(h, w)))
     corners = np.array([[0, 0, 1], [w, 0, 1], [0, h, 1], [w, h, 1]], float).T
     def proj(Hx):
         q = Hx @ corners
@@ -680,10 +1213,11 @@ def _ecc_polish(A, Am, B, Bm, H0, model, iters=60, eps=1e-6,
     shift = float(np.linalg.norm(proj(Hp) - proj(H0f), axis=1).max())
     info.update(converged=True, correlation=round(float(cc), 6),
                 max_corner_shift_px=round(shift, 4))
-    if shift > max_corner_shift_px:
-        info["note"] = ("ECC moved the frame corners by %.2f px, beyond the %.1f px "
-                        "this stage is allowed to change a verified model; rejected"
-                        % (shift, max_corner_shift_px))
+    info["max_corner_shift_allowed_px"] = round(float(max_corner_shift), 3)
+    if shift > max_corner_shift:
+        info["note"] = ("ECC moved the frame corners by %.2f px, beyond the %.2f px "
+                        "(0.5%% of the frame diagonal) this stage is allowed to "
+                        "change a verified model; rejected" % (shift, max_corner_shift))
         return None, info
     return Hp, info
 
@@ -735,21 +1269,33 @@ def _segment_fit(corr, vr, model, shape, segments):
     return out
 
 
-def _write_matches(job_dir, corr, vr, back_x, back_y, frame):
+def _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back=None):
+    """The match points, in the coordinates a consumer of the product needs.
+
+    `per_point_back` carries the original source pixel measured for each point by
+    the fine stage. It is preferred over the `back_x`/`back_y` lookup because
+    that lookup is indexed by working-grid position and so quantises the source
+    coordinate to the decimation - which would throw away exactly the precision
+    the fine stage was run to obtain.
+    """
     step = frame.get("reference_decimation", 1)
     orow, ocol = frame.get("reference_origin", [0, 0])
+    pb_x, pb_y = per_point_back if per_point_back is not None else (None, None)
     with open(os.path.join(job_dir, "matches.csv"), "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(["src_x", "src_y", "ref_x", "ref_y", "confidence", "inlier"])
         for k in range(len(corr)):
             sx, sy = corr.src[k]
             # map back to ORIGINAL source pixel coordinates where we can
-            j, i = int(round(sy)), int(round(sx))
-            if 0 <= j < back_x.shape[0] and 0 <= i < back_x.shape[1] \
-                    and np.isfinite(back_x[j, i]):
-                osx, osy = float(back_x[j, i]), float(back_y[j, i])
+            if pb_x is not None and k < len(pb_x) and np.isfinite(pb_x[k]):
+                osx, osy = float(pb_x[k]), float(pb_y[k])
             else:
-                osx, osy = float(sx), float(sy)
+                j, i = int(round(sy)), int(round(sx))
+                if 0 <= j < back_x.shape[0] and 0 <= i < back_x.shape[1] \
+                        and np.isfinite(back_x[j, i]):
+                    osx, osy = float(back_x[j, i]), float(back_y[j, i])
+                else:
+                    osx, osy = float(sx), float(sy)
             w.writerow(["%.3f" % osx, "%.3f" % osy,
                         "%.3f" % (ocol + float(corr.ref[k][0]) * step),
                         "%.3f" % (orow + float(corr.ref[k][1]) * step),
@@ -781,14 +1327,39 @@ def _write_registered(job_dir, warped, wvalid, R: Scene, frame):
                     np.clip(np.nan_to_num(out) * 255, 0, 255).astype(np.uint8))
 
 
-def _write_transform(job_dir, Hm, model, decomp, seg, frame, method):
+def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None):
+    # The working-grid matrix is what the warp uses, but it is expressed in a
+    # grid that exists only inside this run. Conjugating it by the grid-to-
+    # reference map gives the same transform in FULL-RESOLUTION reference
+    # pixels, which is the one a consumer of the product can actually apply.
+    native = None
+    step = int((frame or {}).get("reference_decimation", 1) or 1)
+    orow, ocol = (frame or {}).get("reference_origin", [0, 0])
+    try:
+        Hw = np.eye(3)
+        Hw[:2, :] = np.asarray(Hm, float)[:2, :]
+        if np.asarray(Hm).shape == (3, 3):
+            Hw = np.asarray(Hm, float)
+        T = np.array([[1.0 / step, 0, -ocol / float(step)],
+                      [0, 1.0 / step, -orow / float(step)],
+                      [0, 0, 1.0]])
+        Hn = np.linalg.inv(T) @ Hw @ T
+        if abs(Hn[2, 2]) > 1e-12:
+            Hn = Hn / Hn[2, 2]
+        native = Hn.tolist()
+    except Exception:                                                 # noqa: BLE001
+        native = None
+
     tj = {"model": model, "matrix": np.asarray(Hm, float).tolist(),
+          "matrix_reference_px": native,
+          "units": conv or {},
           "decomposition": {k: (round(float(v), 6) if isinstance(v, (int, float)) else v)
                             for k, v in (decomp or {}).items()},
           "frame": frame, "method": method,
-          "coordinates": "reference pixel coordinates on the working grid; "
-                         "multiply by frame.reference_decimation for full-resolution "
-                         "reference pixels",
+          "coordinates": "`matrix` is in working-grid coordinates; "
+                         "`matrix_reference_px` is the same transform in "
+                         "full-resolution reference pixels and is the one to apply "
+                         "to the delivered product",
           "segments": seg}
     with open(os.path.join(job_dir, "transform.json"), "w") as fh:
         json.dump(tj, fh, indent=1)
@@ -797,14 +1368,17 @@ def _write_transform(job_dir, Hm, model, decomp, seg, frame, method):
 
 def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
                    acc, cov, disp, m_per_px, degraded, warn, decomp, secs, grid,
-                   eligible, extrap):
-    n = len(best["corr"])
-    ratio = vr.inlier_ratio
+                   eligible, extrap, conv, fine_info):
+    n = int(vr.inlier_mask.size)      # the correspondence set behind THIS result,
+    ratio = vr.inlier_ratio           # which is the fine set once that stage runs
     rmse_px = acc.get("held_out_rmse_px", acc.get("fit_rmse_px"))
     d_az = None
     if S.sun_azimuth_deg is not None and R.sun_azimuth_deg is not None:
         d = abs(S.sun_azimuth_deg - R.sun_azimuth_deg) % 360.0
         d_az = round(min(d, 360.0 - d), 2)
+
+    units = _rmse_units(None if rmse_px is None else rmse_px * conv["reference_decimation"],
+                        conv)
 
     reasons = []
     if vr.n_inliers < 12:
@@ -825,18 +1399,53 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
     if character.get("overlap_fraction", 1) < 0.15:
         reasons.append("the images share only %.0f%% of the frame"
                        % (100 * character["overlap_fraction"]))
+    # A limit of the reference is not a defect in the registration, so this is
+    # stated rather than counted against the run's status. Quoting "sub-pixel:
+    # False" without it would read as a shortfall in the matching when in fact
+    # no method could do better against a reference this coarse.
+    notes = []
+    sp_floor = conv.get("source_px_per_reference_px")
+    if sp_floor and sp_floor >= 1.0 and units["rmse_source_px"] is not None:
+        notes.append("one reference pixel is %.2f source pixels, so sub-source-pixel "
+                     "accuracy is not reachable against this reference at all; the "
+                     "result is %.2f source px, %.2f reference px, %s m"
+                     % (sp_floor, units["rmse_source_px"], units["rmse_reference_px"],
+                        units["rmse_m"]))
     reasons += list(warn or [])
     status = "pass" if not reasons else "warning"
 
     m = {"status": status, "reason": "; ".join(reasons) if reasons else None,
+         "notes": notes,
          "job_id": job_id, "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
          "runtime_s": round(secs, 2),
          "method_used": best["name"], "model": best["model"],
-         "accuracy": dict(acc, rmse_px=rmse_px,
-                          rmse_m=(round(rmse_px * m_per_px, 3)
-                                  if (rmse_px is not None and m_per_px) else None),
-                          metres_per_pixel=m_per_px,
-                          subpixel=bool(rmse_px is not None and rmse_px < 1.0)),
+         "accuracy": dict(
+             acc, rmse_px=rmse_px,
+             # The same error in every unit it can honestly be stated in. The
+             # working grid is an internal artefact of this run, so quoting a
+             # residual only in its pixels says nothing about either input.
+             **units,
+             metres_per_pixel=m_per_px,
+             units=conv,
+             # The problem statement asks for sub-pixel accuracy OF THE SOURCE
+             # IMAGE, so that is what the flag reports. It is None, not False,
+             # when there is no scale to convert with - a bare PNG cannot answer
+             # the question either way.
+             subpixel=(None if units["rmse_source_px"] is None
+                       else bool(units["rmse_source_px"] < 1.0)),
+             subpixel_basis="source pixels",
+             subpixel_working_grid=bool(rmse_px is not None and rmse_px < 1.0),
+             # One reference pixel, expressed in source pixels. Nothing can
+             # localise a source pixel against a reference better than about a
+             # reference pixel, so when this is >= 1 a sub-source-pixel result
+             # is not available from this pair at all - no method would give it,
+             # and the honest thing is to say so rather than keep reporting
+             # False as though it were a shortfall in the matching.
+             subpixel_floor_source_px=(round(conv["source_px_per_reference_px"], 3)
+                                       if conv["source_px_per_reference_px"] else None),
+             subpixel_attainable=(None if not conv["source_px_per_reference_px"]
+                                  else bool(conv["source_px_per_reference_px"] < 1.0))),
+         "fine_stage": fine_info,
          "matches": {"candidates": n, "inliers": int(vr.n_inliers),
                      "inlier_ratio": round(ratio, 4)},
          "distribution": {"grid": list(grid), "coverage_fraction": round(cov, 4),

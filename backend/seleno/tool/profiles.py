@@ -15,15 +15,26 @@ from dataclasses import dataclass, field
 CONFIG_DIR = os.path.abspath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "config", "sensors"))
 
+def _token(t: str) -> str:
+    """Match `t` as a standalone token, treating `_`, `-` and `.` as separators.
+
+    `\\b` is the obvious thing to reach for and it is wrong here: `_` is a word
+    character, so `\\bnac\\b` does not match `NAC_CM355_...`, which is exactly how
+    these products are named. That silently dropped a real NAC mosaic to the
+    `_default` profile.
+    """
+    return r"(?<![a-z0-9])%s(?![a-z0-9])" % t
+
+
 # Substrings that identify an instrument in a logical id, a DATA_SET_ID or a
 # filename. Ordered: the first hit wins, so more specific patterns come first.
 PATTERNS = [
-    ("ohrc", [r"ch2_ohr", r"\bohrc\b", r"cho\.ohr"]),
-    ("tmc2", [r"ch2_tmc", r"\btmc\b", r"cho\.tmc", r"tmc2"]),
-    ("iirs", [r"ch2_iir", r"\biirs\b", r"cho\.iir"]),
-    ("selene_tc", [r"tco_map", r"sln-l-tc", r"selene", r"\bkaguya\b"]),
-    ("nac", [r"nac_pole", r"lroc.*nac", r"\bnac\b", r"lro-l-lroc"]),
-    ("wac", [r"wac_", r"\bwac\b", r"lroc-wac"]),
+    ("ohrc", [r"ch2_ohr", _token("ohrc"), r"cho\.ohr"]),
+    ("tmc2", [r"ch2_tmc", _token("tmc"), r"cho\.tmc", _token("tmc2")]),
+    ("iirs", [r"ch2_iir", _token("iirs"), r"cho\.iir"]),
+    ("selene_tc", [r"tco_map", r"sln-l-tc", r"selene", _token("kaguya")]),
+    ("nac", [r"nac_pole", r"lroc.*nac", _token("nac"), r"lro-l-lroc"]),
+    ("wac", [_token("wac"), r"lroc-wac"]),
 ]
 
 

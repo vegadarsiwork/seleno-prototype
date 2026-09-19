@@ -152,19 +152,35 @@ function MetricsTable({ m }) {
         <Row k="inliers" v={m.matches?.inliers} />
         <Row k="inlier ratio" v={pct(m.matches?.inlier_ratio)} />
         <Row k="held-out points" v={a.held_out_n} />
-        <Row k="RMSE (px)" v={num(a.rmse_px, 4)} />
+        {/* The working grid is internal to the run, so a residual quoted only in
+            its pixels says nothing about either input. All four, always. */}
+        <Row k="RMSE (source px)" v={num(a.rmse_source_px, 3)}
+             tone={a.subpixel ? 'ok' : ''} />
+        <Row k="RMSE (reference px)" v={num(a.rmse_reference_px, 3)} />
         <Row k="RMSE (m)" v={a.rmse_m == null
           ? <span title="no scale on the reference; metres would be invented">null</span>
-          : num(a.rmse_m, 1)} />
-        <Row k="median / p90 (px)"
+          : num(a.rmse_m, 3)} />
+        <Row k="RMSE (working-grid px)" v={num(a.rmse_working_px, 4)} />
+        <Row k="median / p90 (working px)"
              v={`${num(a.held_out_median_px, 3)} / ${num(a.held_out_p90_px, 3)}`} />
-        <Row k="metres per pixel" v={a.metres_per_pixel == null ? 'null' : num(a.metres_per_pixel, 2)} />
-        <Row k="sub-pixel" v={String(a.subpixel)} tone={a.subpixel ? 'ok' : ''} />
+        <Row k="sub-pixel (source)" v={a.subpixel == null ? 'unknown — no scale'
+          : String(a.subpixel)} tone={a.subpixel ? 'ok' : ''} />
+        {a.subpixel_attainable === false && (
+          <Row k="sub-pixel floor" mono={false}
+               v={`1 reference px = ${num(a.subpixel_floor_source_px, 2)} source px, so sub-source-pixel is not reachable against this reference`} />
+        )}
         <Row k="refinement" v={a.subpixel_method} />
         {a.ecc?.attempted && (
           <Row k="ECC polish" v={a.ecc.adopted
             ? `adopted, ${num(a.ecc.rmse_px_before, 4)} -> ${num(a.rmse_px, 4)} px`
             : (a.ecc.note || 'not adopted')} mono={false} />
+        )}
+        {m.fine_stage?.adopted && (
+          <Row k="fine stage" mono={false}
+               v={`${m.fine_stage.method} at native resolution, ${m.fine_stage.points} points from ${m.fine_stage.windows_used} windows`} />
+        )}
+        {m.fine_stage?.attempted && !m.fine_stage?.adopted && (
+          <Row k="fine stage" mono={false} v={m.fine_stage.note || 'not adopted'} />
         )}
         <Row k="coverage" v={`${pct(d.coverage_fraction)} of ${d.eligible_cells} eligible cells`} />
         <Row k="dispersion" v={num(d.dispersion, 3)} />
@@ -383,6 +399,9 @@ export default function ToolView({ view, setView }) {
               <div className="grid2">
                 <Panel title="Metrics" meta="metrics.json">
                   <MetricsTable m={m} />
+                  {(m.notes || []).map((n, i) => (
+                    <div key={i} className="caption">{n}</div>
+                  ))}
                 </Panel>
                 <Panel title="Degraded capability"
                        meta={(m.degraded || []).length + ' notes'}>

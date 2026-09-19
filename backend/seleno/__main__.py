@@ -25,6 +25,12 @@ def main(argv=None):
     r.add_argument("--segments", type=int, default=0,
                    help="fit this many per-segment transforms along the long axis "
                         "(for pushbroom strips); 0 disables")
+    r.add_argument("--no-fine", action="store_true",
+                   help="skip the native-resolution fine stage (faster; the "
+                        "reported accuracy is then floored by the working grid)")
+    r.add_argument("--fine-tiles", type=int, default=0,
+                   help="cap on native-resolution windows; 0 means as many as "
+                        "needed to tile the overlap (max 24)")
     r.add_argument("--no-subpixel", action="store_true",
                    help="skip the ECC sub-pixel polish (faster; the discrete "
                         "stages' own accuracy is then what is reported)")
@@ -49,7 +55,8 @@ def main(argv=None):
     from seleno.tool import register
     res = register(a.source, a.reference, a.out, model=a.model, max_side=a.max_side,
                    grid=(a.grid, a.grid), segments=a.segments,
-                   subpixel=not a.no_subpixel, verbose=not a.quiet)
+                   subpixel=not a.no_subpixel, fine=not a.no_fine,
+                   fine_tiles=a.fine_tiles, verbose=not a.quiet)
     if a.json:
         print(json.dumps(res.metrics, indent=1))
     return 0 if res.ok else 2
