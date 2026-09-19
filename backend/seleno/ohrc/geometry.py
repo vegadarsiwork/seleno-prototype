@@ -131,6 +131,37 @@ class GeometryGrid:
         return cls(upx.astype(np.float64), usc.astype(np.float64), LON, LAT, X, Y,
                    source=path)
 
+    @classmethod
+    def from_envi_loc(cls, path: str, samples: int, lines: int, step: int = 0
+                      ) -> "GeometryGrid":
+        """Lattice from an IIRS `_loc_` backplane.
+
+        IIRS does not ship the tabular geometry CSV the framing cameras do. It
+        ships a band-sequential ENVI cube of per-pixel backplanes whose first
+        two bands are Longitude and Latitude in the MOON_ME frame, at the full
+        detector grid - 250 x 12945 here, 3.2 million points.
+
+        That is far finer than anything downstream needs (the interpolators
+        subsample to roughly 200 rows), and projecting three million points to
+        stereographic to build it is pure cost, so it is decimated on the way in
+        and the decimation is recorded in `source`.
+        """
+        step = step or max(1, lines // 2000)
+        cube = np.memmap(path, dtype="<f4", mode="r", shape=(4, lines, samples))
+        LON = np.asarray(cube[0, ::step, :], np.float64)
+        LAT = np.asarray(cube[1, ::step, :], np.float64)
+        del cube
+        sc = np.arange(0, lines, step, dtype=np.float64)[:LON.shape[0]]
+        px = np.arange(samples, dtype=np.float64)
+        # A backplane carries fill where the geometry could not be solved.
+        bad = ~np.isfinite(LON) | ~np.isfinite(LAT) | (np.abs(LAT) > 90.0)
+        if bad.any():
+            LON = np.where(bad, np.nan, LON)
+            LAT = np.where(bad, np.nan, LAT)
+        X, Y = lonlat_to_south_stereo(LON, LAT)
+        return cls(px, sc, LON, LAT, X, Y,
+                   source="%s (every %d lines)" % (path, step))
+
     # -------------------------------------------------------------- interpolate
     def _weights(self, sample, line):
         s = np.atleast_1d(np.asarray(sample, np.float64))

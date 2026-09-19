@@ -169,13 +169,27 @@ def _percentile_norm(a: np.ndarray, valid: np.ndarray, lo=2.0, hi=98.0) -> np.nd
 
 def _try_pds4(path: str, profiles) -> Scene | None:
     """Chandrayaan-2 PDS4: a .xml label beside a .img."""
+    # The data file is whatever the label says it is. The framing cameras ship
+    # `.img`; IIRS ships a `.qub`, and guessing the extension simply misses it.
     if path.lower().endswith(".xml"):
-        lbl, img = path, os.path.splitext(path)[0] + ".img"
-    elif path.lower().endswith(".img") and os.path.exists(os.path.splitext(path)[0] + ".xml"):
+        lbl = path
+        img = None
+    elif path.lower().endswith((".img", ".qub")) and \
+            os.path.exists(os.path.splitext(path)[0] + ".xml"):
         img, lbl = path, os.path.splitext(path)[0] + ".xml"
     else:
         return None
-    if not os.path.exists(img):
+    if img is None:
+        try:
+            from ..ohrc.label import parse_label as _pl
+            named = _pl(lbl).image_file_name
+        except Exception:
+            named = None
+        stem = os.path.splitext(lbl)[0]
+        cands = ([os.path.join(os.path.dirname(lbl), named)] if named else []) \
+            + [stem + ".img", stem + ".qub"]
+        img = next((c for c in cands if os.path.exists(c)), None)
+    if not img or not os.path.exists(img):
         return None
     try:
         from ..ohrc.label import parse_label
@@ -190,20 +204,62 @@ def _try_pds4(path: str, profiles) -> Scene | None:
     # into RAM (2.37 GB for a TMC-2 strip) before a single pixel is needed. The
     # memmap supports the fancy indexing `_sample` does, and pages in only what
     # is touched.
-    a = np.memmap(img, dtype=np.dtype(L.numpy_dtype), mode="r",
-                  shape=(L.lines, L.samples))
     valid = None
     degraded = []
+    if getattr(L, "bands", 0) and L.bands > 1:
+        # A spectrometer cube. Collapse it to one reflected-light raster before
+        # anything else looks at it; every matcher here takes a 2D image.
+        from . import spectral
+        names = [n for n in (getattr(L, "axis_names", None) or [])]
+        order = "bsq"
+        if names[:1] == ["line"] and names[1:2] == ["sample"]:
+            order = "bip"
+        elif names[:1] == ["line"] and names[1:2] == ["band"]:
+            order = "bil"
+        shape = {"bip": (L.lines, L.samples, L.bands),
+                 "bil": (L.lines, L.bands, L.samples)}.get(
+                     order, (L.bands, L.lines, L.samples))
+        cube = np.memmap(img, dtype=np.dtype(L.numpy_dtype), mode="r", shape=shape)
+        spc = prof.get("spectral") or {}
+        a, rep = spectral.pseudo_pan(
+            cube, getattr(L, "band_centres_um", None), order=order,
+            nodata=prof.get("nodata", 0),
+            lo=float(spc.get("pseudo_pan_lo_um", spectral.DEFAULT_LO_UM)),
+            hi=float(spc.get("pseudo_pan_hi_um", spectral.DEFAULT_HI_UM)),
+            max_bands=int(spc.get("max_bands", 48)))
+        if a is None:
+            raise UnreadableInput("%s is a %d-band cube and no band in the "
+                                  "reflected-light window carried signal"
+                                  % (os.path.basename(img), L.bands))
+        degraded.append(spectral.pseudo_pan_report(rep))
+        degraded += rep["degraded"]
+    else:
+        # Deliberately NOT np.asarray(..., float32): that copies the entire
+        # raster into RAM (2.37 GB for a TMC-2 strip) before a single pixel is
+        # needed. The memmap supports the fancy indexing `_sample` does, and
+        # pages in only what is touched.
+        a = np.memmap(img, dtype=np.dtype(L.numpy_dtype), mode="r",
+                      shape=(L.lines, L.samples))
 
     lonlat = None
     csv = _find_geometry_csv(img, L)
+    loc = _find_envi_loc(img)
     if csv:
         try:
             from ..ohrc.geometry import GeometryGrid
             lonlat = GeometryGrid.from_csv(csv)
         except Exception as exc:
             degraded.append("geometry CSV present but unreadable (%s)" % type(exc).__name__)
-    else:
+    elif loc:
+        try:
+            from ..ohrc.geometry import GeometryGrid
+            lonlat = GeometryGrid.from_envi_loc(loc, L.samples, L.lines)
+            degraded.append("geometry from the %s backplane"
+                            % os.path.basename(loc).split("_d_")[-1].split("_")[0])
+        except Exception as exc:
+            degraded.append("geometry backplane present but unreadable (%s: %s)"
+                            % (type(exc).__name__, exc))
+    if lonlat is None and not csv and not loc:
         degraded.append("no geometry lattice: registration will be in pixel space "
                         "unless the reference supplies a frame")
 
@@ -229,6 +285,29 @@ def _try_pds4(path: str, profiles) -> Scene | None:
                        "samples": L.samples, "data_type": L.data_type,
                        "reference_data_used": L.reference_data_used,
                        "label_sun_trusted": trusted_sun})
+
+
+def _find_envi_loc(img_path: str) -> str | None:
+    """The sibling `_loc_` backplane an IIRS delivery ships instead of a CSV."""
+    d = os.path.dirname(img_path)
+    base = os.path.basename(img_path)
+    try:
+        names = os.listdir(d)
+    except OSError:
+        return None
+    m = re.search(r"(\d{8}T\d{10,16})", base)
+    keys = [m.group(1)] if m else []
+    # Products that carry no timestamp in the name still share a stem with
+    # their backplanes, so fall back to the longest common prefix.
+    stem = os.path.splitext(base)[0]
+    keys.append(stem.split("_d_")[0])
+    for key in keys:
+        if not key:
+            continue
+        for f in sorted(names):
+            if key in f and "_loc_" in f and f.lower().endswith(".img"):
+                return os.path.join(d, f)
+    return None
 
 
 def _find_geometry_csv(img_path: str, label) -> str | None:
@@ -384,6 +463,117 @@ def _pds3_projection(L, lines, samples):
     return None, None, "unsupported projection"
 
 
+# A raster this large is read lazily instead of up front. 512 MB as float32 is
+# about 128 megapixels, comfortably above any single Chandrayaan-2 frame and far
+# below a global mosaic.
+_EAGER_BYTES = 512 << 20
+
+
+class LazyRaster:
+    """Array-like over a rasterio band, reading only what is indexed.
+
+    `_try_gdal` used to do `ds.read(1).astype(np.float32)`. That is fine for a
+    scene and fatal for a mosaic: the LROC WAC global basemap is 109164 x 54582,
+    so the eager read asks for 23.8 GB, raises, and is swallowed by the reader's
+    `except Exception: return None` - the tool simply reported that nothing could
+    read the file.
+
+    Only the two access patterns the pipeline actually uses are supported:
+    strided 2D slicing (the working-grid build) and paired fancy indexing (the
+    per-sample lift). Both are served by windowed reads.
+    """
+
+    def __init__(self, path: str, band: int = 1, dtype=np.float32):
+        import rasterio
+        self._path, self._band, self.dtype = path, band, np.dtype(dtype)
+        with rasterio.open(path) as ds:
+            self.shape = (ds.height, ds.width)
+        self._ds = None
+
+    @property
+    def ndim(self):
+        return 2
+
+    @property
+    def size(self):
+        return int(self.shape[0]) * int(self.shape[1])
+
+    def _open(self):
+        if self._ds is None:
+            import rasterio
+            self._ds = rasterio.open(self._path)
+        return self._ds
+
+    def _norm(self, sl, n):
+        start, stop, step = sl.indices(n)
+        return start, max(start, stop), max(1, step)
+
+    def __getitem__(self, key):
+        from rasterio.windows import Window
+        if not isinstance(key, tuple) or len(key) != 2:
+            raise TypeError("LazyRaster supports 2D indexing only, got %r" % (key,))
+        kr, kc = key
+        ds = self._open()
+        H, W = self.shape
+
+        if isinstance(kr, slice) and isinstance(kc, slice):
+            r0, r1, rs = self._norm(kr, H)
+            c0, c1, cs = self._norm(kc, W)
+            oh = len(range(r0, r1, rs))
+            ow = len(range(c0, c1, cs))
+            if oh <= 0 or ow <= 0:
+                return np.zeros((max(oh, 0), max(ow, 0)), self.dtype)
+            # Stride EXACTLY as numpy would, reading in row blocks so memory
+            # stays bounded. GDAL's own `out_shape` decimation is tempting and
+            # wrong here: it resamples at output cell centres rather than taking
+            # every `step`-th pixel, so `a[0::4]` and `a[1::4]` come back
+            # identical - which would quietly turn the boxcar averaging in
+            # `_boxcar_decimate` into a no-op and lose the half-block alignment
+            # it exists to fix.
+            per = max(1, int(_EAGER_BYTES // max(1, (c1 - c0) * 4 * rs)))
+            parts = []
+            i = 0
+            while i < oh:
+                n = min(per, oh - i)
+                rs0 = r0 + i * rs
+                rs1 = min(r1, rs0 + (n - 1) * rs + 1)
+                blk = ds.read(self._band,
+                              window=Window(c0, rs0, c1 - c0, rs1 - rs0))
+                parts.append(blk[::rs, ::cs][:n])
+                i += n
+            a = np.vstack(parts) if len(parts) > 1 else parts[0]
+            return a.astype(self.dtype, copy=False)
+
+        rr = np.asarray(kr)
+        cc = np.asarray(kc)
+        if rr.shape != cc.shape:
+            raise IndexError("LazyRaster fancy indexing needs matching shapes")
+        out = np.zeros(rr.shape, self.dtype)
+        if rr.size == 0:
+            return out
+        flat_r, flat_c = rr.ravel(), cc.ravel()
+        order = np.argsort(flat_r, kind="stable")
+        # Walk in row bands so the window read stays bounded whatever the
+        # points look like.
+        band_rows = max(1, int(_EAGER_BYTES // max(1, W * self.dtype.itemsize)))
+        res = np.zeros(flat_r.size, self.dtype)
+        i = 0
+        while i < order.size:
+            r_start = int(flat_r[order[i]])
+            j = i
+            while j < order.size and int(flat_r[order[j]]) < r_start + band_rows:
+                j += 1
+            idx = order[i:j]
+            r_end = int(flat_r[idx].max()) + 1
+            c_lo = int(flat_c[idx].min())
+            c_hi = int(flat_c[idx].max()) + 1
+            blk = ds.read(self._band,
+                          window=Window(c_lo, r_start, c_hi - c_lo, r_end - r_start))
+            res[idx] = blk[flat_r[idx] - r_start, flat_c[idx] - c_lo]
+            i = j
+        return res.reshape(rr.shape)
+
+
 def _try_gdal(path: str, profiles) -> Scene | None:
     try:
         import rasterio
@@ -391,8 +581,10 @@ def _try_gdal(path: str, profiles) -> Scene | None:
         return None
     try:
         with rasterio.open(path) as ds:
-            a = ds.read(1).astype(np.float32)
             crs, transform, nodata = ds.crs, ds.transform, ds.nodata
+            npx = ds.height * ds.width
+            lazy = npx * 4 > _EAGER_BYTES
+            a = None if lazy else ds.read(1).astype(np.float32)
             # A plain PNG/JPG opens through GDAL with an IDENTITY transform, so
             # transform.a is 1.0 and looks like a 1 m pixel. Taking it would make
             # the tool report a metre-scale RMSE for an image that has no scale at
@@ -403,12 +595,18 @@ def _try_gdal(path: str, profiles) -> Scene | None:
     except Exception:
         return None
     prof = profiles.match(instrument="", path=path)
-    valid = np.isfinite(a)
-    if nodata is not None:
-        valid &= a != nodata
-    else:
-        valid &= a != prof.get("nodata", 0)
     degraded = []
+    if a is None:
+        a = LazyRaster(path)
+        valid = None                 # evaluated per sample, as for a PDS memmap
+        degraded.append("%.0f megapixels: read lazily, in windows"
+                        % (npx / 1e6))
+    else:
+        valid = np.isfinite(a)
+        if nodata is not None:
+            valid &= a != nodata
+        else:
+            valid &= a != prof.get("nodata", 0)
     if crs is None:
         degraded.append("GeoTIFF carries no CRS; pixel-space registration only")
     if crs is not None and crs.is_geographic and gsd is not None:

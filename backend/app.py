@@ -450,6 +450,10 @@ def docs_md(name: str):
                "TRAINING": os.path.join("docs", "TRAINING.md"),
                "PHASE2": os.path.join("reports", "PHASE2.md"),
                "GEOLOCATION": os.path.join("reports", "GEOLOCATION.md"),
+               "TOOL": os.path.join("docs", "TOOL.md"),
+               "PHASE7": os.path.join("reports", "PHASE7.md"),
+               "RESOLUTION_RANKING": os.path.join("reports",
+                                                  "RESOLUTION_RANKING.md"),
                "TMC2_SELENE": os.path.join("reports", "TMC2_SELENE.md")}
     if name not in allowed:
         raise HTTPException(404, "unknown document")

@@ -88,6 +88,9 @@ class OhrcLabel:
     data_type: str = ""
     offset: int = 0
     axis_index_order: str = ""
+    bands: int = 0
+    axis_names: list = field(default_factory=list)
+    band_centres_um: list = field(default_factory=list)
     declared_file_size: int | None = None
     md5_checksum: str | None = None
     image_file_name: str | None = None
@@ -198,6 +201,49 @@ class OhrcLabel:
         return d
 
 
+_UM = {"micrometer": 1.0, "micrometre": 1.0, "micron": 1.0, "um": 1.0,
+       "nanometer": 1e-3, "nanometre": 1e-3, "nm": 1e-3,
+       "angstrom": 1e-4, "millimeter": 1e3, "mm": 1e3}
+
+
+def _band_centres(t: str, nbands: int) -> list:
+    """Per-band centre wavelengths in micrometres, or [] if the label has none.
+
+    PDS4 spells this several ways depending on the discipline dictionary in use
+    and the mission's own conventions, and no real IIRS label has been available
+    to check against, so this tries the forms that exist rather than committing
+    to one. A caller that gets [] back must say so rather than inventing a
+    wavelength axis.
+    """
+    if nbands <= 0:
+        return []
+    for tag in ("center_value", "band_center", "center_wavelength",
+                "filter_center", "wavelength"):
+        vals = re.findall(r"<(?:\w+:)?%s[^>]*>\s*([-\d.eE+]+)\s*</(?:\w+:)?%s>"
+                          % (tag, tag), t)
+        if len(vals) >= max(2, nbands // 2):
+            unit = "micrometer"
+            mu = re.search(r"<(?:\w+:)?%s[^>]*unit=\"([^\"]+)\"" % tag, t)
+            if mu:
+                unit = mu.group(1).strip().lower()
+            k = _UM.get(unit, 1.0)
+            out = [float(v) * k for v in vals[:nbands]]
+            if len(out) == nbands:
+                return out
+    # A first/last pair plus a uniform step is the other common encoding.
+    lo = _float(t, "first_band_wavelength") or _float(t, "minimum_wavelength")
+    hi = _float(t, "last_band_wavelength") or _float(t, "maximum_wavelength")
+    if lo and hi and nbands > 1:
+        unit = "micrometer"
+        mu = re.search(r"<(?:\w+:)?(?:minimum|first)_\w*wavelength[^>]*unit=\"([^\"]+)\"", t)
+        if mu:
+            unit = mu.group(1).strip().lower()
+        k = _UM.get(unit, 1.0)
+        step = (hi - lo) / (nbands - 1)
+        return [(lo + i * step) * k for i in range(nbands)]
+    return []
+
+
 def parse_label(path: str) -> OhrcLabel:
     with open(path, encoding="utf-8", errors="replace") as fh:
         t = fh.read()
@@ -211,10 +257,28 @@ def parse_label(path: str) -> OhrcLabel:
     lab.md5_checksum = _scalar(t, "md5_checksum")
     lab.image_file_name = _scalar(t, "file_name")
 
-    # Axis_Array order is Line then Sample ("Last Index Fastest").
+    # Axis_Array order is Line then Sample ("Last Index Fastest") for the
+    # framing instruments. A spectrometer cube carries a third Band axis, and
+    # its position varies by product (BSQ/BIL/BIP), so read the axis NAMES
+    # rather than assuming an order.
     els = [int(x) for x in re.findall(r"<elements>(\d+)</elements>", t)]
-    if len(els) >= 2:
+    names = [x.strip().lower()
+             for x in re.findall(r"<axis_name>\s*([^<]+?)\s*</axis_name>", t)]
+    if len(names) == len(els) and len(els) >= 2:
+        lab.axis_names = names
+        got = dict(zip(names, els))
+        lab.lines = got.get("line", got.get("lines", 0))
+        lab.samples = got.get("sample", got.get("samples", 0))
+        lab.bands = got.get("band", got.get("bands", 0))
+        if not (lab.lines and lab.samples):        # unfamiliar naming
+            lab.lines, lab.samples = els[0], els[1]
+    elif len(els) >= 3:
+        # No usable names: PDS4's own default ordering is Band, Line, Sample.
+        lab.bands, lab.lines, lab.samples = els[0], els[1], els[2]
+    elif len(els) >= 2:
         lab.lines, lab.samples = els[0], els[1]
+
+    lab.band_centres_um = _band_centres(t, lab.bands)
 
     lab.start_time = _iso(_scalar(t, "start_date_time"))
     lab.stop_time = _iso(_scalar(t, "stop_date_time"))

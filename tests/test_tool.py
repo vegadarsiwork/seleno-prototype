@@ -62,6 +62,32 @@ def write_png(path, arr01, bits=8):
     return path
 
 
+def geo_pair(master, res_src, res_ref, tag, shift=(0, 0)):
+    """Two GeoTIFFs of the SAME ground at different resolutions.
+
+    Writing two rasters with the same pixel count but different pixel sizes
+    gives them different extents, which is a no-overlap test, not a scale test.
+    Both of these cover the master's full extent; only the sampling differs.
+    """
+    import rasterio
+    from rasterio.transform import Affine
+    n = master.shape[0]
+    out = []
+    for i, res_m in enumerate((res_src, res_ref)):
+        k = max(2, int(round(res_m)))
+        arr = master[::k, ::k]
+        if i == 0 and shift != (0, 0):
+            arr = np.roll(arr, shift, axis=(0, 1))
+        path = os.path.join(TMP, "%s_%d.tif" % (tag, i))
+        with rasterio.open(path, "w", driver="GTiff", height=arr.shape[0],
+                           width=arr.shape[1], count=1, dtype="uint8",
+                           crs="+proj=stere +lat_0=-90 +R=1737400 +units=m",
+                           transform=Affine(res_m, 0, 0, 0, -res_m, 0)) as ds:
+            ds.write(np.clip(arr * 255, 0, 255).astype(np.uint8), 1)
+        out.append(path)
+    return out
+
+
 def run(src, ref, **kw):
     out = os.path.join(TMP, "out")
     kw.setdefault("verbose", False)
@@ -273,6 +299,308 @@ def t_full_artifact_set_is_written():
     assert rows[0] == "src_x,src_y,ref_x,ref_y,confidence,inlier", rows[0]
     assert len(rows) > 5, "only %d match rows" % (len(rows) - 1)
     return "%d matches, %d artifacts" % (len(rows) - 1, len(want) + len(reg))
+
+
+def t_rmse_is_reported_in_four_units():
+    """One error, four units, and they must agree with each other."""
+    master = terrain(21, n=1024)
+    src, ref = geo_pair(master, 2.0, 4.0, "u")
+    res = run(src, ref, max_side=256)
+    assert res.status != "failed", res.reason
+    m = metrics_of(res)
+    a_ = m["accuracy"]
+    for k in ("rmse_reference_px", "rmse_working_px", "rmse_source_px", "rmse_m"):
+        assert k in a_ and a_[k] is not None, \
+            "%s is missing or null on a fully georeferenced pair" % k
+    u = a_["units"]
+    ref_px = a_["rmse_reference_px"]
+    assert abs(a_["rmse_m"] - ref_px * u["metres_per_reference_px"]) < 0.05, \
+        "metres disagree with reference px"
+    assert abs(a_["rmse_source_px"] - ref_px * u["source_px_per_reference_px"]) < 0.05, \
+        "source px disagree with reference px"
+    assert abs(a_["rmse_working_px"] - ref_px / u["reference_decimation"]) < 0.05, \
+        "working px disagree with reference px"
+    return "ref %.3f px = %.2f m = %.3f src px = %.3f working px" % (
+        ref_px, a_["rmse_m"], a_["rmse_source_px"], a_["rmse_working_px"])
+
+
+def t_subpixel_flag_is_about_source_pixels():
+    a = terrain(22)
+    s = write_png(os.path.join(TMP, "sp_a.png"), a)
+    r = write_png(os.path.join(TMP, "sp_b.png"), np.roll(a, 3, axis=1))
+    res = run(s, r)
+    m = metrics_of(res)["accuracy"]
+    assert m["subpixel_basis"] == "source pixels", m["subpixel_basis"]
+    if m["rmse_source_px"] is None:
+        assert m["subpixel"] is None, \
+            "no scale to convert with, so the flag must be null, not False"
+    else:
+        assert m["subpixel"] == (m["rmse_source_px"] < 1.0)
+    assert "subpixel_working_grid" in m, "the working-grid flag must still be visible"
+    return "subpixel=%s basis=%s floor=%s" % (
+        m["subpixel"], m["subpixel_basis"], m.get("subpixel_floor_source_px"))
+
+
+def t_unreachable_subpixel_is_a_note_not_a_failure():
+    """A coarse reference limits accuracy; that is not a defect in the run."""
+    master = terrain(23, n=1024)
+    src, ref = geo_pair(master, 2.0, 8.0, "fl")     # reference 4x coarser
+    res = run(src, ref, max_side=512)
+    m = metrics_of(res)
+    if res.status == "failed":
+        return "failed cleanly: %s" % m["reason"]
+    acc = m["accuracy"]
+    assert acc["subpixel_floor_source_px"] is not None
+    assert acc["subpixel_floor_source_px"] > 1.0, acc["subpixel_floor_source_px"]
+    assert acc["subpixel_attainable"] is False, \
+        "a coarser reference cannot give sub-source-pixel; that must be stated"
+    joined = " ".join(m.get("notes") or [])
+    assert "not reachable" in joined, "the limit must be stated in notes: %r" % joined
+    assert "reference pixel is" not in (m.get("reason") or ""), \
+        "a limit of the reference must not be counted against the run's status"
+    return "floor %.2f src px, attainable=%s, status %s" % (
+        acc["subpixel_floor_source_px"], acc["subpixel_attainable"], m["status"])
+
+
+def t_fine_stage_beats_the_working_grid():
+    """A decimated solve must be refined at native resolution, not trusted."""
+    import rasterio
+    from rasterio.transform import Affine
+    a = terrain(24, n=1024)
+    b = np.roll(a, (5, -4), axis=(0, 1))
+    paths = []
+    for i, arr in enumerate((b, a)):
+        p = os.path.join(TMP, "fs_%d.tif" % i)
+        with rasterio.open(p, "w", driver="GTiff", height=1024, width=1024, count=1,
+                           dtype="uint8",
+                           crs="+proj=stere +lat_0=-90 +R=1737400 +units=m",
+                           transform=Affine(1.0, 0, 0, 0, -1.0, 0)) as ds:
+            ds.write(np.clip(arr * 255, 0, 255).astype(np.uint8), 1)
+        paths.append(p)
+    # max_side 256 forces a 4x decimated working grid
+    coarse = run(paths[0], paths[1], max_side=256, fine=False)
+    fine = run(paths[0], paths[1], max_side=256, fine=True)
+    if coarse.status == "failed" or fine.status == "failed":
+        return "pair did not register; nothing to compare"
+    mc, mf = metrics_of(coarse), metrics_of(fine)
+    assert mc["fine_stage"]["attempted"] is False, "fine=False must not run the stage"
+    if not mf["fine_stage"].get("adopted"):
+        return "fine stage ran but was not adopted: %s" % mf["fine_stage"].get("note")
+    rc = mc["accuracy"]["rmse_reference_px"]
+    rf = mf["accuracy"]["rmse_reference_px"]
+    assert rf < rc, "fine stage made it worse: %.3f -> %.3f reference px" % (rc, rf)
+    return "%.3f -> %.3f reference px (%d native points)" % (
+        rc, rf, mf["fine_stage"]["points"])
+
+
+def iirs_like_cube(tag, nbands=64, n=192, lo=0.8, hi=4.8, order="bsq",
+                  with_centres=True):
+    """A synthetic PDS4 spectrometer cube shaped like IIRS.
+
+    Reflected-light bands carry the terrain. Bands past 2.5 um carry an
+    INVERTED, smoother field standing in for thermal emission, so a pseudo-pan
+    that fails to exclude them is measurably worse than one that does.
+    """
+    ground = terrain(31, n=n)
+    thermal = cv2.GaussianBlur(1.0 - ground, (0, 0), 9.0)
+    centres = [lo + i * (hi - lo) / (nbands - 1) for i in range(nbands)]
+    cube = np.zeros((nbands, n, n), np.float32)
+    rng = np.random.default_rng(7)
+    for i, c in enumerate(centres):
+        base = ground if c < 2.5 else thermal
+        gain = 0.3 + 2.0 * np.exp(-((c - 1.2) ** 2) / 0.5)
+        cube[i] = base * gain + 0.02 * rng.standard_normal((n, n)).astype(np.float32)
+    raw = np.clip(cube * 8000, 0, 65535).astype("<u2")
+
+    img = os.path.join(TMP, "%s.img" % tag)
+    raw.tofile(img)
+    axes = {"bsq": ["Band", "Line", "Sample"]}[order]
+    els = {"Band": nbands, "Line": n, "Sample": n}
+    ax = "".join("<Axis_Array><axis_name>%s</axis_name><elements>%d</elements>"
+                 "</Axis_Array>" % (a, els[a]) for a in axes)
+    bands_xml = "".join('<sp:center_value unit="micrometer">%.6f</sp:center_value>'
+                        % c for c in centres) if with_centres else ""
+    xml = ('<?xml version="1.0"?><Product_Observational>'
+           '<logical_identifier>urn:isro:isda:ch2_iir:test</logical_identifier>'
+           '<File_Area_Observational><Array_3D_Spectrum>'
+           '<offset unit="byte">0</offset>'
+           '<axis_index_order>Last Index Fastest</axis_index_order>'
+           '<data_type>UnsignedLSB2</data_type>' + ax +
+           '</Array_3D_Spectrum></File_Area_Observational>'
+           '<Spectral_Characteristics>' + bands_xml + '</Spectral_Characteristics>'
+           '</Product_Observational>')
+    lbl = os.path.join(TMP, "%s.xml" % tag)
+    open(lbl, "w").write(xml)
+    return lbl, ground
+
+
+def t_spectrometer_cube_collapses_to_reflected_light():
+    from seleno.tool import spectral
+    lbl, ground = iirs_like_cube("iirs_a")
+    sc = load(lbl)
+    assert sc.array.ndim == 2, "a cube must be collapsed before use, got %r" % (
+        sc.array.shape,)
+    assert sc.instrument.lower() in ("iirs", "unknown"), sc.instrument
+    note = " ".join(sc.degraded)
+    assert "pseudo-pan" in note, "the collapse must be recorded: %s" % note
+    # it must resemble the reflected-light ground, not the thermal stand-in
+    a = np.asarray(sc.array, np.float32)
+    g = ground[:a.shape[0], :a.shape[1]]
+    r = float(np.corrcoef(a.ravel(), g.ravel())[0, 1])
+    assert r > 0.7, "pseudo-pan does not track the reflected-light terrain (r=%.3f)" % r
+    return "%s, r=%.3f vs terrain" % (note.split(" (")[0], r)
+
+
+def t_thermal_bands_are_excluded():
+    """Past ~2.5 um the signal is emission, not reflectance; it must be dropped."""
+    from seleno.tool import spectral
+    lbl, ground = iirs_like_cube("iirs_b")
+    from seleno.ohrc.label import parse_label
+    L = parse_label(lbl)
+    assert L.bands == 64, "band axis not parsed: %r" % L.bands
+    assert len(L.band_centres_um) == 64, "band centres not parsed"
+    idx = spectral.select_bands(L.band_centres_um)
+    assert idx, "no band selected in the reflected-light window"
+    used = [L.band_centres_um[i] for i in idx]
+    assert max(used) <= 1.6 + 1e-6, "a band past 1.6 um was selected: %.3f" % max(used)
+    assert min(used) >= 0.8 - 1e-6, "a band below 0.8 um was selected: %.3f" % min(used)
+    assert not any(c > 2.5 for c in used), "thermal band selected"
+    return "%d of %d bands, %.2f-%.2f um" % (len(idx), L.bands, min(used), max(used))
+
+
+def t_cube_without_band_centres_says_so():
+    """No wavelengths in the label means the window cannot be applied."""
+    lbl, _ = iirs_like_cube("iirs_c", with_centres=False)
+    sc = load(lbl)
+    assert sc.array.ndim == 2
+    note = " ".join(sc.degraded)
+    assert "no band centre" in note or "carried no band centre" in note, \
+        "a guessed band selection must be declared: %s" % note
+    return "declared: %s" % note.split(";")[0][:70]
+
+
+def envi_cube(tag, nbands=32, lines=300, samples=64, lo_nm=712.3, step_nm=16.84,
+              ext=".qub", with_loc=True):
+    """A PDS4 spectrometer product shaped like a real IIRS delivery.
+
+    The synthetic cube the first version of these tests used was wrong in three
+    ways that only a real product exposed: the data file is a `.qub` and is
+    named in the label rather than implied by the extension; the band centres
+    live in `<center_wavelength unit="nm">` inside `Band_Bin`, in NANOMETRES;
+    and the geometry arrives as an ENVI `_loc_` backplane rather than the
+    tabular CSV the framing cameras ship.
+    """
+    ground = terrain(41, n=max(lines, samples))[:lines, :samples]
+    thermal = cv2.GaussianBlur(1.0 - ground, (0, 0), 7.0)
+    centres = [lo_nm + i * step_nm for i in range(nbands)]
+    cube = np.zeros((nbands, lines, samples), np.float32)
+    rng = np.random.default_rng(11)
+    for i, c_nm in enumerate(centres):
+        c = c_nm / 1000.0
+        base = ground if c < 2.5 else thermal
+        cube[i] = base * (0.05 + 0.3 * np.exp(-((c - 1.2) ** 2) / 0.6)) \
+            + 0.004 * rng.standard_normal((lines, samples)).astype(np.float32)
+    stem = os.path.join(TMP, "ch2_iir_ndi_20240120T1432235872_d_rfl_%s" % tag)
+    cube.astype("<f4").tofile(stem + ext)
+
+    if with_loc:
+        loc = np.zeros((4, lines, samples), np.float32)
+        lon = 40.0 + np.linspace(0, 0.4, samples)[None, :] * np.ones((lines, 1))
+        lat = np.linspace(-70.0, -66.0, lines)[:, None] * np.ones((1, samples))
+        loc[0], loc[1] = lon, lat
+        loc[2] = 1737400.0
+        loc_path = stem.replace("_d_rfl_", "_d_loc_") + "_ard.img"
+        open(loc_path, "wb").write(loc.astype("<f4").tobytes())
+
+    bins = "".join(
+        '<Band_Bin><band_number>%d</band_number>'
+        '<band_width unit="nm">19.8</band_width>'
+        '<center_wavelength unit="nm">%.1f</center_wavelength></Band_Bin>'
+        % (i + 1, c) for i, c in enumerate(centres))
+    xml = ('<?xml version="1.0"?><Product_Observational>'
+           '<logical_identifier>urn:isro:isda:ch2_cho.iir:data_derived:%s</logical_identifier>'
+           '<File_Area_Observational><File><file_name>%s</file_name></File>'
+           '<Array_3D_Spectrum><offset unit="byte">0</offset>'
+           '<axis_index_order>Last Index Fastest</axis_index_order>'
+           '<Element_Array><data_type>IEEE754LSBSingle</data_type></Element_Array>'
+           '<Axis_Array><axis_name>BAND</axis_name><elements>%d</elements>'
+           '<sequence_number>1</sequence_number>%s</Axis_Array>'
+           '<Axis_Array><axis_name>LINE</axis_name><elements>%d</elements></Axis_Array>'
+           '<Axis_Array><axis_name>SAMPLE</axis_name><elements>%d</elements></Axis_Array>'
+           '</Array_3D_Spectrum></File_Area_Observational>'
+           '<isda:pixel_resolution unit="m/pixel">56.73</isda:pixel_resolution>'
+           '</Product_Observational>'
+           % (tag, os.path.basename(stem + ext), nbands, bins, lines, samples))
+    open(stem + ".xml", "w").write(xml)
+    return stem + ".xml", ground
+
+
+def t_label_names_the_data_file_not_the_extension():
+    """IIRS ships a .qub; guessing `.img` beside the label simply misses it."""
+    lbl, _ = envi_cube("qb", ext=".qub")
+    assert not os.path.exists(lbl.replace(".xml", ".img")), "fixture should have no .img"
+    sc = load(lbl)
+    assert sc.array.ndim == 2, sc.array.shape
+    assert sc.path.endswith(".qub"), "the label's own file_name must be used: %s" % sc.path
+    return os.path.basename(sc.path)
+
+
+def t_band_centres_in_nanometres_are_converted():
+    """Real labels give centres in nm inside Band_Bin; the window is in um."""
+    from seleno.ohrc.label import parse_label
+    lbl, _ = envi_cube("nm", nbands=32, lo_nm=712.3, step_nm=16.84)
+    L = parse_label(lbl)
+    assert L.bands == 32, L.bands
+    c = L.band_centres_um
+    assert len(c) == 32, "band centres not parsed: %d" % len(c)
+    assert 0.70 < c[0] < 0.72, "nm not converted to um: first centre %r" % c[0]
+    assert 1.2 < c[-1] < 1.3, "last centre %r" % c[-1]
+    sc = load(lbl)
+    note = " ".join(sc.degraded)
+    assert "band centres from the label" in note, \
+        "real centres must not fall back to a guess: %s" % note
+    return "%.4f..%.4f um, %s" % (c[0], c[-1], note.split("(")[1].rstrip(")"))
+
+
+def t_geometry_comes_from_the_loc_backplane():
+    """IIRS has no geometry CSV; lon/lat arrive as an ENVI _loc_ cube."""
+    lbl, _ = envi_cube("loc", with_loc=True)
+    sc = load(lbl)
+    assert sc.lonlat is not None, "no lattice built from the backplane"
+    lon, lat = sc.lonlat.lon, sc.lonlat.lat
+    assert 39.9 < np.nanmin(lon) < 40.5, np.nanmin(lon)
+    assert -70.5 < np.nanmin(lat) < -65.5, np.nanmin(lat)
+    assert "backplane" in " ".join(sc.degraded), sc.degraded
+    return "lattice %s, lon %.2f..%.2f lat %.2f..%.2f" % (
+        lon.shape, np.nanmin(lon), np.nanmax(lon), np.nanmin(lat), np.nanmax(lat))
+
+
+def t_large_raster_is_read_lazily():
+    """A global mosaic must not be pulled into RAM to be opened."""
+    from seleno.tool.scene import LazyRaster, _EAGER_BYTES
+    import rasterio
+    from rasterio.transform import Affine
+    n = 2048
+    p = os.path.join(TMP, "big.tif")
+    a = np.clip(terrain(42, n=n) * 255, 0, 255).astype(np.uint8)
+    with rasterio.open(p, "w", driver="GTiff", height=n, width=n, count=1,
+                       dtype="uint8", crs="+proj=eqc +R=1737400 +units=m",
+                       transform=Affine(100.0, 0, 0, 0, -100.0, 0)) as ds:
+        ds.write(a, 1)
+    lz = LazyRaster(p)
+    assert lz.shape == (n, n) and lz.ndim == 2 and lz.size == n * n
+    # strided slicing must agree with the eager read
+    ref = a.astype(np.float32)[::7, ::5]
+    got = lz[0:n:7, 0:n:5]
+    assert got.shape == ref.shape, "%s vs %s" % (got.shape, ref.shape)
+    assert np.allclose(got, ref), "strided read disagrees with the eager read"
+    # paired fancy indexing must agree too
+    rng = np.random.default_rng(3)
+    rr = rng.integers(0, n, 500)
+    cc = rng.integers(0, n, 500)
+    assert np.allclose(lz[rr, cc], a[rr, cc].astype(np.float32)), \
+        "fancy indexing disagrees with the eager read"
+    return "%dx%d lazy reads match eager, threshold %d MB" % (n, n, _EAGER_BYTES >> 20)
 
 
 def t_failure_codes_are_declared():

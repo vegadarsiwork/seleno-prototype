@@ -13,3 +13,14 @@ clahe:
 shadow_threshold: 0.05
 texture_threshold: 0.010
 nodata: 0
+
+# IIRS is an imaging spectrometer, so a cube has to become one raster before any
+# matcher sees it. These bound the reflected-light window used to build the
+# pseudo-pan; past ~2.5 um a lunar daytime spectrum is the surface's own thermal
+# emission, which tracks temperature rather than albedo or shape and does not
+# resemble the reflected-light reference it would be matched against.
+# See backend/seleno/tool/spectral.py. NOT yet validated against a real product.
+spectral:
+  pseudo_pan_lo_um: 0.8
+  pseudo_pan_hi_um: 1.6
+  max_bands: 48
