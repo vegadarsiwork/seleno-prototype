@@ -54,6 +54,21 @@ def terrain(seed=0, n=256):
     return (a / max(a.max(), 1e-6))
 
 
+def terrain_hw(seed, h, w):
+    """`terrain`, at any shape - pushbroom strips are rarely square."""
+    rng = np.random.default_rng(seed)
+    a = cv2.GaussianBlur(rng.random((h, w)).astype(np.float32), (0, 0), 6.0)
+    a += 0.6 * cv2.GaussianBlur(rng.random((h, w)).astype(np.float32), (0, 0), 1.5)
+    for _ in range(max(18, h * w // 4000)):
+        cy = int(rng.integers(10, max(11, h - 10)))
+        cx = int(rng.integers(10, max(11, w - 10)))
+        r = int(rng.integers(5, 16))
+        cv2.circle(a, (cx, cy), r, float(rng.uniform(0.2, 0.9)), -1)
+        cv2.circle(a, (cx, cy), r, float(rng.uniform(0.0, 0.3)), 2)
+    a -= a.min()
+    return (a / max(a.max(), 1e-6))
+
+
 def write_png(path, arr01, bits=8):
     if bits == 8:
         cv2.imwrite(path, np.clip(arr01 * 255, 0, 255).astype(np.uint8))
@@ -391,6 +406,124 @@ def t_fine_stage_beats_the_working_grid():
     assert rf < rc, "fine stage made it worse: %.3f -> %.3f reference px" % (rc, rf)
     return "%.3f -> %.3f reference px (%d native points)" % (
         rc, rf, mf["fine_stage"]["points"])
+
+
+def _native_error(res, truth_dx, truth_dy, h, w):
+    """Worst error, in reference px, of the delivered full-resolution transform
+    against a known translation, over the source's corners and centre."""
+    Hn = np.asarray(res.transform["matrix_reference_px"], float)
+    pts = np.array([[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+                    [(w - 1) / 2, (h - 1) / 2]], float)
+    p = np.hstack([pts, np.ones((len(pts), 1))]) @ Hn.T
+    p = p[:, :2] / p[:, 2:]
+    return float(np.abs(p - (pts + [truth_dx, truth_dy])).max())
+
+
+def t_pixel_space_strip_fine_windows_line_up():
+    """A long strip with no geometry, registered onto itself.
+
+    The fine stage tiles native windows down the strip. In pixel space each
+    one used to be filled from the TOP of the source whatever its position, so
+    every window past the first compared unrelated ground; on a real IIRS strip
+    that took a 249/253 coarse solve to 10/226 and a warning.
+    """
+    a = terrain_hw(41, 3000, 200)
+    p = write_png(os.path.join(TMP, "strip.png"), a)
+    res = run(p, p, max_side=256)                  # 12x decimated working grid
+    m = metrics_of(res)
+    fs = m["fine_stage"]
+    assert fs.get("attempted"), "the fine stage must run on a decimated strip"
+    assert fs.get("adopted"), "fine stage not adopted on a same-file strip: %s" % fs.get("note")
+    assert res.status == "pass", "same-file strip must pass, got %s: %s" % (
+        res.status, res.reason)
+    ratio = m["matches"]["inlier_ratio"]
+    assert ratio > 0.5, "native inlier ratio %.3f on identical images" % ratio
+    err = _native_error(res, 0, 0, *a.shape)
+    assert err < 1.0, "same-file strip is off identity by %.2f px" % err
+    return "%d/%d native inliers from %d windows, off identity by %.2f px" % (
+        m["matches"]["inliers"], m["matches"]["candidates"], fs["windows_used"], err)
+
+
+def t_fine_stage_cannot_replace_a_better_coarse_set():
+    """A native set that verifies but is worse must not displace the coarse one.
+
+    Twelve consistent points clustered in one corner among 188 random ones
+    clear the old bar (>= 8 inliers) while failing the inlier-ratio, coverage
+    and hull checks the coarse set passes.
+    """
+    from seleno.tool.methods import Correspondences
+    mod = sys.modules["seleno.tool.register"]
+    real = mod._fine_stage
+
+    def poisoned(S, R, corr, vr, frame, *a, **k):
+        rng = np.random.default_rng(5)
+        H, W = R.array.shape
+        good = rng.uniform(0, 0.15, (12, 2)) * [W, H]
+        src = np.vstack([good, rng.uniform(0, 1, (188, 2)) * [W, H]])
+        ref = np.vstack([good, rng.uniform(0, 1, (188, 2)) * [W, H]])
+        c = Correspondences(src=src.astype(np.float32), ref=ref.astype(np.float32),
+                            confidence=np.ones(len(src), np.float32),
+                            method="poisoned@native", kind="dense",
+                            detail={"back_x": src[:, 0], "back_y": src[:, 1]})
+        return c, {"attempted": True, "points": len(src), "windows_used": 1,
+                   "native": True, "note": None}
+
+    a = terrain(42, n=1024)
+    p = write_png(os.path.join(TMP, "poison.png"), a)
+    mod._fine_stage = poisoned
+    try:
+        res = run(p, p, max_side=256)
+    finally:
+        mod._fine_stage = real
+    m = metrics_of(res)
+    fs = m["fine_stage"]
+    assert not fs.get("adopted"), "a worse native set replaced the coarse solution"
+    assert "coarse solution was kept" in (fs.get("note") or ""), fs.get("note")
+    assert res.status == "pass", "coarse set should still pass, got %s: %s" % (
+        res.status, res.reason)
+    return "refused: %s" % fs["note"][:90]
+
+
+def t_random_pixel_space_pairs_are_right_or_refused():
+    """Random shapes, sizes, shifts and working grids, no geometry at all.
+
+    Whatever the input, a result is either within a pixel of the known shift or
+    a declared failure. A confident wrong answer is the one outcome not allowed.
+    """
+    rng = np.random.default_rng(2026)
+    lines, wrong, failed = [], [], []
+    for i in range(6):
+        kind = ("tall", "wide", "square")[i % 3]
+        if kind == "tall":
+            h, w = int(rng.integers(1500, 3500)), int(rng.integers(150, 320))
+        elif kind == "wide":
+            h, w = int(rng.integers(150, 320)), int(rng.integers(1500, 3500))
+        else:
+            h, w = int(rng.integers(600, 1400)), int(rng.integers(600, 1400))
+        dy, dx = int(rng.integers(0, max(2, h // 60))), int(rng.integers(0, max(2, w // 60)))
+        master = terrain_hw(100 + i, h + dy, w + dx)
+        ref = write_png(os.path.join(TMP, "rnd%d_ref.png" % i), master[:h, :w])
+        src = write_png(os.path.join(TMP, "rnd%d_src.png" % i), master[dy:dy + h, dx:dx + w])
+        max_side = int(rng.choice([256, 512]))
+        res = run(src, ref, max_side=max_side)
+        tag = "%s %dx%d shift(%d,%d) side %d" % (kind, h, w, dx, dy, max_side)
+        if res.status == "failed":
+            code = metrics_of(res).get("reason")
+            assert code in FAILURE_CODES, "%s failed without a declared code: %s" % (tag, code)
+            failed.append(tag)
+            continue
+        err = _native_error(res, dx, dy, h, w)
+        lines.append("%s -> %.2f px" % (tag, err))
+        if err >= 1.0:
+            wrong.append("%s: off by %.2f px (%s)" % (tag, err, res.status))
+    assert not wrong, "confident wrong answers: " + "; ".join(wrong)
+    # The thinnest strips at a 256 px grid fall under the 4096 px overlap floor
+    # and are refused; that is allowed, but most of these must still register or
+    # the test says nothing about accuracy.
+    assert len(lines) >= 4, "only %d of 6 registered; refused: %s" % (
+        len(lines), "; ".join(failed))
+    return "%d right, %d refused; worst %s" % (
+        len(lines), len(failed), max(lines, key=lambda s: float(s.split()[-2])) if lines else "-")
 
 
 def iirs_like_cube(tag, nbands=64, n=192, lo=0.8, hi=4.8, order="bsq",

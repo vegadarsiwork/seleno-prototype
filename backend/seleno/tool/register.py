@@ -132,20 +132,28 @@ def _boxcar_decimate(arr, r0, r1, c0, c1, step, nodata, scale, offset, taps=4):
     Averaging a few offsets is not a proper anti-aliasing filter, but it is
     within one read of free and removes most of the noise floor. `taps` caps the
     work so a 16x decimation does not become 256 reads.
+
+    Returns ``(decimated, (centre_row, centre_col))``: the offset, in full-
+    resolution pixels from each block's first pixel, of the taps that were
+    actually averaged. With the taps capped and ragged offsets skipped that is
+    not the block's midpoint, and anything placed against this grid has to be
+    sampled at the same point.
     """
     base = np.asarray(arr[r0:r1:step, c0:c1:step], np.float32)
     if step <= 1:
-        return base * scale + offset
+        return base * scale + offset, (0.0, 0.0)
     k = int(min(step, taps))
     h, w = base.shape
     acc = np.zeros((h, w), np.float32)
     cnt = np.zeros((h, w), np.float32)
+    used = []
     for dy in range(k):
         for dx in range(k):
             blk = np.asarray(arr[r0 + dy:r1:step, c0 + dx:c1:step], np.float32)
             blk = blk[:h, :w]
             if blk.shape != (h, w):            # ragged tail; skip this offset
                 continue
+            used.append((dy, dx))
             blk = blk * scale + offset
             good = np.isfinite(blk) & (blk > -1e30)
             if nodata is not None and scale == 1.0 and offset == 0.0:
@@ -153,7 +161,8 @@ def _boxcar_decimate(arr, r0, r1, c0, c1, step, nodata, scale, offset, taps=4):
             acc += np.where(good, blk, 0.0)
             cnt += good
     out = np.where(cnt > 0, acc / np.maximum(cnt, 1.0), np.nan)
-    return out.astype(np.float32)
+    centre = tuple(float(v) for v in np.mean(used, axis=0))
+    return out.astype(np.float32), centre
 
 
 def _target_grid(ref: Scene, max_side: int, window=None):
@@ -172,10 +181,10 @@ def _target_grid(ref: Scene, max_side: int, window=None):
     if r1 - r0 < 32 or c1 - c0 < 32:
         r0, c0, r1, c1 = 0, 0, h, w
     step = max(1, int(math.ceil(max(r1 - r0, c1 - c0) / float(max_side))))
-    sub = _boxcar_decimate(ref.array, r0, r1, c0, c1, step, ref.nodata,
-                           ref.meta_scale, ref.meta_offset)
+    sub, centre = _boxcar_decimate(ref.array, r0, r1, c0, c1, step, ref.nodata,
+                                   ref.meta_scale, ref.meta_offset)
     v = np.isfinite(sub) & (sub > -1e30)
-    return step, (r0, c0), np.nan_to_num(sub).astype(np.float32), v
+    return step, (r0, c0), np.nan_to_num(sub).astype(np.float32), v, centre
 
 
 def _source_window(src: Scene, ref: Scene, pad_frac: float = 0.35,
@@ -259,7 +268,7 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
     """
     if window is None:
         window = _source_window(src, ref)
-    step, (orow, ocol), R, Rv = _target_grid(ref, max_side, window)
+    step, (orow, ocol), R, Rv, (tap_r, tap_c) = _target_grid(ref, max_side, window)
     H, W = R.shape
     info = {"target_shape": [H, W], "reference_decimation": step,
             "reference_origin": [orow, ocol], "route": None, "notes": []}
@@ -308,25 +317,40 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
         return _sample(src, S, L, R, Rv, info)
 
     # --- route 3: no usable geometry. Pixel space, scale-matched if GSDs are known.
-    scale = 1.0
+    ratio = 1.0
     if src.gsd_m and ref.gsd_m:
-        scale = float(src.gsd_m) / float(ref.gsd_m) / step
+        ratio = float(src.gsd_m) / float(ref.gsd_m)
         info["notes"].append("no shared frame; source resampled by the GSD ratio "
-                             "(%.4f) and registered in pixel space" % scale)
+                             "(%.4f) and registered in pixel space" % ratio)
     else:
         info["notes"].append("no shared frame and no GSD on at least one side; "
                              "registered in pixel space at native sampling. No "
                              "metre-scale accuracy can be reported.")
-    cols, rows = np.meshgrid(np.arange(W), np.arange(H))
+    # Target pixels go to FULL-RESOLUTION reference coordinates first - window
+    # origin and decimation both - because that is the frame `prewarp` is written
+    # in and the only one a source pixel can be looked up from. Built from the
+    # window-local index alone, every fine-stage window down a strip was filled
+    # from the top of the source while the reference was cut from further down,
+    # and a same-file IIRS run fell from 249/253 coarse inliers to 10/226.
+    #
+    # Each target pixel stands where the reference's averaged taps are centred
+    # (pixel-index coordinates, so a pixel's centre sits on an integer), which
+    # is not the block's midpoint once the taps are capped. The source is then
+    # looked up in pixel-edge coordinates, as the georeferenced routes do, so
+    # that `_sample`'s truncation picks the NEAREST source pixel rather than the
+    # one below: truncating a centre coordinate put a half-pixel bias into every
+    # native window, and a same-file strip came back 1.1 px off.
+    cols, rows = np.meshgrid(ocol + np.arange(W) * float(step) + tap_c,
+                             orow + np.arange(H) * float(step) + tap_r)
     if prewarp is not None:
         P = np.asarray(prewarp, float)
         den = P[2, 0] * cols + P[2, 1] * rows + P[2, 2]
         den = np.where(np.abs(den) < 1e-12, 1e-12, den)
         cols, rows = ((P[0, 0] * cols + P[0, 1] * rows + P[0, 2]) / den,
                       (P[1, 0] * cols + P[1, 1] * rows + P[1, 2]) / den)
-    S = cols / max(scale, 1e-9)
-    L = rows / max(scale, 1e-9)
-    info["route"] = "pixel space (scale %.4f)" % scale
+    S = (cols + 0.5) / max(ratio, 1e-9)
+    L = (rows + 0.5) / max(ratio, 1e-9)
+    info["route"] = "pixel space (GSD ratio %.4f, %dx decimation)" % (ratio, step)
     return _sample(src, S, L, R, Rv, info)
 
 
@@ -697,7 +721,22 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             w_ref = np.column_stack([(fcorr.ref[:, 0] - ocol0) / step0,
                                      (fcorr.ref[:, 1] - orow0) / step0]).astype(np.float32)
             fvr = V.verify(w_src, w_ref, model_type=best["model"], threshold=3.0 / step0)
-            if fvr.model is not None and fvr.n_inliers >= max(8, V._min_points(best["model"])):
+
+            # Verifying is not enough to be adopted: the fine set must also not
+            # fail a quality check the coarse set passed. Counting inliers alone
+            # let 10 of 226 native points replace 249 of 253 coarse ones and
+            # turned a clean same-file run into a warning.
+            def _gates(v, ref_pts):
+                inl = ref_pts[v.inlier_mask]
+                return _quality_gates(
+                    v.n_inliers, v.inlier_ratio,
+                    spatial.cell_coverage(inl, B.shape, grid, eligible=eligible),
+                    spatial.extrapolation_fraction(inl, B.shape, grid, eligible=eligible))
+            verified = (fvr.model is not None
+                        and fvr.n_inliers >= max(8, V._min_points(best["model"])))
+            fine_gates = _gates(fvr, w_ref) if verified else {}
+            regressed = [k for k in fine_gates if k not in _gates(vr, corr.ref)]
+            if verified and not regressed:
                 corr = M.Correspondences(src=w_src, ref=w_ref,
                                          confidence=fcorr.confidence,
                                          method=fcorr.method, kind=fcorr.kind,
@@ -710,6 +749,12 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                 fine_info["inliers"] = int(fvr.n_inliers)
                 log("fine      : %d points from %d native windows, %d verified inliers"
                     % (fine_info["points"], fine_info["windows_used"], fvr.n_inliers))
+            elif verified:
+                fine_info["adopted"] = False
+                fine_info["note"] = ("native points fail checks the coarse set passed "
+                                     "(%s); the coarse solution was kept"
+                                     % "; ".join(fine_gates[k] for k in regressed))
+                log("fine      : %s" % fine_info["note"])
             else:
                 fine_info["adopted"] = False
                 fine_info["note"] = ("native points did not verify (%d inliers); the "
@@ -1366,6 +1411,32 @@ def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None):
     return tj
 
 
+def _quality_gates(n_inliers, ratio, cov, extrap) -> dict:
+    """The match-quality checks a result is graded on, as {check: reason}.
+
+    One definition, used twice: by the status line, and by the fine stage's
+    adoption test - so a native-resolution set can never replace a coarse one
+    while failing a check the coarse one passed.
+    """
+    g = {}
+    if n_inliers < 12:
+        g["inliers"] = "only %d verified inliers" % n_inliers
+    if ratio < 0.15:
+        g["inlier_ratio"] = "inlier ratio %.1f%% is below 15%%" % (100 * ratio)
+    if cov < 0.25:
+        g["coverage"] = ("matches cover %.0f%% of the reference grid; the transform is "
+                         "extrapolated over the rest" % (100 * cov))
+    if extrap > 0.5:
+        # Coverage alone misses this: tie points crowded into one lit strip can
+        # clear the coverage bar against a small eligible set while most of the
+        # frame still sits outside their hull, where the fit is extrapolated and
+        # its error is unbounded by anything we measured.
+        g["extrapolation"] = ("%.0f%% of the reference area lies outside the tie-point "
+                              "hull, so the transform is extrapolated there and the "
+                              "quoted RMSE does not describe it" % (100 * extrap))
+    return g
+
+
 def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
                    acc, cov, disp, m_per_px, degraded, warn, decomp, secs, grid,
                    eligible, extrap, conv, fine_info):
@@ -1380,22 +1451,7 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
     units = _rmse_units(None if rmse_px is None else rmse_px * conv["reference_decimation"],
                         conv)
 
-    reasons = []
-    if vr.n_inliers < 12:
-        reasons.append("only %d verified inliers" % vr.n_inliers)
-    if ratio < 0.15:
-        reasons.append("inlier ratio %.1f%% is below 15%%" % (100 * ratio))
-    if cov < 0.25:
-        reasons.append("matches cover %.0f%% of the reference grid; the transform is "
-                       "extrapolated over the rest" % (100 * cov))
-    if extrap > 0.5:
-        # Coverage alone misses this: tie points crowded into one lit strip can
-        # clear the coverage bar against a small eligible set while most of the
-        # frame still sits outside their hull, where the fit is extrapolated and
-        # its error is unbounded by anything we measured.
-        reasons.append("%.0f%% of the reference area lies outside the tie-point hull, "
-                       "so the transform is extrapolated there and the quoted RMSE "
-                       "does not describe it" % (100 * extrap))
+    reasons = list(_quality_gates(vr.n_inliers, ratio, cov, extrap).values())
     if character.get("overlap_fraction", 1) < 0.15:
         reasons.append("the images share only %.0f%% of the frame"
                        % (100 * character["overlap_fraction"]))
