@@ -2,6 +2,8 @@ __pycache__/
 *.pyc
 node_modules/
 data/raw/
+# files uploaded through the registration tool UI
+data/uploads/
 
 # results/ mixes cited evidence with regenerable bulk, so it is listed
 # explicitly instead of being ignored wholesale. README.md and HANDOFF.md cite

@@ -15,14 +15,17 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
+import shutil
 import threading
 import time
 import uuid
 import zipfile
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
+from starlette.concurrency import run_in_threadpool
 
 from seleno.tool import FAILURE_CODES, register
 from seleno.tool import view as tview
@@ -38,7 +41,8 @@ router = APIRouter(prefix="/api/tool", tags=["tool"])
 # Extensions the tool will attempt. It degrades gracefully on anything it can
 # open, so this list is about not showing the user a directory full of .oat and
 # .spm files, not about what the reader can handle.
-READABLE = (".xml", ".lbl", ".img", ".tif", ".tiff", ".png", ".jpg", ".jpeg", ".cub")
+READABLE = (".xml", ".lbl", ".img", ".tif", ".tiff", ".png", ".jpg", ".jpeg", ".cub",
+            ".jp2", ".j2k", ".bmp", ".gif", ".webp", ".vrt", ".fits", ".fit")
 
 # Where real archive products live. Anything selectable from outside these roots
 # is labelled a fixture in the listing and in the UI, because a demo that shows
@@ -48,6 +52,9 @@ PRODUCT_ROOTS = (os.path.join(ROOT, "data", "raw"),)
 FIXTURE_ROOTS = (os.path.join(ROOT, "data", "fixtures"),
                  os.path.join(ROOT, "tests", "fixtures"),
                  os.path.join(ROOT, "Dataset"))
+# Files a user uploaded through the UI. Neither archive products nor fixtures:
+# their provenance is whatever the user says it is, so they get their own label.
+UPLOADS = os.path.join(ROOT, "data", "uploads")
 VIEW_CACHE = os.path.join(OUTPUTS, ".viewcache")
 
 _JOBS: dict[str, dict] = {}
@@ -60,6 +67,8 @@ _LOCK = threading.Lock()
 
 def _classify(path: str) -> str:
     ap = os.path.abspath(path)
+    if ap.startswith(os.path.abspath(UPLOADS) + os.sep):
+        return "upload"
     for r in PRODUCT_ROOTS:
         if ap.startswith(os.path.abspath(r) + os.sep):
             return "product"
@@ -122,7 +131,7 @@ def _dedupe_pds(items: list[dict]) -> list[dict]:
 def list_files():
     """Selectable inputs, each labelled product or fixture."""
     items: list[dict] = []
-    for r in PRODUCT_ROOTS + FIXTURE_ROOTS:
+    for r in (UPLOADS,) + PRODUCT_ROOTS + FIXTURE_ROOTS:
         items += _scan(r)
     items = _dedupe_pds(items)
     prof = Profiles.load()
@@ -130,7 +139,8 @@ def list_files():
         p = prof.match("", i["path"])
         i["instrument"] = p.get("name", "unknown")
         i["gsd_m"] = p.get("gsd_m")
-    items.sort(key=lambda i: (i["kind"] != "product", i["instrument"], i["name"]))
+    rank = {"upload": 0, "product": 1, "fixture": 2}
+    items.sort(key=lambda i: (rank.get(i["kind"], 3), i["instrument"], i["name"]))
     return {"root": ROOT, "count": len(items), "files": items,
             "note": "entries marked 'fixture' are not archive products"}
 
@@ -350,3 +360,77 @@ def view_region(path: str, x0: float, y0: float, x1: float, y1: float):
         "Content-Disposition": 'attachment; filename="%s"' % fn,
         "X-Scale": str(s)})
 
+
+# --------------------------------------------------------------------------- #
+# uploads
+# --------------------------------------------------------------------------- #
+
+_BATCH = re.compile(r"[a-z0-9]{6,32}")
+_UNSAFE = re.compile(r"[^A-Za-z0-9._+-]+")
+
+
+def _upload_target(batch: str, name: str) -> str:
+    """Where an uploaded file lands.
+
+    Each upload batch gets its own directory, so a PDS label and its data file
+    land side by side and two uploads with the same name do not collide.
+    Relative folders inside a dropped folder are kept, because a PDS4 product
+    finds its geometry CSV by walking up from the image. Every segment is
+    sanitised, and the result must stay inside the batch directory.
+    """
+    if not _BATCH.fullmatch(batch):
+        raise HTTPException(400, "bad upload batch id")
+    segs = []
+    for seg in name.replace("\\", "/").split("/"):
+        seg = _UNSAFE.sub("_", seg).lstrip(".")
+        if seg:
+            segs.append(seg)
+    if not segs or len(segs) > 8:
+        raise HTTPException(400, "bad file name: %r" % name)
+    base = os.path.join(UPLOADS, batch)
+    dest = os.path.abspath(os.path.join(base, *segs))
+    if not dest.startswith(base + os.sep):
+        raise HTTPException(400, "bad file name: %r" % name)
+    return dest
+
+
+@router.put("/upload")
+async def upload(request: Request, batch: str, name: str):
+    """Stream one file to disk. The body is the raw file, not a multipart form,
+    so a 6 GB mosaic goes straight to disk instead of being buffered first."""
+    dest = _upload_target(batch, name)
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    declared = request.headers.get("content-length")
+    declared = int(declared) if declared and declared.isdigit() else None
+    if declared is not None:
+        free = shutil.disk_usage(os.path.dirname(dest)).free
+        if declared > free - (1 << 30):
+            raise HTTPException(507, "not enough disk space: %.1f GB needed, %.1f GB free"
+                                % (declared / 1e9, free / 1e9))
+    part = dest + ".part"
+    n = 0
+    fh = open(part, "wb")
+    try:
+        buf = bytearray()
+        async for chunk in request.stream():
+            buf += chunk
+            if len(buf) >= 8 << 20:
+                data, buf = bytes(buf), bytearray()
+                await run_in_threadpool(fh.write, data)
+                n += len(data)
+        if buf:
+            await run_in_threadpool(fh.write, bytes(buf))
+            n += len(buf)
+        fh.close()
+        if declared is not None and n != declared:
+            raise HTTPException(400, "upload truncated: %d of %d bytes" % (n, declared))
+        os.replace(part, dest)
+    except BaseException:
+        fh.close()
+        try:
+            os.remove(part)
+        except OSError:
+            pass
+        raise
+    return {"path": os.path.relpath(dest, ROOT), "name": os.path.basename(dest),
+            "bytes": n}

@@ -846,6 +846,30 @@ def t_view_overview_agrees_with_native_reads():
     return "factor %d, max difference %d grey level(s)" % (f, worst)
 
 
+def t_upload_names_stay_inside_their_batch():
+    """Upload names come from the browser and must never escape data/uploads."""
+    from fastapi import HTTPException
+    import tool_routes as R
+    base = os.path.join(R.UPLOADS, "abcdef12")
+    for name in ("../../etc/passwd", "a/../../b.png", "/etc/passwd", "..\\..\\x.tif",
+                 ".bashrc", "ok.png", "dir/sub/scene.xml"):
+        dest = R._upload_target("abcdef12", name)
+        assert dest.startswith(base + os.sep), "%r escaped to %s" % (name, dest)
+    for bad_batch in ("../x", "ABC", "a", "abc/def"):
+        try:
+            R._upload_target(bad_batch, "a.png")
+        except HTTPException:
+            continue
+        raise AssertionError("batch id %r was accepted" % bad_batch)
+    for bad_name in ("", "..", "/", "a/" * 12 + "b"):
+        try:
+            R._upload_target("abcdef12", bad_name)
+        except HTTPException:
+            continue
+        raise AssertionError("name %r was accepted" % bad_name)
+    return "traversal, absolute and hidden names all contained"
+
+
 def main():
     global TMP
     TMP = tempfile.mkdtemp(prefix="seleno_tool_")
