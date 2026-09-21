@@ -16,6 +16,7 @@ exists and carries `status: "failed"` plus one of
 from __future__ import annotations
 
 import json
+import math
 import os
 import shutil
 import sys
@@ -766,6 +767,83 @@ def t_uniform_distribution_is_reported():
     assert 0.0 <= d["coverage_fraction"] <= 1.0
     return "coverage %.2f, dispersion %.2f over %d eligible cells" % (
         d["coverage_fraction"], d["dispersion"], d["eligible_cells"])
+
+
+def _view_fixture(name, h=700, w=1000):
+    import rasterio
+    from rasterio.transform import Affine
+    p = os.path.join(TMP, name)
+    a = np.clip(terrain_hw(21, h, w) * 255, 0, 255).astype(np.uint8)
+    with rasterio.open(p, "w", driver="GTiff", height=h, width=w, count=1,
+                       dtype="uint8", crs="+proj=eqc +R=1737400 +units=m",
+                       transform=Affine(100.0, 0, 0, 0, -100.0, 0)) as ds:
+        ds.write(a, 1)
+    return p, a
+
+
+def t_view_tiles_are_the_size_the_viewer_expects():
+    """Every tile at every level must be exactly ceil(level size) - 256*index,
+    or the viewer stretches edge tiles and the image shears at its borders."""
+    from seleno.tool import view as V
+    p, a = _view_fixture("view_sizes.tif")
+    v = V.open_view(p, os.path.join(TMP, "viewcache"))
+    assert isinstance(v.array, np.memmap), "uncompressed TIFF should be memory-mapped"
+    h, w = a.shape
+    n = 0
+    s = 1
+    while s <= v.max_scale:
+        lh, lw = -(-h // s), -(-w // s)
+        for ty in range(-(-lh // V.TILE)):
+            for tx in range(-(-lw // V.TILE)):
+                t = V.tile(v, s, tx, ty)
+                want = (min(V.TILE, lh - ty * V.TILE), min(V.TILE, lw - tx * V.TILE))
+                assert t.shape == want, "s=%d tile %d,%d is %s, want %s" % (s, tx, ty, t.shape, want)
+                n += 1
+        s *= 2
+    # at 1:1 a tile is the file's own pixels through the one fixed stretch
+    got = V.tile(v, 1, 1, 1).astype(np.float32)
+    raw = a[256:512, 256:512].astype(np.float32)
+    want = np.rint(np.clip((raw - v.lo) * (255.0 / (v.hi - v.lo)), 0, 255))
+    assert np.array_equal(got, want), "1:1 tile is not the native pixels"
+    geo = v.georef()
+    assert geo and geo["kind"] == "eqc" and geo["R"] == 1737400.0, geo
+    return "%d tiles over %d levels, georef %s" % (n, int(math.log2(v.max_scale)) + 1, geo["kind"])
+
+
+def t_view_overview_agrees_with_native_reads():
+    """Tiles switch from native reads to the cached overview at one scale. The
+    two must show the same thing there, or zooming makes the image jump."""
+    from seleno.tool import view as V
+    saved = V.OVERVIEW_MAX_SIDE
+    V.OVERVIEW_MAX_SIDE = 128
+    try:
+        p, a = _view_fixture("view_ov.tif")
+        v = V.open_view(p, os.path.join(TMP, "viewcache"))
+        f = v.factor
+        assert f == 8 and v.overview is not None, "expected an 8x overview, got %d" % f
+        worst = 0.0
+        for s in (f, 2 * f):
+            ov = V.render(v, 0, 0, v.width, v.height, s)
+            keep, v.overview = v.overview, None
+            try:
+                nat = V.render(v, 0, 0, v.width, v.height, s)
+            finally:
+                v.overview = keep
+            assert ov.shape == nat.shape, "%s vs %s" % (ov.shape, nat.shape)
+            # The last row and column are partial blocks. The overview averages
+            # its partial blocks with equal weight, native reads by pixel count,
+            # so only the interior is expected to agree exactly.
+            d = np.abs(ov.astype(int) - nat.astype(int))[:-1, :-1]
+            worst = max(worst, float(d.max()))
+        assert worst <= 1, "overview and native reads differ by %d grey levels" % worst
+        # and a second open reuses the cached overview rather than rebuilding
+        cached = [x for x in os.listdir(os.path.join(TMP, "viewcache")) if x.endswith(".npy")]
+        assert cached, "overview was not cached"
+        region, box, s = V.region(v, -50, -50, 400, 300)
+        assert box == (0, 0, 400, 300) and s == 1 and region.shape == (300, 400), (box, s, region.shape)
+    finally:
+        V.OVERVIEW_MAX_SIDE = saved
+    return "factor %d, max difference %d grey level(s)" % (f, worst)
 
 
 def main():

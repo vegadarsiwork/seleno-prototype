@@ -25,7 +25,9 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 
 from seleno.tool import FAILURE_CODES, register
+from seleno.tool import view as tview
 from seleno.tool.profiles import Profiles
+from seleno.tool.scene import UnreadableInput
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -46,6 +48,7 @@ PRODUCT_ROOTS = (os.path.join(ROOT, "data", "raw"),)
 FIXTURE_ROOTS = (os.path.join(ROOT, "data", "fixtures"),
                  os.path.join(ROOT, "tests", "fixtures"),
                  os.path.join(ROOT, "Dataset"))
+VIEW_CACHE = os.path.join(OUTPUTS, ".viewcache")
 
 _JOBS: dict[str, dict] = {}
 _LOCK = threading.Lock()
@@ -289,3 +292,61 @@ def download(jid: str):
     return Response(buf.read(), media_type="application/zip", headers={
         "Content-Disposition": 'attachment; filename="seleno_%s.zip"'
                                % _JOBS[jid]["job_dir_id"]})
+
+
+# --------------------------------------------------------------------------- #
+# viewing: any input, any zoom
+# --------------------------------------------------------------------------- #
+
+def _view(rel: str) -> tview.Viewable:
+    full = _resolve(rel)
+    if os.path.isdir(full):
+        raise HTTPException(400, "%r is a directory" % rel)
+    try:
+        return tview.open_view(full, VIEW_CACHE)
+    except UnreadableInput as exc:
+        raise HTTPException(422, str(exc))
+    except Exception as exc:                                          # noqa: BLE001
+        raise HTTPException(422, "could not open %s for viewing (%s: %s)"
+                            % (os.path.basename(full), type(exc).__name__, exc))
+
+
+@router.get("/view/info")
+def view_info(path: str):
+    """Size, georeferencing and stretch of one input.
+
+    The first call on a large file builds its overview, one pass over the file;
+    the result is cached on disk, so later calls return at once.
+    """
+    v = _view(path)
+    return dict(v.info(), path=path, name=os.path.basename(v.path))
+
+
+@router.get("/view/tile")
+def view_tile(path: str, s: int, x: int, y: int):
+    """One 256 px tile at 1/s scale. The client adds `v=<mtime>` to the URL, so
+    a replaced file never serves a stale cached tile."""
+    v = _view(path)
+    try:
+        a = tview.tile(v, s, x, y)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+    return Response(tview.png(a), media_type="image/png",
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
+@router.get("/view/region")
+def view_region(path: str, x0: float, y0: float, x1: float, y1: float):
+    """A window of native pixels as a PNG download, at the finest scale that
+    keeps it under the size and read limits in `seleno.tool.view`."""
+    v = _view(path)
+    try:
+        a, (bx0, by0, bx1, by1), s = tview.region(v, x0, y0, x1, y1)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    stem = os.path.splitext(os.path.basename(v.path))[0]
+    fn = "%s_x%d-%d_y%d-%d_1to%d.png" % (stem, bx0, bx1, by0, by1, s)
+    return Response(tview.png(a, 3), media_type="image/png", headers={
+        "Content-Disposition": 'attachment; filename="%s"' % fn,
+        "X-Scale": str(s)})
+
