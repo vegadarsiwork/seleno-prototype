@@ -83,6 +83,11 @@ _CHUNK_ROWS = 256
 # the memmap pages that get touched.
 _BYTES_PER_TARGET_PX = 900
 
+# Pixel budgets for what a person looks at: each preview panel, and each panel
+# of the overlay.png composite (three of them, in colour, so it is kept smaller).
+_PREVIEW_PX = 4_000_000
+_COMPOSITE_PANEL_PX = 1_000_000
+
 
 def _available_bytes() -> int:
     """Physical memory we may use, read from the OS rather than assumed."""
@@ -845,8 +850,10 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                              vr, acc, ov_cov, ov_disp, m_per_px, degraded, warn, d,
                              time.time() - t_start, grid, eligible, ov_extrap,
                              conv, fine_info)
-    _write_overlay(job_dir, A, Am, B, Bm, warped, wvalid, corr, vr)
-    _write_preview_json(job_dir, A, B, corr, vr)
+    layers = _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm,
+                             best["model"], corr, cache, log)
+    _write_overlay(job_dir, *layers, vr)
+    _write_preview_json(job_dir, layers[0], layers[2], layers[6], vr)
     _write_report(job_dir, job_id, S, R, metrics, tj, attempts)
 
     status = metrics["status"]
@@ -1529,9 +1536,104 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
     return m
 
 
+def _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm, model,
+                    corr, cache, log):
+    """The preview panels at a resolution meant for looking at.
+
+    The working grid is sized for matching, not viewing: `max_side` caps the LONG
+    axis, so a 250 x 12945 IIRS strip comes out 20 px across, and the viewer
+    blew that up 28x into a blur. Here the panels are placed again from the
+    inputs themselves over the same window, at the finest sampling that fits
+    `_PREVIEW_PX` - native, for that strip - and the transform and tie points
+    are carried onto them by the same grid-to-grid map.
+
+    Returns ``(A, Am, B, Bm, warped, wvalid, corr)`` on the display grid, or the
+    working-grid ones when they are already that fine or the placement fails: a
+    preview is never worth failing a run over.
+    """
+    same = (A, Am, B, Bm, warped, wvalid, corr)
+    step_w = int(frame.get("reference_decimation", 1) or 1)
+    orow_w, ocol_w = frame.get("reference_origin", [0, 0])
+    rh, rw = R.array.shape
+    win = (orow_w, ocol_w, min(rh, orow_w + B.shape[0] * step_w),
+           min(rw, ocol_w + B.shape[1] * step_w))
+    long_side = max(win[2] - win[0], win[3] - win[1])
+    area = (win[2] - win[0]) * (win[3] - win[1])
+    step_d = max(1, int(math.ceil(math.sqrt(area / float(_PREVIEW_PX)))))
+    if step_d >= step_w:
+        return same
+    try:
+        A_raw, Am_d, B_raw, Bm_d, _, _, fr = prealign(
+            S, R, max_side=int(math.ceil(long_side / float(step_d))), window=win,
+            cache=cache)
+        step_d = int(fr["reference_decimation"])
+        orow_d, ocol_d = fr["reference_origin"]
+        # working-grid pixels -> display-grid pixels, through full resolution
+        k = step_w / float(step_d)
+        D = np.array([[k, 0.0, (ocol_w - ocol_d) / float(step_d)],
+                      [0.0, k, (orow_w - orow_d) / float(step_d)],
+                      [0.0, 0.0, 1.0]])
+        Hw = np.eye(3)
+        Hw[:2, :] = np.asarray(Hm, float)[:2, :]
+        if np.asarray(Hm).shape == (3, 3):
+            Hw = np.asarray(Hm, float)
+        warped_d, wvalid_d = _warp(A_raw, Am_d, D @ Hw @ np.linalg.inv(D),
+                                   B_raw.shape, model)
+        A_d = normalised(Scene(path=S.path, array=A_raw, valid=Am_d, reader=S.reader), sp)
+        B_d = normalised(Scene(path=R.path, array=B_raw, valid=Bm_d, reader=R.reader), rp)
+
+        def to_d(p):
+            return (np.asarray(p, np.float64) * k + D[:2, 2]).astype(np.float32)
+
+        corr_d = M.Correspondences(src=to_d(corr.src), ref=to_d(corr.ref),
+                                   confidence=corr.confidence, method=corr.method,
+                                   kind=corr.kind, detail=corr.detail)
+        log("preview   : panels at %d x %d (%dx decimation; working grid %dx)"
+            % (B_d.shape[1], B_d.shape[0], step_d, step_w))
+        return A_d, Am_d, B_d, Bm_d, warped_d, wvalid_d, corr_d
+    except Exception as exc:                                          # noqa: BLE001
+        log("preview   : kept the working grid (%s: %s)" % (type(exc).__name__, exc))
+        return same
+
+
+def _spread(idx, n):
+    """At most `n` of `idx`, evenly spaced through it.
+
+    Taking the first `n` instead draws only the start of the set: fine-stage
+    points arrive window by window, so the first 600 of 20 000 all sit in the
+    first window and a strip's match lines bunched at one end.
+    """
+    if n <= 0:
+        return idx[:0]
+    if len(idx) <= n:
+        return idx
+    return idx[np.linspace(0, len(idx) - 1, n).round().astype(int)]
+
+
 def _write_overlay(job_dir, A, Am, B, Bm, warped, wvalid, corr, vr):
     def u8(a, m):
         return M.to_u8(a, m)
+
+    # Separate panels first, at full preview resolution. A UI needs the layers
+    # apart so it can toggle between them and draw its own match lines at
+    # whatever zoom the user is at.
+    cv2.imwrite(os.path.join(job_dir, "source.png"), u8(A, Am))
+    cv2.imwrite(os.path.join(job_dir, "reference.png"), u8(B, Bm))
+    cv2.imwrite(os.path.join(job_dir, "registered.png"), u8(warped, wvalid))
+
+    # The composite is what goes in a report. It holds three panels in colour,
+    # so it is reduced to its own budget rather than written at full size.
+    f = min(1.0, math.sqrt(_COMPOSITE_PANEL_PX / float(max(1, B.size))))
+    if f < 1.0:
+        def rs(a, interp=cv2.INTER_AREA):
+            return cv2.resize(np.asarray(a, np.float32), None, fx=f, fy=f,
+                              interpolation=interp)
+        A, B, warped = rs(A), rs(B), rs(warped)
+        Am, Bm, wvalid = (rs(m.astype(np.float32), cv2.INTER_NEAREST) > 0.5
+                          for m in (Am, Bm, wvalid))
+        corr = M.Correspondences(src=corr.src * f, ref=corr.ref * f,
+                                 confidence=corr.confidence, method=corr.method,
+                                 kind=corr.kind)
 
     Bu = u8(B, Bm)
     Wu = u8(warped, wvalid)
@@ -1547,7 +1649,7 @@ def _write_overlay(job_dir, A, Am, B, Bm, warped, wvalid, corr, vr):
     side = np.hstack([cv2.cvtColor(u8(A, Am), cv2.COLOR_GRAY2BGR),
                       np.full((h, 12, 3), 255, np.uint8),
                       cv2.cvtColor(Bu, cv2.COLOR_GRAY2BGR)])
-    for k in np.nonzero(vr.inlier_mask)[0][:400]:
+    for k in _spread(np.nonzero(vr.inlier_mask)[0], 400):
         p1 = tuple(np.round(corr.src[k]).astype(int))
         p2 = tuple(np.round(corr.ref[k]).astype(int) + np.array([w + 12, 0]))
         cv2.line(side, p1, p2, (90, 220, 120), 1, cv2.LINE_AA)
@@ -1560,16 +1662,9 @@ def _write_overlay(job_dir, A, Am, B, Bm, warped, wvalid, corr, vr):
     cv2.imwrite(os.path.join(job_dir, "overlay.png"),
                 np.vstack([side, np.full((14, side.shape[1], 3), 255, np.uint8), ch3]))
 
-    # Separate panels as well as the composite. The composite is what goes in a
-    # report; a UI needs the layers apart so it can toggle between them and draw
-    # its own match lines at whatever zoom the user is at.
-    cv2.imwrite(os.path.join(job_dir, "source.png"), u8(A, Am))
-    cv2.imwrite(os.path.join(job_dir, "reference.png"), Bu)
-    cv2.imwrite(os.path.join(job_dir, "registered.png"), Wu)
-
 
 def _write_preview_json(job_dir, A, B, corr, vr, limit=600):
-    """Match coordinates in WORKING-GRID pixels, for drawing.
+    """Match coordinates in PREVIEW-PANEL pixels (source.png, reference.png), for drawing.
 
     matches.csv stays exactly as the contract specifies - original source pixels
     and full-resolution reference pixels - because that is what anyone consuming
@@ -1581,9 +1676,9 @@ def _write_preview_json(job_dir, A, B, corr, vr, limit=600):
     n = len(corr)
     keep = np.arange(n)
     if n > limit:                       # keep every inlier we can, then fill
-        inl = np.nonzero(vr.inlier_mask)[0]
-        out = np.nonzero(~vr.inlier_mask)[0]
-        keep = np.concatenate([inl[:limit], out[:max(0, limit - len(inl))]])
+        inl = _spread(np.nonzero(vr.inlier_mask)[0], limit)
+        out = _spread(np.nonzero(~vr.inlier_mask)[0], limit - len(inl))
+        keep = np.concatenate([inl, out])
     pv = {"source": {"width": int(A.shape[1]), "height": int(A.shape[0])},
           "reference": {"width": int(B.shape[1]), "height": int(B.shape[0])},
           "n_total": int(n), "n_shown": int(len(keep)),

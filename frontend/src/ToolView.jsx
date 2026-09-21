@@ -69,36 +69,42 @@ function MatchLines({ jobId, preview, showOutliers }) {
     const [sa, sb] = imgs
     const cv = ref.current
     const GAP = 14
-    // Draw at a fixed working width so line coordinates stay exact under CSS scaling.
-    const H = Math.max(sa.height, sb.height)
-    cv.width = sa.width + GAP + sb.width
-    cv.height = H
+    // Drawn at the panels' own pixel size so line coordinates stay exact; the
+    // zoom control scales the canvas, never the drawing. Images wider than
+    // they are tall are stacked instead of put side by side, or a long
+    // horizontal strip would be squeezed to a sliver.
+    const stack = sa.width > 1.2 * sa.height
+    cv.width = stack ? Math.max(sa.width, sb.width) : sa.width + GAP + sb.width
+    cv.height = stack ? sa.height + GAP + sb.height : Math.max(sa.height, sb.height)
     const g = cv.getContext('2d')
     g.fillStyle = '#0c0d10'
     g.fillRect(0, 0, cv.width, cv.height)
+    const ox = stack ? 0 : sa.width + GAP
+    const oy = stack ? sa.height + GAP : 0
     g.drawImage(sa, 0, 0)
-    g.drawImage(sb, sa.width + GAP, 0)
+    g.drawImage(sb, ox, oy)
 
     const sx = sa.width / preview.source.width
     const sy = sa.height / preview.source.height
     const rx = sb.width / preview.reference.width
     const ry = sb.height / preview.reference.height
-    const off = sa.width + GAP
+    // Keep marks legible whether the panels are 300 px or 3000 px across.
+    const u = Math.max(1, Math.min(cv.width, cv.height) / 500)
 
     for (const m of preview.matches) {
       if (!m.inlier && !showOutliers) continue
       g.strokeStyle = m.inlier ? 'rgba(90,220,140,0.55)' : 'rgba(230,103,103,0.28)'
-      g.lineWidth = m.inlier ? 1.1 : 0.8
+      g.lineWidth = (m.inlier ? 1.1 : 0.8) * u
       g.beginPath()
       g.moveTo(m.sx * sx, m.sy * sy)
-      g.lineTo(off + m.rx * rx, m.ry * ry)
+      g.lineTo(ox + m.rx * rx, oy + m.ry * ry)
       g.stroke()
     }
     for (const m of preview.matches) {
       if (!m.inlier && !showOutliers) continue
       g.fillStyle = m.inlier ? '#5adc8c' : 'rgba(230,103,103,0.5)'
-      g.beginPath(); g.arc(m.sx * sx, m.sy * sy, 1.6, 0, 7); g.fill()
-      g.beginPath(); g.arc(off + m.rx * rx, m.ry * ry, 1.6, 0, 7); g.fill()
+      g.beginPath(); g.arc(m.sx * sx, m.sy * sy, 1.6 * u, 0, 7); g.fill()
+      g.beginPath(); g.arc(ox + m.rx * rx, oy + m.ry * ry, 1.6 * u, 0, 7); g.fill()
     }
   }, [imgs, preview, showOutliers])
 
@@ -106,20 +112,45 @@ function MatchLines({ jobId, preview, showOutliers }) {
   return <canvas ref={ref} className="tool-canvas" />
 }
 
+/* Every image view sits in a scroll box and is never enlarged by the browser's
+ * smoothing. "Fit" only ever SHRINKS to the panel width, "1:1" shows the
+ * panels' own pixels, "2x" doubles them without interpolation. A 250 x 12945
+ * strip is only readable at its own pixels, scrolled: stretched to the panel
+ * width it was a 28x blur. */
+const ZOOMS = [['fit', 'Fit'], ['1', '1:1'], ['2', '2\u00d7']]
+
+function Zoom({ value, onChange }) {
+  return (
+    <div className="seg zoom" role="group" aria-label="zoom">
+      {ZOOMS.map(([k, label]) => (
+        <button key={k} aria-selected={value === k} onClick={() => onChange(k)}>
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function View({ zoom, children }) {
+  return <div className={'tool-view z-' + zoom}>{children}</div>
+}
+
 /* Reference vs registered under a wipe. Same frame, same pixel grid, so the
  * seam is the alignment - which is the only honest way to show it. */
-function BeforeAfter({ jobId }) {
+function BeforeAfter({ jobId, zoom }) {
   const [x, setX] = useState(50)
   return (
     <div>
-      <div className="tool-wipe">
-        <img src={api.toolFileUrl(jobId, 'reference.png')} alt="reference" />
-        <img src={api.toolFileUrl(jobId, 'registered.png')} alt="registered"
-             className="over" style={{ clipPath: `inset(0 0 0 ${x}%)` }} />
-        <div className="seam" style={{ left: x + '%' }} />
-        <span className="tool-tag left">REFERENCE</span>
-        <span className="tool-tag right">REGISTERED SOURCE</span>
-      </div>
+      <View zoom={zoom}>
+        <div className="tool-wipe">
+          <img src={api.toolFileUrl(jobId, 'reference.png')} alt="reference" />
+          <img src={api.toolFileUrl(jobId, 'registered.png')} alt="registered"
+               className="over" style={{ clipPath: `inset(0 0 0 ${x}%)` }} />
+          <div className="seam" style={{ left: x + '%' }} />
+          <span className="tool-tag left">REFERENCE</span>
+          <span className="tool-tag right">REGISTERED SOURCE</span>
+        </div>
+      </View>
       <input className="tool-range" type="range" min="0" max="100" value={x}
              onChange={(e) => setX(+e.target.value)} />
     </div>
@@ -214,6 +245,7 @@ export default function ToolView({ view, setView }) {
   const [preview, setPreview] = useState(null)
   const [showOut, setShowOut] = useState(false)
   const [tab, setTab] = useState('matches')
+  const [zoom, setZoom] = useState('fit')
 
   useEffect(() => {
     api.toolFiles().then((d) => setFiles(d.files)).catch((e) => setErr(String(e)))
@@ -420,16 +452,19 @@ export default function ToolView({ view, setView }) {
             </div>
 
             <div className="section">
-              <div className="seg" style={{ marginBottom: 12 }}>
-                <button aria-selected={tab === 'matches'} onClick={() => setTab('matches')}>
-                  Match lines
-                </button>
-                <button aria-selected={tab === 'wipe'} onClick={() => setTab('wipe')}>
-                  Before / after
-                </button>
-                <button aria-selected={tab === 'overlay'} onClick={() => setTab('overlay')}>
-                  Composite
-                </button>
+              <div className="tool-tabs">
+                <div className="seg">
+                  <button aria-selected={tab === 'matches'} onClick={() => setTab('matches')}>
+                    Match lines
+                  </button>
+                  <button aria-selected={tab === 'wipe'} onClick={() => setTab('wipe')}>
+                    Before / after
+                  </button>
+                  <button aria-selected={tab === 'overlay'} onClick={() => setTab('overlay')}>
+                    Composite
+                  </button>
+                </div>
+                <Zoom value={zoom} onChange={setZoom} />
               </div>
 
               {tab === 'matches' && (
@@ -441,21 +476,25 @@ export default function ToolView({ view, setView }) {
                            onChange={(e) => setShowOut(e.target.checked)} />
                     <span>show rejected candidates</span>
                   </label>
-                  <MatchLines jobId={job.id} preview={preview} showOutliers={showOut} />
+                  <View zoom={zoom}>
+                    <MatchLines jobId={job.id} preview={preview} showOutliers={showOut} />
+                  </View>
                 </Panel>
               )}
 
               {tab === 'wipe' && (
                 <Panel title="Reference vs registered source" meta="registered.png"
                        caption="Drag the handle. Both panels are the same pixel grid, so features crossing the seam without stepping are aligned.">
-                  <BeforeAfter jobId={job.id} />
+                  <BeforeAfter jobId={job.id} zoom={zoom} />
                 </Panel>
               )}
 
               {tab === 'overlay' && (
                 <Panel title="Composite" meta="overlay.png"
                        caption="Top: source and reference with tie lines. Bottom: checkerboard of reference and registered source.">
-                  <img src={api.toolFileUrl(job.id, 'overlay.png')} alt="overlay" />
+                  <View zoom={zoom}>
+                    <img src={api.toolFileUrl(job.id, 'overlay.png')} alt="overlay" />
+                  </View>
                 </Panel>
               )}
             </div>
