@@ -356,3 +356,89 @@ table.data td.st-refused, table.data td.st-error { color: var(--refused); }
   padding: 9px 11px; border-radius: 3px; margin: 14px 0; font-size: 12px;
 }
 .note.warnbox strong { color: var(--s4); }
+
+/* --- uploads -------------------------------------------------------------- */
+.chip.up { border-color: #2b4a6b; color: #8fb8e8; }
+
+.tool-drop {
+  border: 1px dashed var(--line-2); border-radius: 3px; padding: 10px;
+  text-align: center; font-size: 11.5px; color: var(--text-2); background: var(--surface);
+}
+.tool-drop.over { border-color: var(--s4); background: #201d14; }
+.tool-drop .hint { color: var(--text-faint); font-size: 10px; margin-top: 6px; line-height: 1.4; }
+.tool-drop-btns { display: flex; gap: 4px; justify-content: center; margin-top: 7px; }
+.tool-drop-btns button, .tool-peek {
+  background: var(--panel-2); border: 1px solid var(--line-2); color: var(--text-2);
+  border-radius: 2px; padding: 3px 8px; font-family: var(--mono); font-size: 10.5px; cursor: pointer;
+}
+.tool-drop-btns button:hover:not(:disabled), .tool-peek:hover { border-color: var(--s4); color: var(--text); }
+.tool-drop-btns button:disabled { opacity: .45; cursor: default; }
+
+.tool-uploads { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+.tool-up {
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center;
+  font-size: 11px; padding: 4px 6px; background: var(--surface); border-radius: 2px;
+}
+.tool-up .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tool-up .tg { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+.tool-up.error .tg { color: var(--refused); white-space: normal; }
+.tool-up .bar { grid-column: 1 / -1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.tool-up .bar > div { height: 100%; background: var(--s4); transition: width .2s linear; }
+.tool-check { display: flex; gap: 6px; font-size: 11px; color: var(--text-2); padding: 3px 2px; line-height: 1.4; word-break: break-word; }
+.tool-check .mk { font-family: var(--mono); width: 10px; flex: none; }
+.tool-check.ok .mk { color: var(--accepted); }
+.tool-check.bad .mk, .tool-check.bad { color: var(--refused); }
+.tool-check a { color: var(--s4); }
+
+.tool-filerow { display: grid; grid-template-columns: 1fr auto; gap: 3px; }
+.tool-filerow .tool-file { min-width: 0; }
+.tool-peek { padding: 0 7px; }
+.tool-peek[aria-pressed="true"] { border-color: var(--s4); color: var(--s4); }
+
+/* --- deep zoom ------------------------------------------------------------ */
+.btn.sm { width: auto; padding: 5px 12px; font-size: 11px; letter-spacing: .02em; }
+.dz-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+.dz-head h3 { margin: 0; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+              color: var(--text-faint); font-weight: 600; }
+.dz-head h3 code { text-transform: none; letter-spacing: 0; }
+
+.dz-stage { position: relative; background: #000; border-radius: 2px; overflow: hidden;
+            border: 1px solid var(--line); min-height: 260px; }
+.dz-host { position: absolute; inset: 0; }
+.dz-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.dz-stage .tool-tag { z-index: 3; }
+.dz-tools { position: absolute; top: 7px; right: 7px; z-index: 3; display: flex; gap: 2px; }
+.dz-tools button {
+  background: rgba(12, 13, 16, .85); border: 1px solid var(--line-2); color: var(--text-2);
+  font-family: var(--mono); font-size: 11px; padding: 4px 8px; border-radius: 2px; cursor: pointer;
+  min-width: 28px;
+}
+.dz-tools button:hover { border-color: var(--s4); color: var(--text); }
+.dz-hud {
+  position: absolute; left: 7px; bottom: 7px; z-index: 3; pointer-events: none;
+  display: flex; flex-wrap: wrap; gap: 4px 12px; max-width: calc(100% - 200px);
+  background: rgba(12, 13, 16, .85); padding: 4px 8px; border-radius: 2px;
+  font-family: var(--mono); font-size: 10.5px; color: var(--text-2);
+}
+.dz-hud .dim, .dz-go .dim { color: var(--text-faint); }
+.dz-wait {
+  position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
+  padding: 20px; font-family: var(--mono); font-size: 11.5px; color: var(--text-2); gap: 6px;
+}
+.dz-wait .dim { color: var(--text-faint); font-size: 10.5px; max-width: 420px; }
+.dz-wait.bad { color: var(--refused); }
+.dz .navigator { border: 1px solid var(--line-2) !important; background: rgba(0, 0, 0, .6) !important; }
+
+.dz-go { display: flex; gap: 6px; align-items: center; margin-top: 7px; flex-wrap: wrap; font-size: 11px; }
+.dz-go select { width: auto; }
+.dz-go input {
+  flex: 1; min-width: 160px; background: var(--panel-2); border: 1px solid var(--line-2);
+  border-radius: 3px; padding: 6px 8px; font-family: var(--mono); font-size: 11.5px; color: var(--text);
+}
+.dz-go input:focus { outline: none; border-color: var(--s4); }
+.dz-go .btn { width: auto; padding: 6px 14px; }
+.dz-go .bad { color: var(--refused); }
+
+.dz-bar { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 6px; }
+.dz-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 900px) { .dz-pair { grid-template-columns: 1fr; } }

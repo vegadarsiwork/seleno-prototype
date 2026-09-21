@@ -1,8 +1,14 @@
 const BASE = ''
 
+// FastAPI puts the reason in {"detail": ...}; show that, not the raw JSON.
+async function failure(r) {
+  const t = await r.text()
+  try { return new Error(JSON.parse(t).detail || t || r.statusText) } catch { return new Error(t || r.statusText) }
+}
+
 async function jget(path) {
   const r = await fetch(BASE + path)
-  if (!r.ok) throw new Error((await r.text()) || r.statusText)
+  if (!r.ok) throw await failure(r)
   return r.json()
 }
 
@@ -12,7 +18,7 @@ async function jpost(path, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  if (!r.ok) throw new Error((await r.text()) || r.statusText)
+  if (!r.ok) throw await failure(r)
   return r.json()
 }
 
@@ -43,3 +49,36 @@ export const toolJob = (id) => jget(`/api/tool/jobs/${id}`)
 export const toolFile = (id, name) => jget(`/api/tool/jobs/${id}/file/${name}`)
 export const toolFileUrl = (id, name) => `${BASE}/api/tool/jobs/${id}/file/${name}`
 export const toolDownloadUrl = (id) => `${BASE}/api/tool/jobs/${id}/download`
+export const toolText = async (id, name) => {
+  const r = await fetch(toolFileUrl(id, name))
+  if (!r.ok) throw await failure(r)
+  return r.text()
+}
+
+// --- viewing any input at any zoom --------------------------------------- //
+const q = encodeURIComponent
+export const viewInfo = (path) => jget(`/api/tool/view/info?path=${q(path)}`)
+export const viewTileUrl = (path, s, x, y, v) =>
+  `${BASE}/api/tool/view/tile?path=${q(path)}&s=${s}&x=${x}&y=${y}&v=${v}`
+export const viewRegionUrl = (path, x0, y0, x1, y1) =>
+  `${BASE}/api/tool/view/region?path=${q(path)}` +
+  `&x0=${Math.floor(x0)}&y0=${Math.floor(y0)}&x1=${Math.ceil(x1)}&y1=${Math.ceil(y1)}`
+
+// --- uploads ------------------------------------------------------------- //
+// XHR rather than fetch: fetch cannot report upload progress, and a 6 GB file
+// with no progress bar looks exactly like a hung page.
+export const uploadFile = (batch, name, file, onProgress) =>
+  new Promise((resolve, reject) => {
+    const x = new XMLHttpRequest()
+    x.open('PUT', `${BASE}/api/tool/upload?batch=${q(batch)}&name=${q(name)}`)
+    x.upload.onprogress = (e) => onProgress && onProgress(e.loaded)
+    x.onload = () => {
+      if (x.status >= 200 && x.status < 300) return resolve(JSON.parse(x.responseText))
+      let msg = x.responseText || x.statusText
+      try { msg = JSON.parse(x.responseText).detail || msg } catch { /* not JSON */ }
+      reject(new Error(msg))
+    }
+    x.onerror = () => reject(new Error('network error during upload'))
+    x.onabort = () => reject(new Error('upload aborted'))
+    x.send(file)
+  })

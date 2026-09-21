@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as api from './api'
 import { Panel, num, pct } from './components'
+import DeepZoom, { Explore } from './DeepZoom'
 
 const MODELS = ['auto', 'similarity', 'affine', 'homography']
 const SIDES = [768, 1024, 2048, 4096]
@@ -20,7 +21,13 @@ const fmtBytes = (b) =>
       : b > 1e6 ? (b / 1e6).toFixed(1) + ' MB'
         : b > 1e3 ? (b / 1e3).toFixed(0) + ' kB' : b + ' B'
 
-function FilePicker({ label, files, value, onChange, filter, onFilter }) {
+const CHIP = {
+  product: ['real', 'PRODUCT'],
+  upload: ['up', 'UPLOAD'],
+  fixture: ['synth', 'FIXTURE'],
+}
+
+function FilePicker({ label, files, value, onChange, filter, onFilter, onInspect, inspecting }) {
   return (
     <div className="field">
       <label>{label}</label>
@@ -28,16 +35,23 @@ function FilePicker({ label, files, value, onChange, filter, onFilter }) {
              value={filter} onChange={(e) => onFilter(e.target.value)} />
       <div className="tool-files">
         {files.length === 0 && <div className="tool-empty">no matching files</div>}
-        {files.map((f) => (
-          <button key={f.path} className="tool-file" aria-selected={value === f.path}
-                  onClick={() => onChange(f.path)} title={f.path}>
-            <span className={'chip ' + (f.kind === 'product' ? 'real' : 'synth')}>
-              {f.kind === 'product' ? 'PRODUCT' : 'FIXTURE'}
-            </span>
-            <span className="nm">{f.name}</span>
-            <span className="tg">{f.instrument} · {fmtBytes(f.bytes)}</span>
-          </button>
-        ))}
+        {files.map((f) => {
+          const [cls, tag] = CHIP[f.kind] || CHIP.fixture
+          return (
+            <div key={f.path} className="tool-filerow">
+              <button className="tool-file" aria-selected={value === f.path}
+                      onClick={() => onChange(f.path)} title={f.path}>
+                <span className={'chip ' + cls}>{tag}</span>
+                <span className="nm">{f.name}</span>
+                <span className="tg">{f.instrument} · {fmtBytes(f.bytes)}</span>
+              </button>
+              <button className="tool-peek" aria-pressed={inspecting === f.path}
+                      onClick={() => onInspect(f.path)} title="open at full resolution">
+                view
+              </button>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -227,6 +241,143 @@ function MetricsTable({ m }) {
   )
 }
 
+const newBatch = () =>
+  Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => b.toString(16).padStart(2, '0')).join('')
+
+/* A dropped folder arrives as directory entries, not files. Walk them so a
+ * PDS product keeps its label, data file and geometry folder together. */
+async function filesFromDrop(dt) {
+  const entries = [...(dt.items || [])]
+    .map((it) => (it.webkitGetAsEntry ? it.webkitGetAsEntry() : null)).filter(Boolean)
+  if (!entries.length) return [...(dt.files || [])].map((f) => ({ file: f, rel: f.name }))
+  const out = []
+  const walk = async (entry, prefix) => {
+    if (entry.name.startsWith('.')) return
+    if (entry.isFile) {
+      const f = await new Promise((res, rej) => entry.file(res, rej))
+      out.push({ file: f, rel: prefix + f.name })
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader()
+      for (;;) {
+        const batch = await new Promise((res, rej) => reader.readEntries(res, rej))
+        if (!batch.length) break
+        for (const e of batch) await walk(e, prefix + entry.name + '/')
+      }
+    }
+  }
+  for (const e of entries) await walk(e, '')
+  return out
+}
+
+/* Upload any file the tool can read. Each batch gets its own folder on the
+ * server; afterwards every selectable file in it is opened once, so an
+ * unreadable upload says so now rather than 6 minutes into a run. */
+function Uploader({ refresh, onInspect }) {
+  const [items, setItems] = useState([])
+  const [checks, setChecks] = useState([])
+  const [over, setOver] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const fileIn = useRef(null)
+  const dirIn = useRef(null)
+
+  const upd = (key, patch) =>
+    setItems((xs) => xs.map((x) => (x.key === key ? { ...x, ...patch } : x)))
+
+  const start = async (list) => {
+    list = list.filter((f) => !f.rel.split('/').pop().startsWith('.'))
+    if (!list.length || busy) return
+    setBusy(true)
+    const batch = newBatch()
+    setItems(list.map((f, i) => ({ key: batch + i, name: f.rel, total: f.file.size,
+                                   loaded: 0, state: 'queued' })))
+    setChecks([])
+    for (let i = 0; i < list.length; i++) {
+      const key = batch + i
+      upd(key, { state: 'sending' })
+      try {
+        await api.uploadFile(batch, list[i].rel, list[i].file, (loaded) => upd(key, { loaded }))
+        upd(key, { state: 'done', loaded: list[i].file.size })
+      } catch (e) {
+        upd(key, { state: 'error', error: e.message || String(e) })
+      }
+    }
+    const files = await refresh()
+    const mine = (files || []).filter((f) => f.path.startsWith(`data/uploads/${batch}/`))
+    setChecks(mine.map((f) => ({ path: f.path, name: f.name, state: 'checking' })))
+    setBusy(false)
+    for (const f of mine) {
+      try {
+        const d = await api.viewInfo(f.path)
+        const geo = d.georef ? (d.georef.kind ? `georeferenced (${d.georef.kind})` : 'georeferenced')
+          : 'no map projection'
+        setChecks((cs) => cs.map((c) => c.path === f.path ? { ...c, state: 'ok',
+          text: `${d.width} × ${d.height} ${d.dtype}, ${d.reader} reader, ${geo}` } : c))
+      } catch (e) {
+        setChecks((cs) => cs.map((c) => c.path === f.path
+          ? { ...c, state: 'bad', text: e.message || String(e) } : c))
+      }
+    }
+  }
+
+  const fromInput = (e) => {
+    const list = [...e.target.files].map((f) => ({ file: f, rel: f.webkitRelativePath || f.name }))
+    e.target.value = ''
+    start(list)
+  }
+  const onDrop = (e) => {
+    e.preventDefault(); setOver(false)
+    filesFromDrop(e.dataTransfer).then(start)
+  }
+
+  return (
+    <div className="field">
+      <label>Upload</label>
+      <div className={'tool-drop' + (over ? ' over' : '')}
+           onDragOver={(e) => { e.preventDefault(); setOver(true) }}
+           onDragLeave={() => setOver(false)} onDrop={onDrop}>
+        <div>Drop files or a folder here</div>
+        <div className="tool-drop-btns">
+          <button disabled={busy} onClick={() => fileIn.current.click()}>choose files</button>
+          <button disabled={busy} onClick={() => dirIn.current.click()}>choose folder</button>
+        </div>
+        <div className="hint">
+          GeoTIFF, PNG/JPG, JPEG 2000, PDS3 (.lbl/.IMG), PDS4 (.xml with its .img/.qub).
+          Upload a label and its data file together.
+        </div>
+        <input ref={fileIn} type="file" multiple hidden onChange={fromInput} />
+        <input ref={dirIn} type="file" webkitdirectory="" directory="" hidden onChange={fromInput} />
+      </div>
+      {items.length > 0 && (
+        <div className="tool-uploads">
+          {items.map((x) => (
+            <div key={x.key} className={'tool-up ' + x.state}>
+              <span className="nm" title={x.name}>{x.name}</span>
+              <span className="tg">
+                {x.state === 'error' ? x.error
+                  : x.state === 'done' ? fmtBytes(x.total)
+                    : `${fmtBytes(x.loaded)} / ${fmtBytes(x.total)}`}
+              </span>
+              {x.state === 'sending' && (
+                <div className="bar"><div style={{ width: `${(100 * x.loaded) / (x.total || 1)}%` }} /></div>
+              )}
+            </div>
+          ))}
+          {checks.map((c) => (
+            <div key={c.path} className={'tool-check ' + c.state}>
+              <span className="mk">{c.state === 'ok' ? '✓' : c.state === 'bad' ? '✗' : '…'}</span>
+              <span>
+                <strong>{c.name}</strong>{' '}
+                {c.state === 'checking' ? 'opening…' : c.text}
+                {c.state === 'ok' && <> · <a href="#" onClick={(e) => { e.preventDefault(); onInspect(c.path) }}>view</a></>}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ToolView({ view, setView }) {
   const [files, setFiles] = useState([])
   const [err, setErr] = useState(null)
@@ -244,12 +395,15 @@ export default function ToolView({ view, setView }) {
   const [job, setJob] = useState(null)
   const [preview, setPreview] = useState(null)
   const [showOut, setShowOut] = useState(false)
-  const [tab, setTab] = useState('matches')
+  const [tab, setTab] = useState('explore')
   const [zoom, setZoom] = useState('fit')
+  const [inspect, setInspect] = useState(null)
 
-  useEffect(() => {
-    api.toolFiles().then((d) => setFiles(d.files)).catch((e) => setErr(String(e)))
-  }, [])
+  const refresh = useCallback(() =>
+    api.toolFiles()
+      .then((d) => { setFiles(d.files); return d.files })
+      .catch((e) => { setErr(String(e)); return [] }), [])
+  useEffect(() => { refresh() }, [refresh])
 
   const filtered = (all, q) => {
     const s = q.trim().toLowerCase()
@@ -282,7 +436,7 @@ export default function ToolView({ view, setView }) {
   }, [job?.id, job?.state])
 
   const run = useCallback(() => {
-    setErr(null); setPreview(null); setTab('matches')
+    setErr(null); setPreview(null); setTab('explore')
     api.toolRegister({
       source: src, reference: ref_, model, max_side: maxSide,
       grid, segments, subpixel,
@@ -318,10 +472,11 @@ export default function ToolView({ view, setView }) {
         </div>
 
         <div className="rail-section">
+          <Uploader refresh={refresh} onInspect={setInspect} />
           <FilePicker label="Source" files={listA} value={src} onChange={setSrc}
-                      filter={fa} onFilter={setFa} />
+                      filter={fa} onFilter={setFa} onInspect={setInspect} inspecting={inspect} />
           <FilePicker label="Reference" files={listB} value={ref_} onChange={setRef}
-                      filter={fb} onFilter={setFb} />
+                      filter={fb} onFilter={setFb} onInspect={setInspect} inspecting={inspect} />
         </div>
 
         <div className="rail-section">
@@ -392,6 +547,21 @@ export default function ToolView({ view, setView }) {
         )}
         {err && <div className="note bad">{err}</div>}
 
+        {inspect && (
+          <div className="section">
+            <div className="dz-head">
+              <h3>Inspect · <code>{byPath[inspect]?.name || inspect.split('/').pop()}</code></h3>
+              <button className="btn ghost sm" onClick={() => setInspect(null)}>Close</button>
+            </div>
+            <DeepZoom key={inspect} path={inspect} height="72vh" />
+            <div className="caption">
+              Scroll or pinch to zoom, drag to pan, double-click to zoom in. Tiles
+              are read from the file itself at the scale on screen; past 1:1 each
+              native pixel is drawn as a block, never smoothed.
+            </div>
+          </div>
+        )}
+
         {job && (
           <div className="section">
             <h3>Run</h3>
@@ -454,6 +624,9 @@ export default function ToolView({ view, setView }) {
             <div className="section">
               <div className="tool-tabs">
                 <div className="seg">
+                  <button aria-selected={tab === 'explore'} onClick={() => setTab('explore')}>
+                    Zoom &amp; compare
+                  </button>
                   <button aria-selected={tab === 'matches'} onClick={() => setTab('matches')}>
                     Match lines
                   </button>
@@ -464,8 +637,21 @@ export default function ToolView({ view, setView }) {
                     Composite
                   </button>
                 </div>
-                <Zoom value={zoom} onChange={setZoom} />
+                {tab !== 'explore' && <Zoom value={zoom} onChange={setZoom} />}
               </div>
+
+              {tab === 'explore' && job.source && job.reference && (
+                <Panel title="Source and reference at full resolution"
+                       meta={`${byPath[job.source]?.name || job.source.split('/').pop()} → ${byPath[job.reference]?.name || job.reference.split('/').pop()}`}
+                       caption="Zoom anywhere, down to single native pixels. Green: tie points the run kept. With the views linked, the view under the pointer leads and the other shows the same ground, located through the tie points nearest the centre.">
+                  <label className="check">
+                    <input type="checkbox" checked={showOut}
+                           onChange={(e) => setShowOut(e.target.checked)} />
+                    <span>show rejected candidates</span>
+                  </label>
+                  <Explore key={job.id} job={job} showOutliers={showOut} />
+                </Panel>
+              )}
 
               {tab === 'matches' && (
                 <Panel title="Tie points"
