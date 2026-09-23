@@ -1,0 +1,954 @@
+[
+  {
+    "name": "synthetic_translation",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/translation.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+    "options": {
+      "max_side": 512
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_translation/854d1689776a",
+    "accuracy": {
+      "held_out_n": 639,
+      "held_out_rmse_px": 0.6974,
+      "held_out_median_px": 0.6667,
+      "held_out_p90_px": 0.9135,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.935076,
+        "max_corner_shift_px": 4.5768,
+        "note": "ECC moved the frame corners by 4.58 px, beyond the 3.62 px (0.5% of the frame diagonal) this stage is allowed to change a verified model; rejected",
+        "max_corner_shift_allowed_px": 3.62
+      },
+      "rmse_px": 0.6974,
+      "rmse_reference_px": 0.6974,
+      "rmse_working_px": 0.6974,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 1826,
+      "inliers": 1826,
+      "inlier_ratio": 1.0
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.8906,
+      "dispersion": 0.4384,
+      "extrapolation_fraction": 0.3281,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        512,
+        512
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9786
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        512,
+        512
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.1062,
+    "corner_errors_px": [
+      0.047,
+      0.156,
+      0.153,
+      0.068
+    ],
+    "csv_truth_rmse_px": 0.982812313624321,
+    "csv_truth_median_px": 1.1597413504742946,
+    "csv_matrix_direct_rmse_px": 0.9889167925396058,
+    "seconds": 5.58
+  },
+  {
+    "name": "synthetic_brightness",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/brightness.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+    "options": {
+      "max_side": 512
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_brightness/479d02f2bd5d",
+    "accuracy": {
+      "held_out_n": 633,
+      "held_out_rmse_px": 0.6803,
+      "held_out_median_px": 0.6861,
+      "held_out_p90_px": 0.9291,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.923069,
+        "max_corner_shift_px": 4.5676,
+        "note": "ECC moved the frame corners by 4.57 px, beyond the 3.62 px (0.5% of the frame diagonal) this stage is allowed to change a verified model; rejected",
+        "max_corner_shift_allowed_px": 3.62
+      },
+      "rmse_px": 0.6803,
+      "rmse_reference_px": 0.6803,
+      "rmse_working_px": 0.6803,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 1810,
+      "inliers": 1809,
+      "inlier_ratio": 0.9994
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.875,
+      "dispersion": 0.4343,
+      "extrapolation_fraction": 0.3281,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        512,
+        512
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 1.0
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        512,
+        512
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.1011,
+    "corner_errors_px": [
+      0.032,
+      0.149,
+      0.142,
+      0.082
+    ],
+    "csv_truth_rmse_px": 0.964976792498549,
+    "csv_truth_median_px": 1.1597413504742946,
+    "csv_matrix_direct_rmse_px": 0.980601141096096,
+    "seconds": 4.92
+  },
+  {
+    "name": "synthetic_contrast_inversion",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/contrast_inversion.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+    "options": {
+      "max_side": 512
+    },
+    "status": "warning",
+    "reason": "61% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_contrast_inversion/79198400ad87",
+    "accuracy": {
+      "held_out_n": 13,
+      "held_out_rmse_px": 0.2256,
+      "held_out_median_px": 0.0597,
+      "held_out_p90_px": 0.2641,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.949556,
+        "max_corner_shift_px": 3.9235,
+        "note": "ECC moved the frame corners by 3.92 px, beyond the 3.62 px (0.5% of the frame diagonal) this stage is allowed to change a verified model; rejected",
+        "max_corner_shift_allowed_px": 3.62
+      },
+      "rmse_px": 0.2256,
+      "rmse_reference_px": 0.2256,
+      "rmse_working_px": 0.2256,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 36,
+      "inliers": 36,
+      "inlier_ratio": 1.0
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.5625,
+      "dispersion": 0.3978,
+      "extrapolation_fraction": 0.6094,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "dense-ncc",
+    "frame": {
+      "target_shape": [
+        512,
+        512
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9786
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        512,
+        512
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.1193,
+    "corner_errors_px": [
+      0.036,
+      0.122,
+      0.114,
+      0.205
+    ],
+    "csv_truth_rmse_px": 0.676233974959015,
+    "csv_truth_median_px": 0.6575687320219674,
+    "csv_matrix_direct_rmse_px": 0.7309801829885509,
+    "seconds": 7.19
+  },
+  {
+    "name": "synthetic_rotation_20",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/rotation_20.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+    "options": {
+      "max_side": 512
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_rotation_20/711e96d41848",
+    "accuracy": {
+      "held_out_n": 503,
+      "held_out_rmse_px": 0.9712,
+      "held_out_median_px": 0.7495,
+      "held_out_p90_px": 1.4942,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.919033,
+        "max_corner_shift_px": 2.4072,
+        "note": "ECC converged but did not improve held-out RMSE (1.2031 vs 0.9712 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 3.62
+      },
+      "rmse_px": 0.9712,
+      "rmse_reference_px": 0.9712,
+      "rmse_working_px": 0.9712,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 1456,
+      "inliers": 1436,
+      "inlier_ratio": 0.9863
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.871,
+      "dispersion": 0.4287,
+      "extrapolation_fraction": 0.2903,
+      "eligible_cells": 62,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        512,
+        512
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.8774
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        512,
+        512
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.2049,
+    "corner_errors_px": [
+      0.291,
+      0.061,
+      0.333,
+      0.134
+    ],
+    "csv_truth_rmse_px": 1.2880527290494994,
+    "csv_truth_median_px": 1.0462703890656329,
+    "csv_matrix_direct_rmse_px": 1.2161547535903603,
+    "seconds": 5.97
+  },
+  {
+    "name": "synthetic_rotation_60",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/rotation_60.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+    "options": {
+      "max_side": 512
+    },
+    "status": "failed",
+    "reason": "degenerate_transform",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_rotation_60/faf0567849e6",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": null,
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 9.72
+  },
+  {
+    "name": "synthetic_scale_1p5",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/scale_1p5.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+    "options": {
+      "max_side": 512
+    },
+    "status": "failed",
+    "reason": "degenerate_transform",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_scale_1p5/f48e51d9f219",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": null,
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 5.76
+  },
+  {
+    "name": "synthetic_perspective",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/perspective.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+    "options": {
+      "max_side": 512
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_perspective/e2e9ce7be47c",
+    "accuracy": {
+      "held_out_n": 595,
+      "held_out_rmse_px": 0.6315,
+      "held_out_median_px": 0.5271,
+      "held_out_p90_px": 0.9267,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.914895,
+        "max_corner_shift_px": 3.5372,
+        "note": "ECC converged but did not improve held-out RMSE (1.1499 vs 0.6315 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 3.62
+      },
+      "rmse_px": 0.6315,
+      "rmse_reference_px": 0.6315,
+      "rmse_working_px": 0.6315,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 1702,
+      "inliers": 1701,
+      "inlier_ratio": 0.9994
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.8594,
+      "dispersion": 0.4426,
+      "extrapolation_fraction": 0.2812,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        512,
+        512
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.947
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        512,
+        512
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.0718,
+    "corner_errors_px": [
+      0.039,
+      0.069,
+      0.131,
+      0.049
+    ],
+    "csv_truth_rmse_px": 0.9821159760539435,
+    "csv_truth_median_px": 0.866486404882575,
+    "csv_matrix_direct_rmse_px": 0.9713982453612207,
+    "seconds": 5.48
+  },
+  {
+    "name": "synthetic_scale4_geo",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/fine_source.tif",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/coarse_reference.tif",
+    "options": {
+      "max_side": 512
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_scale4_geo/cd479d899f27",
+    "accuracy": {
+      "held_out_n": 355,
+      "held_out_rmse_px": 0.4613,
+      "held_out_median_px": 0.1761,
+      "held_out_p90_px": 0.8907,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.986094,
+        "max_corner_shift_px": 0.2015,
+        "note": "ECC converged but did not improve held-out RMSE (0.4631 vs 0.4613 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 3.0
+      },
+      "rmse_px": 0.4613,
+      "rmse_reference_px": 0.4613,
+      "rmse_working_px": 0.4613,
+      "rmse_source_px": 1.8452,
+      "rmse_m": 1.845,
+      "metres_per_pixel": 4.0,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": 4.0,
+        "source_px_per_reference_px": 4.0,
+        "metres_per_working_px": 4.0
+      },
+      "subpixel": false,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": 4.0,
+      "subpixel_attainable": false
+    },
+    "matches": {
+      "candidates": 1013,
+      "inliers": 1013,
+      "inlier_ratio": 1.0
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.875,
+      "dispersion": 0.4298,
+      "extrapolation_fraction": 0.1562,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        256,
+        256
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "both georeferenced: reference CRS -> source CRS",
+      "notes": [],
+      "source_oversample": 4.0,
+      "source_taps": 4,
+      "source_coverage": 1.0
+    },
+    "degraded": [],
+    "export": {
+      "shape": [
+        256,
+        256
+      ],
+      "bands": 1,
+      "transform": [
+        4.0,
+        0.0,
+        0.0,
+        0.0,
+        -4.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]"
+    },
+    "corner_error_px": 0.122,
+    "corner_errors_px": [
+      0.08,
+      0.178,
+      0.031,
+      0.199
+    ],
+    "csv_truth_rmse_px": 0.4748421569716745,
+    "csv_truth_median_px": 0.1767766952966369,
+    "csv_matrix_direct_rmse_px": 595.015869350546,
+    "seconds": 1.58,
+    "direct_export_corner_error_px": 651.6813
+  },
+  {
+    "name": "synthetic_decimated_identity",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/fine_source.tif",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/fine_source.tif",
+    "options": {
+      "max_side": 256,
+      "segments": 4
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_decimated_identity/9d9e4106c5e3",
+    "accuracy": {
+      "held_out_n": 1411,
+      "held_out_rmse_px": 0.3116,
+      "held_out_median_px": 0.184,
+      "held_out_p90_px": 0.5207,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.98609,
+        "max_corner_shift_px": 0.3442,
+        "note": "ECC converged but did not improve held-out RMSE (0.3674 vs 0.3116 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 3.0
+      },
+      "rmse_px": 0.3116,
+      "rmse_reference_px": 1.2464,
+      "rmse_working_px": 0.3116,
+      "rmse_source_px": 1.2464,
+      "rmse_m": 1.246,
+      "metres_per_pixel": 4.0,
+      "units": {
+        "reference_decimation": 4,
+        "metres_per_reference_px": 1.0,
+        "source_px_per_reference_px": 1.0,
+        "metres_per_working_px": 4.0
+      },
+      "subpixel": false,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": 1.0,
+      "subpixel_attainable": false
+    },
+    "matches": {
+      "candidates": 4051,
+      "inliers": 4032,
+      "inlier_ratio": 0.9953
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 1.0,
+      "dispersion": 0.5271,
+      "extrapolation_fraction": 0.0469,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": true,
+      "windows": 4,
+      "windows_used": 4,
+      "points": 4051,
+      "native": true,
+      "note": "windows still decimated 2x; raise --max-side or lower --fine-tiles",
+      "method": "disk_lightglue",
+      "probe": [
+        {
+          "method": "disk_lightglue",
+          "candidates": 1047,
+          "inliers": 1046
+        }
+      ],
+      "placement": "4 windows tiling 980 x 984 reference px (2 x 2 grid)",
+      "adopted": true,
+      "inliers": 4032
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        256,
+        256
+      ],
+      "reference_decimation": 4,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "both georeferenced: reference CRS -> source CRS",
+      "notes": [],
+      "source_oversample": 4.0,
+      "source_taps": 4,
+      "source_coverage": 1.0
+    },
+    "degraded": [],
+    "export": {
+      "shape": [
+        256,
+        256
+      ],
+      "bands": 1,
+      "transform": [
+        4.0,
+        0.0,
+        0.0,
+        0.0,
+        -4.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]"
+    },
+    "corner_error_px": 0.4434,
+    "corner_errors_px": [
+      0.655,
+      0.04,
+      0.585,
+      0.493
+    ],
+    "csv_truth_rmse_px": 1.9798470112602222,
+    "csv_truth_median_px": 1.0075140431512923,
+    "csv_matrix_direct_rmse_px": 1.8826248179607812,
+    "seconds": 9.81
+  },
+  {
+    "name": "rotated_geogrid_writer",
+    "actual": [
+      8.0,
+      0.3,
+      126.4,
+      0.2,
+      -8.0,
+      186.4,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "expected": [
+      8.0,
+      1.2,
+      126.4,
+      0.8,
+      -8.0,
+      186.4,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "corner_displacement_m": 137.37150359517815
+  }
+]

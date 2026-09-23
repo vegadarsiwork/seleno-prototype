@@ -1,0 +1,1020 @@
+[
+  {
+    "name": "lroc_005_055_r6144_c27648",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_055_r6144_c27648_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_055_r6144_c27648_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_005_055_r6144_c27648/3aef4ffc9834",
+    "accuracy": {
+      "held_out_n": 279,
+      "held_out_rmse_px": 1.4513,
+      "held_out_median_px": 1.0547,
+      "held_out_p90_px": 2.3547,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.593234,
+        "max_corner_shift_px": 2.3546,
+        "note": "ECC converged but did not improve held-out RMSE (1.9268 vs 1.4513 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 7.241
+      },
+      "rmse_px": 1.4513,
+      "rmse_reference_px": 1.4513,
+      "rmse_working_px": 1.4513,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": false,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 930,
+      "inliers": 796,
+      "inlier_ratio": 0.8559
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.7969,
+      "dispersion": 0.4493,
+      "extrapolation_fraction": 0.125,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9897
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        1024,
+        1024
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.666,
+    "corner_errors_px": [
+      0.922,
+      0.365,
+      0.187,
+      1.19
+    ],
+    "csv_truth_rmse_px": 1.4958724368369665,
+    "csv_truth_median_px": 1.151173998011362,
+    "csv_matrix_direct_rmse_px": 1.5431387089528805,
+    "seconds": 19.27,
+    "negative": false,
+    "delta_sun_lon_deg": 50
+  },
+  {
+    "name": "lroc_005_055_r4096_c23552",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_055_r4096_c23552_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_055_r4096_c23552_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_005_055_r4096_c23552/1c76c66be7a4",
+    "accuracy": {
+      "held_out_n": 332,
+      "held_out_rmse_px": 1.2742,
+      "held_out_median_px": 0.9796,
+      "held_out_p90_px": 2.0261,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.608313,
+        "max_corner_shift_px": 1.7274,
+        "note": "ECC converged but did not improve held-out RMSE (1.5289 vs 1.2742 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 7.241
+      },
+      "rmse_px": 1.2742,
+      "rmse_reference_px": 1.2742,
+      "rmse_working_px": 1.2742,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": false,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 1002,
+      "inliers": 950,
+      "inlier_ratio": 0.9481
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.75,
+      "dispersion": 0.4591,
+      "extrapolation_fraction": 0.2812,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9888
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        1024,
+        1024
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.8637,
+    "corner_errors_px": [
+      0.67,
+      0.43,
+      1.546,
+      0.809
+    ],
+    "csv_truth_rmse_px": 1.2685486652640765,
+    "csv_truth_median_px": 0.9701440882603324,
+    "csv_matrix_direct_rmse_px": 1.3672381725042426,
+    "seconds": 27.2,
+    "negative": false,
+    "delta_sun_lon_deg": 50
+  },
+  {
+    "name": "lroc_095_145_r4096_c43008",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_095_145_r4096_c43008_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_095_145_r4096_c43008_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_095_145_r4096_c43008/df5ef8e897de",
+    "accuracy": {
+      "held_out_n": 284,
+      "held_out_rmse_px": 1.3635,
+      "held_out_median_px": 1.0884,
+      "held_out_p90_px": 2.1265,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.758679,
+        "max_corner_shift_px": 2.3198,
+        "note": "ECC converged but did not improve held-out RMSE (1.4847 vs 1.3635 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 7.241
+      },
+      "rmse_px": 1.3635,
+      "rmse_reference_px": 1.3635,
+      "rmse_working_px": 1.3635,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": false,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 937,
+      "inliers": 810,
+      "inlier_ratio": 0.8645
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.7969,
+      "dispersion": 0.4233,
+      "extrapolation_fraction": 0.3594,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9802
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        1024,
+        1024
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 0.9733,
+    "corner_errors_px": [
+      1.767,
+      0.872,
+      0.63,
+      0.625
+    ],
+    "csv_truth_rmse_px": 1.4463528016630942,
+    "csv_truth_median_px": 1.2752242533418063,
+    "csv_matrix_direct_rmse_px": 1.4863111829875766,
+    "seconds": 21.63,
+    "negative": false,
+    "delta_sun_lon_deg": 50
+  },
+  {
+    "name": "lroc_095_145_r9216_c43008",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_095_145_r9216_c43008_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_095_145_r9216_c43008_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "warning",
+    "reason": "only 8 verified inliers; matches cover 12% of the reference grid; the transform is extrapolated over the rest; 69% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_095_145_r9216_c43008/f6851ea448b5",
+    "accuracy": {
+      "held_out_n": 3,
+      "held_out_rmse_px": 3.7571,
+      "held_out_median_px": 3.9517,
+      "held_out_p90_px": 4.1521,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.122929,
+        "max_corner_shift_px": 22.8608,
+        "note": "ECC moved the frame corners by 22.86 px, beyond the 7.24 px (0.5% of the frame diagonal) this stage is allowed to change a verified model; rejected",
+        "max_corner_shift_allowed_px": 7.241
+      },
+      "rmse_px": 3.7571,
+      "rmse_reference_px": 3.7571,
+      "rmse_working_px": 3.7571,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": false,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 31,
+      "inliers": 8,
+      "inlier_ratio": 0.2581
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.125,
+      "dispersion": 0.4474,
+      "extrapolation_fraction": 0.6875,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "dense-ncc",
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9898
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "export": {
+      "shape": [
+        1024,
+        1024
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "corner_error_px": 171.8393,
+    "corner_errors_px": [
+      214.766,
+      212.429,
+      129.468,
+      130.695
+    ],
+    "csv_truth_rmse_px": 91.90845929492544,
+    "csv_truth_median_px": 85.6368008278821,
+    "csv_matrix_direct_rmse_px": 1.7067027142694347,
+    "seconds": 24.7,
+    "negative": false,
+    "delta_sun_lon_deg": 50
+  },
+  {
+    "name": "lroc_145_235_r9216_c41984",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_145_235_r9216_c41984_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_145_235_r9216_c41984_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_145_235_r9216_c41984/e0977a91eaa3",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.992
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 23.88,
+    "negative": false,
+    "delta_sun_lon_deg": 90
+  },
+  {
+    "name": "lroc_235_325_r1024_c43008",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_235_325_r1024_c43008_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_235_325_r1024_c43008_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_235_325_r1024_c43008/72bd4bda6f39",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9939
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 21.34,
+    "negative": false,
+    "delta_sun_lon_deg": 90
+  },
+  {
+    "name": "lroc_235_325_r3072_c41984",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_235_325_r3072_c41984_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_235_325_r3072_c41984_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_235_325_r3072_c41984/ed2206d9845b",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9944
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 13.68,
+    "negative": false,
+    "delta_sun_lon_deg": 90
+  },
+  {
+    "name": "lroc_055_145_r8192_c43008",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_055_145_r8192_c43008_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_055_145_r8192_c43008_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_055_145_r8192_c43008/5243116d45d4",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9949
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 15.28,
+    "negative": false,
+    "delta_sun_lon_deg": 90
+  },
+  {
+    "name": "lroc_055_145_r5120_c43008",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_055_145_r5120_c43008_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_055_145_r5120_c43008_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "warning",
+    "reason": "only 6 verified inliers; matches cover 6% of the reference grid; the transform is extrapolated over the rest; 97% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_055_145_r5120_c43008/9ca5bee3359e",
+    "accuracy": {
+      "held_out_n": 0,
+      "fit_rmse_px": 1.0487,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 0.531166,
+        "max_corner_shift_px": 7.9391,
+        "note": "ECC moved the frame corners by 7.94 px, beyond the 7.24 px (0.5% of the frame diagonal) this stage is allowed to change a verified model; rejected",
+        "max_corner_shift_allowed_px": 7.241
+      },
+      "rmse_px": 1.0487,
+      "rmse_reference_px": 1.0487,
+      "rmse_working_px": 1.0487,
+      "rmse_source_px": null,
+      "rmse_m": null,
+      "metres_per_pixel": null,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": null,
+        "source_px_per_reference_px": null,
+        "metres_per_working_px": null
+      },
+      "subpixel": null,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": false,
+      "subpixel_floor_source_px": null,
+      "subpixel_attainable": null
+    },
+    "matches": {
+      "candidates": 15,
+      "inliers": 6,
+      "inlier_ratio": 0.4
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.0625,
+      "dispersion": 0.2171,
+      "extrapolation_fraction": 0.9688,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9949
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported.",
+      "too few inliers to hold points out; RMSE is fit-set self-consistency, not accuracy"
+    ],
+    "export": {
+      "shape": [
+        1024,
+        1024
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "None"
+    },
+    "direct_export_corner_error_px": 8.241,
+    "corner_error_px": 8.241,
+    "corner_errors_px": [
+      14.916,
+      2.877,
+      9.024,
+      6.147
+    ],
+    "csv_truth_rmse_px": 3.049492584044958,
+    "csv_truth_median_px": 2.903585943330723,
+    "csv_matrix_direct_rmse_px": 1.2324739361593817,
+    "seconds": 15.79,
+    "negative": false,
+    "delta_sun_lon_deg": 90
+  },
+  {
+    "name": "lroc_145_325_r3072_c43008",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_145_325_r3072_c43008_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_145_325_r3072_c43008_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_145_325_r3072_c43008/f9db637e3be7",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9748
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 14.7,
+    "negative": false,
+    "delta_sun_lon_deg": 180
+  },
+  {
+    "name": "lroc_145_325_r12288_c32768",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_145_325_r12288_c32768_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_145_325_r12288_c32768_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_145_325_r12288_c32768/f550c11e7358",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9924
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 14.32,
+    "negative": false,
+    "delta_sun_lon_deg": 180
+  },
+  {
+    "name": "lroc_055_235_r10240_c43008",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_055_235_r10240_c43008_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_055_235_r10240_c43008_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_055_235_r10240_c43008/235f07cf320c",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9836
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 13.99,
+    "negative": false,
+    "delta_sun_lon_deg": 180
+  },
+  {
+    "name": "lroc_005_235_r6144_c27648_neg",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_235_r6144_c27648_neg_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_235_r6144_c27648_neg_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_005_235_r6144_c27648_neg/7103d0ae025d",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9897
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 19.54,
+    "negative": true,
+    "delta_sun_lon_deg": 130
+  },
+  {
+    "name": "lroc_005_325_r4096_c23552_neg",
+    "source": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_325_r4096_c23552_neg_source.png",
+    "reference": "/home/paardhu/Projects/seleno-prototype/data/lroc/pairs/lroc_005_325_r4096_c23552_neg_reference.png",
+    "options": {
+      "max_side": 1024
+    },
+    "status": "failed",
+    "reason": "verification_failed",
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/lroc_005_325_r4096_c23552_neg/f8f5050c2c71",
+    "accuracy": null,
+    "matches": null,
+    "distribution": null,
+    "fine_stage": null,
+    "method_used": null,
+    "frame": {
+      "target_shape": [
+        1024,
+        1024
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+      "notes": [
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 0.9888
+    },
+    "degraded": [
+      "source: GeoTIFF carries no CRS; pixel-space registration only",
+      "reference: GeoTIFF carries no CRS; pixel-space registration only",
+      "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+    ],
+    "seconds": 19.34,
+    "negative": true,
+    "delta_sun_lon_deg": 40
+  }
+]

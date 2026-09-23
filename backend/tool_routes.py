@@ -163,6 +163,7 @@ class RunRequest(BaseModel):
     grid: int = 8
     segments: int = 0
     subpixel: bool = True
+    locate: str = "auto"
 
 
 def _resolve(rel: str) -> str:
@@ -191,7 +192,8 @@ def _worker(jid: str, req: RunRequest, src: str, ref: str):
     try:
         res = register(src, ref, OUTPUTS, model=req.model, max_side=req.max_side,
                        grid=(req.grid, req.grid), segments=req.segments,
-                       subpixel=req.subpixel, progress=progress, verbose=False)
+                       subpixel=req.subpixel, locate=req.locate,
+                       progress=progress, verbose=False)
         with _LOCK:
             job.update(state="done", job_dir_id=res.job_id, status=res.status,
                        reason=res.reason, metrics=res.metrics,

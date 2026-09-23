@@ -34,6 +34,9 @@ def main(argv=None):
     r.add_argument("--no-subpixel", action="store_true",
                    help="skip the ECC sub-pixel polish (faster; the discrete "
                         "stages' own accuracy is then what is reported)")
+    r.add_argument("--locate", choices=("auto", "force", "off"), default="auto",
+                   help="find where the source lies in the reference when no map "
+                        "projection places it (auto), always (force), or never (off)")
     r.add_argument("--quiet", action="store_true")
     r.add_argument("--json", action="store_true", help="print metrics.json to stdout")
 
@@ -56,7 +59,7 @@ def main(argv=None):
     res = register(a.source, a.reference, a.out, model=a.model, max_side=a.max_side,
                    grid=(a.grid, a.grid), segments=a.segments,
                    subpixel=not a.no_subpixel, fine=not a.no_fine,
-                   fine_tiles=a.fine_tiles, verbose=not a.quiet)
+                   fine_tiles=a.fine_tiles, locate=a.locate, verbose=not a.quiet)
     if a.json:
         print(json.dumps(res.metrics, indent=1))
     return 0 if res.ok else 2

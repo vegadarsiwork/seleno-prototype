@@ -42,6 +42,7 @@ import cv2
 import numpy as np
 
 from .. import spatial, verify as V
+from . import locate as LOC
 from . import methods as M
 from .profiles import Profiles
 from .scene import Scene, UnreadableInput, load, normalised
@@ -122,6 +123,11 @@ def _cap_max_side(max_side: int, budget_fraction: float = 0.5) -> tuple[int, str
 
 
 _AA_MAX_TAPS = 4
+# From this reduction up, the source is area-averaged from a block-mean base
+# instead of point-sampled. At OHRC -> IIRS (about 330x) a point sample is one
+# 0.24 m pixel standing for an 80 m cell - noise to every matcher. Below it the
+# measured behaviour of the comb/nearest rule above is kept unchanged.
+_AREA_MIN_FACTOR = 16.0
 
 
 def _boxcar_decimate(arr, r0, r1, c0, c1, step, nodata, scale, offset, taps=4):
@@ -263,13 +269,19 @@ def _source_window(src: Scene, ref: Scene, pad_frac: float = 0.35,
 
 
 def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=None,
-             prewarp=None):
+             prewarp=None, placement=None):
     """Put the source on the reference's grid using whatever geometry exists.
 
     Returns ``(src_on_grid, src_valid, ref_grid, ref_valid, back_x, back_y, info)``
     where `back_x`/`back_y` give, for each target pixel, the ORIGINAL source pixel
     it came from - so match points can always be reported in the source's own
     coordinates, whatever route was taken to get here.
+
+    `placement` is a located reference-pixel -> source-pixel similarity (see
+    `seleno.tool.locate`). It stands in for the pixel-space assumption that
+    both images start at the same corner, and is ignored when a CRS route
+    applies. It is recorded in the returned info, so every later call that is
+    handed that info places the source the same way.
     """
     if window is None:
         window = _source_window(src, ref)
@@ -297,7 +309,7 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
             L[r0b:r1b] = f_l(a, b)
         info["route"] = ("source geometry lattice -> reference %s"
                          % ("projected plane" if projected else "lon/lat"))
-        return _sample(src, S, L, R, Rv, info)
+        return _sample(src, S, L, R, Rv, info, cache)
 
     # --- route 2: both georeferenced
     if src.georeferenced and ref.georeferenced:
@@ -319,11 +331,13 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
             L[r0b:r1b] = np.asarray(rr, np.float64).reshape(r1b - r0b, W)
             S[r0b:r1b] = np.asarray(cc, np.float64).reshape(r1b - r0b, W)
         info["route"] = "both georeferenced: reference CRS -> source CRS"
-        return _sample(src, S, L, R, Rv, info)
+        return _sample(src, S, L, R, Rv, info, cache)
 
-    # --- route 3: no usable geometry. Pixel space, scale-matched if GSDs are known.
+    # --- route 3: no CRS route. A located placement, else pixel space.
     ratio = 1.0
-    if src.gsd_m and ref.gsd_m:
+    if placement is not None:
+        info["placement"] = np.asarray(placement, float).tolist()
+    elif src.gsd_m and ref.gsd_m:
         ratio = float(src.gsd_m) / float(ref.gsd_m)
         info["notes"].append("no shared frame; source resampled by the GSD ratio "
                              "(%.4f) and registered in pixel space" % ratio)
@@ -353,10 +367,18 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
         den = np.where(np.abs(den) < 1e-12, 1e-12, den)
         cols, rows = ((P[0, 0] * cols + P[0, 1] * rows + P[0, 2]) / den,
                       (P[1, 0] * cols + P[1, 1] * rows + P[1, 2]) / den)
+    if placement is not None:
+        T = np.asarray(placement, float)
+        cols, rows = (T[0, 0] * cols + T[0, 1] * rows + T[0, 2],
+                      T[1, 0] * cols + T[1, 1] * rows + T[1, 2])
+        # the placement lands on source pixel centres; `_sample` wants edges
+        S, L = cols + 0.5, rows + 0.5
+        info["route"] = "located placement (%dx decimation)" % step
+        return _sample(src, S, L, R, Rv, info, cache)
     S = (cols + 0.5) / max(ratio, 1e-9)
     L = (rows + 0.5) / max(ratio, 1e-9)
     info["route"] = "pixel space (GSD ratio %.4f, %dx decimation)" % (ratio, step)
-    return _sample(src, S, L, R, Rv, info)
+    return _sample(src, S, L, R, Rv, info, cache)
 
 
 def _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp=None):
@@ -451,7 +473,47 @@ def _lattice_interpolators(grid, crs=None, cache=None):
     return out
 
 
-def _sample(src: Scene, S, L, R, Rv, info):
+def _area_reduced(src: Scene, f: float, cache):
+    """The source area-averaged to `f` source pixels per output pixel, as
+    ``(array, rows_per_px, cols_per_px)``, or None when that is not cheap.
+
+    Cheap means from the array itself when it is small, or from the viewer's
+    cached block-mean overview when that is at least as fine as `f`. Pixels the
+    source marks as nodata 0 are averaged in as black: at these reductions a
+    shadow is part of what the coarse image shows, not a hole in it.
+    """
+    key = ("area", id(src), round(float(f), 1))
+    if cache is not None and key in cache:
+        return cache[key]
+    h, w = src.array.shape
+    if h * w > 16_000_000:
+        # Decide from the shape alone before building anything: an overview
+        # coarser than `f` is useless here, and building one reads the file.
+        from .view import _factor
+        if _factor(h, w) > f:
+            return None
+    base = LOC._base(src, (cache or {}).get("viewcache"))
+    if base is None:
+        return None
+    b, fy, fx = base
+    if max(fy, fx) > f:
+        return None
+    h, w = src.array.shape
+    oh, ow = max(1, int(round(h / f))), max(1, int(round(w / f)))
+    valid = np.isfinite(b)
+    fill = float(np.nanmean(b)) if valid.any() else 0.0
+    arr = cv2.resize(np.where(valid, b, fill).astype(np.float32), (ow, oh),
+                     interpolation=cv2.INTER_AREA)
+    vm = cv2.resize(valid.astype(np.float32), (ow, oh), interpolation=cv2.INTER_AREA) > 0.5
+    arr = arr * src.meta_scale + src.meta_offset
+    arr[~vm] = np.nan
+    out = (arr, h / float(oh), w / float(ow))
+    if cache is not None:
+        cache[key] = out
+    return out
+
+
+def _sample(src: Scene, S, L, R, Rv, info, cache=None):
     """Lift the source onto the target grid, averaging when it is being reduced.
 
     Validity is evaluated on the SAMPLED values, so no source-wide boolean mask
@@ -496,6 +558,21 @@ def _sample(src: Scene, S, L, R, Rv, info):
         aa = f <= _AA_MAX_TAPS + 0.5
         info["source_oversample"] = round(f, 3)
         info["source_taps"] = k if aa else 1
+        red = _area_reduced(src, f, cache) if (not aa and f >= _AREA_MIN_FACTOR) else None
+        if red is not None:
+            arr, ry, rx = red
+            ri = np.clip((L[ok] / ry).astype(np.int64), 0, arr.shape[0] - 1)
+            ci = np.clip((S[ok] / rx).astype(np.int64), 0, arr.shape[1] - 1)
+            vals = arr[ri, ci]
+            out[ok] = np.nan_to_num(vals)
+            ov[ok] = np.isfinite(vals)
+            info["source_taps"] = "area"
+            info.setdefault("notes", []).append(
+                "source reduced %.1fx onto the working grid by area averaging" % f)
+            back_x = np.where(ok, np.nan_to_num(S), np.nan).astype(np.float32)
+            back_y = np.where(ok, np.nan_to_num(L), np.nan).astype(np.float32)
+            info["source_coverage"] = round(float(ov.mean()), 4)
+            return out, ov, R, Rv, back_x, back_y, info
         if not aa:
             info.setdefault("notes", []).append(
                 "source reduced %.1fx onto the working grid and sampled without "
@@ -553,13 +630,16 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
              model: str = "auto", max_side: int = 2048, grid=(8, 8),
              holdout: float = 0.35, seed: int = 0, profiles: Profiles | None = None,
              segments: int = 0, subpixel: bool = True,
-             fine: bool = True, fine_tiles: int = 0,
+             fine: bool = True, fine_tiles: int = 0, locate: str = "auto",
              progress=None, verbose: bool = True) -> Result:
     """Register `source` onto `reference`. Always writes an artifact set.
 
     `progress`, if given, is called with each log line as it happens, so a
     caller driving this from a server can stream real stage transitions rather
     than inventing a percentage.
+
+    `locate` is "auto" (find where the source lies in the reference whenever
+    no map projection places it - see `seleno.tool.locate`), "force" or "off".
     """
     t_start = time.time()
     profiles = profiles or Profiles.load()
@@ -591,11 +671,40 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     sp, rp = profiles.get(S.profile), profiles.get(R.profile)
     degraded = ["source: " + d for d in S.degraded] + ["reference: " + d for d in R.degraded]
 
-    # ---- 2. common frame ---------------------------------------------------
-    cache: dict = {}          # lattice triangulation, reused by the fine stage
+    # ---- 2. where the source lies, when no map projection says -------------
+    placement, locate_info = None, None
     try:
-        A_raw, Am, B_raw, Bm, back_x, back_y, frame = prealign(S, R, max_side=max_side,
-                                                               cache=cache)
+        pl = LOC.locate(S, R, os.path.join(out_dir, ".viewcache"), profiles=profiles,
+                        mode=locate, log=log)
+    except LOC.Disjoint as exc:
+        return _fail(out_dir, job_id, "no_overlap", str(exc), {"degraded": degraded})
+    except Exception as exc:                                          # noqa: BLE001
+        pl = None
+        log("locate    : skipped after an error (%s: %s)" % (type(exc).__name__, exc))
+    if pl is not None:
+        locate_info = pl.info
+        if pl.T_r2s is not None:
+            placement = pl.T_r2s
+        else:
+            # Nothing measured says where the source is. Assuming the two share a
+            # corner is only defensible when their footprints are comparable,
+            # and that is exactly when `locate` is not asked; so say so and stop
+            # rather than register against ground chosen by assumption.
+            degraded.append("locate: no unique position for the source in the reference")
+            return _fail(out_dir, job_id, "insufficient_matches",
+                         "the source could not be located in the reference: %s"
+                         % LOC._summary(pl.info, None).replace(
+                             "; no placement: the pixel-space assumption stands", ""),
+                         {"locate": pl.info, "degraded": degraded})
+
+    # ---- 2b. common frame --------------------------------------------------
+    # lattice triangulations and area-reduced sources, reused by the fine stage;
+    # "viewcache" is where block-mean overviews of large inputs are kept
+    cache: dict = {"viewcache": os.path.join(out_dir, ".viewcache")}
+    try:
+        A_raw, Am, B_raw, Bm, back_x, back_y, frame = prealign(
+            S, R, max_side=max_side, cache=cache, placement=placement,
+            window=(pl.window if (pl is not None and placement is not None) else None))
         # Second pass: having found where the source actually lands, redo the
         # placement at the finest sampling that fits inside `max_side` over just
         # that region. Without this the reported RMSE is floored by the whole-frame
@@ -605,7 +714,8 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             st, (orow, ocol) = frame["reference_decimation"], frame["reference_origin"]
             win = (orow + bb[0] * st, ocol + bb[1] * st,
                    orow + bb[2] * st, ocol + bb[3] * st)
-            finer = prealign(S, R, max_side=max_side, window=win, cache=cache)
+            finer = prealign(S, R, max_side=max_side, window=win, cache=cache,
+                             placement=placement)
             if finer[6]["reference_decimation"] < st and (finer[1] & finer[3]).sum() > 4096:
                 A_raw, Am, B_raw, Bm, back_x, back_y, frame = finer
                 frame["notes"].append(
@@ -615,6 +725,8 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
         return _fail(out_dir, job_id, "no_overlap",
                      "could not place the source in the reference frame: %s: %s"
                      % (type(exc).__name__, exc))
+    if locate_info is not None:
+        frame["locate"] = locate_info
     degraded += frame.get("notes", [])
     if cap_note:
         degraded.append(cap_note)
@@ -1024,7 +1136,8 @@ def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
         try:
             A, Am, B, Bm, bx, by, fr = prealign(S, R, max_side=max_side,
                                                 window=win, cache=cache,
-                                                prewarp=prewarp)
+                                                prewarp=prewarp,
+                                                placement=frame.get("placement"))
         except Exception as exc:                                      # noqa: BLE001
             log("fine      : window at (%d, %d) could not be placed: %s" % (c0, r0, exc))
             continue
@@ -1565,7 +1678,7 @@ def _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm, model
     try:
         A_raw, Am_d, B_raw, Bm_d, _, _, fr = prealign(
             S, R, max_side=int(math.ceil(long_side / float(step_d))), window=win,
-            cache=cache)
+            cache=cache, placement=frame.get("placement"))
         step_d = int(fr["reference_decimation"])
         orow_d, ocol_d = fr["reference_origin"]
         # working-grid pixels -> display-grid pixels, through full resolution

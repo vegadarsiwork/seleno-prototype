@@ -1,0 +1,245 @@
+{
+  "native_identity": {
+    "name": "contract_native_identity",
+    "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/contract_inputs/native_identity.tif",
+    "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/contract_inputs/native_identity.tif",
+    "options": {
+      "max_side": 512
+    },
+    "status": "pass",
+    "reason": null,
+    "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/contract_native_identity/a7b69e8cfb72",
+    "accuracy": {
+      "held_out_n": 225,
+      "held_out_rmse_px": 0.0,
+      "held_out_median_px": 0.0,
+      "held_out_p90_px": 0.0,
+      "subpixel_method": "parabolic",
+      "ecc": {
+        "attempted": true,
+        "converged": true,
+        "adopted": false,
+        "correlation": 1.0,
+        "max_corner_shift_px": 0.0,
+        "note": "ECC converged but did not improve held-out RMSE (0.0000 vs 0.0000 px); the unpolished model was kept",
+        "max_corner_shift_allowed_px": 3.0
+      },
+      "rmse_px": 0.0,
+      "rmse_reference_px": 0.0,
+      "rmse_working_px": 0.0,
+      "rmse_source_px": 0.0,
+      "rmse_m": 0.0,
+      "metres_per_pixel": 1.0,
+      "units": {
+        "reference_decimation": 1,
+        "metres_per_reference_px": 1.0,
+        "source_px_per_reference_px": 1.0,
+        "metres_per_working_px": 1.0
+      },
+      "subpixel": true,
+      "subpixel_basis": "source pixels",
+      "subpixel_working_grid": true,
+      "subpixel_floor_source_px": 1.0,
+      "subpixel_attainable": false
+    },
+    "matches": {
+      "candidates": 643,
+      "inliers": 643,
+      "inlier_ratio": 1.0
+    },
+    "distribution": {
+      "grid": [
+        8,
+        8
+      ],
+      "coverage_fraction": 0.9062,
+      "dispersion": 0.4193,
+      "extrapolation_fraction": 0.1875,
+      "eligible_cells": 64,
+      "total_cells": 64,
+      "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+    },
+    "fine_stage": {
+      "attempted": false,
+      "windows": 0,
+      "windows_used": 0,
+      "points": 0,
+      "native": true,
+      "note": "the coarse grid was already at native reference resolution",
+      "method": null,
+      "probe": [],
+      "adopted": false
+    },
+    "method_used": "disk_lightglue",
+    "frame": {
+      "target_shape": [
+        256,
+        256
+      ],
+      "reference_decimation": 1,
+      "reference_origin": [
+        0,
+        0
+      ],
+      "route": "both georeferenced: reference CRS -> source CRS",
+      "notes": [],
+      "source_oversample": 1.0,
+      "source_taps": 1,
+      "source_coverage": 1.0
+    },
+    "degraded": [],
+    "export": {
+      "shape": [
+        256,
+        256
+      ],
+      "bands": 1,
+      "transform": [
+        1.0,
+        0.0,
+        1000.0,
+        0.0,
+        -1.0,
+        1000.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]"
+    },
+    "direct_export_corner_error_px": 0.0,
+    "corner_error_px": 0.0,
+    "corner_errors_px": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "csv_truth_rmse_px": 0.7071067811865476,
+    "csv_truth_median_px": 0.7071067811865476,
+    "csv_matrix_direct_rmse_px": 0.7071067811865476,
+    "seconds": 1.12
+  },
+  "holdout_export": {
+    "heldout_count": 639,
+    "refit_calls": 1,
+    "export_equals_holdout_fit": false,
+    "max_matrix_difference": 0.056537043317475444,
+    "run": {
+      "name": "contract_holdout",
+      "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/translation.png",
+      "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+      "options": {
+        "max_side": 512,
+        "fine": false,
+        "subpixel": false
+      },
+      "status": "pass",
+      "reason": null,
+      "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/contract_holdout/5fe10fdc58a1",
+      "accuracy": {
+        "held_out_n": 639,
+        "held_out_rmse_px": 0.6974,
+        "held_out_median_px": 0.6667,
+        "held_out_p90_px": 0.9135,
+        "subpixel_method": "parabolic",
+        "ecc": {
+          "attempted": false
+        },
+        "rmse_px": 0.6974,
+        "rmse_reference_px": 0.6974,
+        "rmse_working_px": 0.6974,
+        "rmse_source_px": null,
+        "rmse_m": null,
+        "metres_per_pixel": null,
+        "units": {
+          "reference_decimation": 1,
+          "metres_per_reference_px": null,
+          "source_px_per_reference_px": null,
+          "metres_per_working_px": null
+        },
+        "subpixel": null,
+        "subpixel_basis": "source pixels",
+        "subpixel_working_grid": true,
+        "subpixel_floor_source_px": null,
+        "subpixel_attainable": null
+      },
+      "matches": {
+        "candidates": 1826,
+        "inliers": 1826,
+        "inlier_ratio": 1.0
+      },
+      "distribution": {
+        "grid": [
+          8,
+          8
+        ],
+        "coverage_fraction": 0.8906,
+        "dispersion": 0.4384,
+        "extrapolation_fraction": 0.3281,
+        "eligible_cells": 64,
+        "total_cells": 64,
+        "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+      },
+      "fine_stage": {
+        "attempted": false,
+        "adopted": false
+      },
+      "method_used": "disk_lightglue",
+      "frame": {
+        "target_shape": [
+          512,
+          512
+        ],
+        "reference_decimation": 1,
+        "reference_origin": [
+          0,
+          0
+        ],
+        "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+        "notes": [
+          "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+        ],
+        "source_oversample": 1.0,
+        "source_taps": 1,
+        "source_coverage": 0.9786
+      },
+      "degraded": [
+        "source: GeoTIFF carries no CRS; pixel-space registration only",
+        "reference: GeoTIFF carries no CRS; pixel-space registration only",
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "export": {
+        "shape": [
+          512,
+          512
+        ],
+        "bands": 1,
+        "transform": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "crs": "None"
+      },
+      "seconds": 2.51
+    }
+  },
+  "native_reference_nodata": {
+    "nodata": -9999.0,
+    "expected_invalid_pixels": 16384,
+    "observed_invalid_pixels": 0,
+    "finite_nodata_marked_valid": true
+  },
+  "geographic_units": {
+    "reported_scalar_gsd_m": 30.323350424149485,
+    "approx_x_m_at_60south": 15.16167521207474,
+    "approx_y_m": 30.32335042414948
+  }
+}

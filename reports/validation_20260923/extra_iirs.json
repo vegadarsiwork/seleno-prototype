@@ -1,0 +1,139 @@
+{
+  "name": "real_iirs_wac_large",
+  "source": "/home/paardhu/Projects/seleno-prototype/data/raw/ch2/iirs/extracted/ch2_iir_ndi_20250729T0936115604_d_rfl_d18_srd.xml",
+  "reference": "/home/paardhu/Projects/seleno-prototype/data/raw/wac/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif",
+  "options": {
+    "max_side": 6144,
+    "grid": [
+      12,
+      12
+    ],
+    "segments": 6
+  },
+  "status": "warning",
+  "reason": "matches cover 25% of the reference grid; the transform is extrapolated over the rest; 87% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+  "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/real_iirs_wac_large/ccf8c960347e",
+  "accuracy": {
+    "held_out_n": 28,
+    "held_out_rmse_px": 0.3592,
+    "held_out_median_px": 0.3151,
+    "held_out_p90_px": 0.5317,
+    "subpixel_method": "parabolic",
+    "ecc": {
+      "attempted": true,
+      "converged": true,
+      "adopted": false,
+      "correlation": 0.386908,
+      "max_corner_shift_px": 4.8295,
+      "note": "ECC converged but did not improve held-out RMSE (1.5049 vs 0.3592 px); the unpolished model was kept",
+      "max_corner_shift_allowed_px": 10.765
+    },
+    "rmse_px": 0.3592,
+    "rmse_reference_px": 1.796,
+    "rmse_working_px": 0.3592,
+    "rmse_source_px": 2.1085,
+    "rmse_m": 179.6,
+    "metres_per_pixel": 500.0,
+    "units": {
+      "reference_decimation": 5,
+      "metres_per_reference_px": 100.0,
+      "source_px_per_reference_px": 1.173984503404555,
+      "metres_per_working_px": 500.0
+    },
+    "subpixel": false,
+    "subpixel_basis": "source pixels",
+    "subpixel_working_grid": true,
+    "subpixel_floor_source_px": 1.174,
+    "subpixel_attainable": false
+  },
+  "matches": {
+    "candidates": 379,
+    "inliers": 81,
+    "inlier_ratio": 0.2137
+  },
+  "distribution": {
+    "grid": [
+      12,
+      12
+    ],
+    "coverage_fraction": 0.2464,
+    "dispersion": 0.2669,
+    "extrapolation_fraction": 0.8696,
+    "eligible_cells": 69,
+    "total_cells": 144,
+    "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+  },
+  "fine_stage": {
+    "attempted": true,
+    "windows": 4,
+    "windows_used": 4,
+    "points": 379,
+    "native": true,
+    "note": null,
+    "method": "dense-ncc",
+    "probe": [
+      {
+        "method": "dense-ncc",
+        "candidates": 93,
+        "inliers": 53
+      }
+    ],
+    "placement": "4 windows tiling 126 x 5289 reference px (1 x 4 grid)",
+    "adopted": true,
+    "inliers": 81
+  },
+  "method_used": "dense-ncc",
+  "frame": {
+    "target_shape": [
+      2150,
+      114
+    ],
+    "reference_decimation": 5,
+    "reference_origin": [
+      17762,
+      84844
+    ],
+    "route": "source geometry lattice -> reference projected plane",
+    "notes": [
+      "source reduced 6.1x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth",
+      "refined: re-placed at 5 x decimation over the overlap instead of 9 x over the whole reference"
+    ],
+    "reference_window": [
+      17762,
+      84844,
+      28508,
+      85411
+    ],
+    "source_oversample": 6.128,
+    "source_taps": 1,
+    "source_coverage": 0.3902
+  },
+  "degraded": [
+    "source: pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)",
+    "source: geometry from the loc backplane",
+    "reference: 5958 megapixels: read lazily, in windows",
+    "source reduced 6.1x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth",
+    "refined: re-placed at 5 x decimation over the overlap instead of 9 x over the whole reference",
+    "working grid capped at 2195 px a side (asked for 6144): 8.7 GB available, budgeting 50% of it"
+  ],
+  "export": {
+    "shape": [
+      2150,
+      114
+    ],
+    "bands": 1,
+    "transform": [
+      500.0,
+      0.0,
+      3026196.9236530997,
+      0.0,
+      -500.0,
+      952901.5381734502,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "crs": "PROJCS[\"SimpleCylindrical MOON\",GEOGCS[\"GCS_MOON\",DATUM[\"D_MOON\",SPHEROID[\"MOON\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",0],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+  },
+  "seconds": 43.19
+}

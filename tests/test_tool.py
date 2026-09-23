@@ -870,6 +870,111 @@ def t_upload_names_stay_inside_their_batch():
     return "traversal, absolute and hidden names all contained"
 
 
+def _small_rotated_source(ref, cx, cy, deg, n=240, f=4.0, seed=5):
+    """An `n` x `n` source at `f` x the reference's sampling, rotated by `deg`,
+    centred on reference pixel (cx, cy). Returns (image, 3x3 source px -> ref px)."""
+    th = math.radians(deg)
+    A = np.array([[math.cos(th), -math.sin(th)], [math.sin(th), math.cos(th)]]) / f
+    t = np.array([cx, cy]) - A @ np.array([(n - 1) / 2.0, (n - 1) / 2.0])
+    img = cv2.warpAffine(ref.astype(np.float32), np.hstack([A, t[:, None]]), (n, n),
+                         flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP)
+    rng = np.random.default_rng(seed)
+    img = np.clip(img + rng.normal(0, 0.02, img.shape), 0, 1)
+    T = np.eye(3)
+    T[:2, :2], T[:2, 2] = A, t
+    return img, T
+
+
+def t_locate_finds_a_small_source_in_a_large_reference():
+    """A 100 m source frame, 4x finer and rotated 25 deg, somewhere in a 2.4 km
+    strip. Without locating, the tool assumed both started at the same corner
+    and compared the wrong ground; it must now find the frame and register it."""
+    ref = terrain_hw(31, 400, 2400)
+    src, T = _small_rotated_source(ref, cx=1730.0, cy=210.0, deg=25.0, n=400)
+    s = write_png(os.path.join(TMP, "loc_src_ohrc.png"), src)
+    r = write_png(os.path.join(TMP, "loc_ref_nac.png"), ref)
+    res = run(s, r)
+    m = metrics_of(res)
+    assert res.status != "failed", "a present, textured frame must register: %s" % m.get("message")
+    tj = json.load(open(os.path.join(res.out_dir, "transform.json")))
+    assert tj["frame"]["route"].startswith("located placement"), tj["frame"]["route"]
+    assert tj["frame"]["locate"]["method"] == "search", tj["frame"]["locate"]
+    errs = []
+    with open(os.path.join(res.out_dir, "matches.csv")) as fh:
+        for row in __import__("csv").DictReader(fh):
+            if row["inlier"].strip() != "1":
+                continue
+            p = T @ np.array([float(row["src_x"]), float(row["src_y"]), 1.0])
+            errs.append(math.hypot(p[0] - float(row["ref_x"]), p[1] - float(row["ref_y"])))
+    med = float(np.median(errs))
+    assert med < 1.5, "tie points sit %.2f reference px from the truth" % med
+    return "found at %.0f deg, %d inliers, median %.2f ref px from truth" % (
+        tj["frame"]["locate"]["search"][tj["frame"]["locate"]["chosen"]]["angle_deg"],
+        len(errs), med)
+
+
+def t_locate_refuses_a_source_that_is_not_there():
+    """Unrelated ground must not be 'found'. The search reports no unique
+    position and the run stops there, saying so, instead of registering
+    against a corner chosen by assumption."""
+    ref = terrain_hw(31, 400, 2400)
+    other, _ = _small_rotated_source(terrain_hw(77, 400, 2400), 1200.0, 200.0, 10.0)
+    s = write_png(os.path.join(TMP, "loc_absent_ohrc.png"), other)
+    r = write_png(os.path.join(TMP, "loc_absent_ref_nac.png"), ref)
+    res = run(s, r)
+    m = metrics_of(res)
+    assert res.status == "failed", "unrelated ground registered: status %s" % res.status
+    assert m["reason"] == "insufficient_matches", m["reason"]
+    assert "could not be located" in (m.get("message") or ""), m.get("message")
+    return m["message"][:90]
+
+
+def _lattice(lon0, lat0, h, w, gsd_m, deg=0.0):
+    """A GeometryGrid for an h x w image centred on (lon0, lat0), gsd_m per pixel."""
+    from seleno.ohrc.geometry import GeometryGrid, lonlat_to_south_stereo
+    from seleno.tool.locate import MOON_R
+    px = np.linspace(0, w - 1, 9)
+    sc = np.linspace(0, h - 1, 33)
+    P, Q = np.meshgrid(px, sc)
+    th = math.radians(deg)
+    e = ((P - (w - 1) / 2) * math.cos(th) - (Q - (h - 1) / 2) * math.sin(th)) * gsd_m
+    n = -((P - (w - 1) / 2) * math.sin(th) + (Q - (h - 1) / 2) * math.cos(th)) * gsd_m
+    lat = lat0 + np.degrees(n / MOON_R)
+    lon = lon0 + np.degrees(e / (MOON_R * math.cos(math.radians(lat0))))
+    x, y = lonlat_to_south_stereo(lon, lat)
+    return GeometryGrid(px, sc, lon, lat, x, y, source="synthetic")
+
+
+def t_locate_geometry_proves_disjoint_and_places_overlap():
+    """Two lattice-only products: ~320 km apart must raise Disjoint (the run's
+    `no_overlap`), and a frame inside a strip must be placed where its lattice
+    says, at the right scale and rotation."""
+    from seleno.tool import locate as L
+    from seleno.tool.scene import Scene
+
+    def scene(grid, h, w, gsd):
+        return Scene(path="synthetic", array=np.zeros((h, w), np.float32), valid=None,
+                     reader="test", gsd_m=gsd, lonlat=grid)
+
+    strip = scene(_lattice(38.0, -60.0, 12000, 250, 80.0), 12000, 250, 80.0)
+    # the strip runs 960 km north-south; this frame is ~320 km east of it
+    far = scene(_lattice(60.0, -60.0, 10000, 1200, 2.0), 10000, 1200, 2.0)
+    try:
+        L.geometry_prior(far, strip, radius_m=7000.0)
+        raise AssertionError("footprints ~320 km apart were not reported disjoint")
+    except L.Disjoint as exc:
+        msg = str(exc)
+    near = scene(_lattice(38.02, -59.9, 10000, 1200, 2.0, deg=30.0), 10000, 1200, 2.0)
+    pr = L.geometry_prior(near, strip, radius_m=7000.0)
+    assert pr and pr["T"] is not None, "an overlapping frame got no placement"
+    i = pr["info"]
+    assert abs(i["scale"] - 2.0 / 80.0) < 0.001, "scale %s" % i["scale"]
+    assert abs(abs(i["rotation_deg"]) - 30.0) < 1.0, "rotation %s" % i["rotation_deg"]
+    assert i["residual_px"] < 0.5, "residual %s px" % i["residual_px"]
+    return "disjoint: %s; placed at scale %.4f, rotation %.1f deg" % (
+        msg.split(";")[0][:60], i["scale"], i["rotation_deg"])
+
+
 def main():
     global TMP
     TMP = tempfile.mkdtemp(prefix="seleno_tool_")

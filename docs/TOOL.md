@@ -248,6 +248,38 @@ padded generously because the source geometry is the thing being corrected.
 Without it a 734 km IIRS strip lands about three pixels wide on a 54× decimated
 global grid, and there is nothing left to match.
 
+## 6d. Finding one image inside another
+
+The stages above refine a placement; they do not search for one. When the
+reference has a map projection, geometry places the source. When it does not —
+two Chandrayaan-2 products carry per-pixel lon/lat lattices and no CRS, and a
+plain PNG carries nothing — the tool used to assume both images start at the
+same corner. For an OHRC frame (2.6 × 22 km) inside an IIRS strip (14 × 700 km)
+that put the frame at the top of the strip, and a pair 500 km apart was reported
+as overlapping 100%.
+
+`seleno.tool.locate` now runs first whenever no CRS route applies and either
+both inputs carry geometry or their footprints differ by more than 2× in area:
+
+- **Geometry**, when both inputs carry a lattice or a CRS: the smaller footprint
+  is projected into the larger image (in a stereographic plane centred on it, so
+  poles and the 0/360 seam are harmless) and fitted with a similarity. If the
+  footprints are further apart than 1.5 × the profiles' expected geolocation
+  error, the run fails as `no_overlap` and says how far apart they are.
+- **Image search**: the smaller footprint, area-averaged to the coarser ground
+  sampling, is correlated over the larger one at a set of rotations (all of
+  them without geometry, ±12° around the geometry's with it), on intensity and
+  on gradient magnitude, coarse-to-fine. A position is accepted only if it
+  stands clearly above the best position *elsewhere* (normalised margin ≥ 0.3,
+  robust z ≥ 4) and both cues agree on it — or one cue is overwhelming. Otherwise
+  the run fails as `insufficient_matches` with the search statistics, rather than
+  registering against a corner chosen by assumption.
+
+When the reduction onto the working grid is 16× or more, the source is now
+area-averaged (from the viewer's cached block-mean overview) instead of
+point-sampled; at OHRC → IIRS scale a point sample is noise. Calibration and
+results: `reports/LOCATE.md`. `--locate off` restores the old behaviour.
+
 ## 7. Sensor profiles
 
 `config/sensors/*.yaml` holds per-instrument behaviour — nominal GSD, bit depth,
@@ -269,6 +301,7 @@ python -m seleno register --source X --reference Y --out DIR
     --no-fine           skip the native-resolution fine stage
     --fine-tiles N      cap on native windows (0 = tile the overlap, max 24)
     --no-subpixel       skip the ECC polish
+    --locate {auto,force,off}   find where the source lies in the reference (§6d)
     --json              print metrics.json to stdout
     --quiet
 
