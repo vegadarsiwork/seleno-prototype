@@ -4,13 +4,13 @@ settings  : max_side=6144, grid=(12, 12) (explicit options override sensor defau
 frame     : source geometry lattice -> reference projected plane, source covers 40.3% of the reference grid
 character : {"cross_correlation": -0.0532, "anti_correlated": true, "same_sensor": false, "sensor_pair": "iirs-wac", "scale_ratio": 0.5673, "overlap_fraction": 0.4031}
 plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
-  dense-ncc        {"method": "dense-ncc", "seconds": 1.53, "candidates": 28, "model": "similarity", "inliers": 9, "inlier_ratio": 0.3214, "verified": true, "coverage": 0.1111, "dispersion": 0.4865, "score": 5.43}
+  dense-ncc        {"method": "dense-ncc", "seconds": 1.47, "candidates": 28, "model": "similarity", "inliers": 9, "inlier_ratio": 0.3214, "verified": true, "coverage": 0.1111, "dispersion": 0.4865, "score": 5.43}
   disk_lightglue   {"method": "disk_lightglue", "seconds": 1.0, "candidates": 2}
-  sift             {"method": "sift", "seconds": 1.52, "candidates": 9, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2222, "verified": true}
-  akaze            {"method": "akaze", "seconds": 1.24, "candidates": 22, "model": "similarity", "inliers": 2, "inlier_ratio": 0.0909, "verified": true}
+  sift             {"method": "sift", "seconds": 1.45, "candidates": 9, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2222, "verified": true}
+  akaze            {"method": "akaze", "seconds": 1.17, "candidates": 22, "model": "similarity", "inliers": 2, "inlier_ratio": 0.0909, "verified": true}
   orb              {"method": "orb", "seconds": 0.48, "candidates": 7, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2857, "verified": true}
 fine      : native probe -> dense-ncc  (dense-ncc 8/19)
 fine      : 294 points from 4 native windows, 22 verified inliers
 subpixel : ECC adopted on validation 5.4813 -> 5.3540 px
 status    : warning  (matches cover 14% of the reference grid; the transform is extrapolated over the rest; 90% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
-wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/iirs_20240120_wac/0dbd02971883
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/iirs_20240120_wac/f9dcf8fba91e

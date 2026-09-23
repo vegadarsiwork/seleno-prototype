@@ -4,13 +4,13 @@ settings  : max_side=2048, grid=(12, 12) (explicit options override sensor defau
 frame     : source geometry lattice -> reference projected plane, source covers 51.5% of the reference grid
 character : {"cross_correlation": -0.5813, "anti_correlated": true, "same_sensor": false, "sensor_pair": "ohrc-nac", "scale_ratio": 0.24, "overlap_fraction": 0.3648}
 plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
-  dense-ncc        {"method": "dense-ncc", "seconds": 1.19, "candidates": 1}
+  dense-ncc        {"method": "dense-ncc", "seconds": 1.17, "candidates": 1}
 Loaded LightGlue model
-  disk_lightglue   {"method": "disk_lightglue", "seconds": 8.42, "candidates": 339, "model": "affine", "inliers": 245, "inlier_ratio": 0.7227, "verified": true, "coverage": 0.1618, "dispersion": 0.1458, "score": 104.7}
-  sift             {"method": "sift", "seconds": 1.58, "candidates": 328, "model": "affine", "inliers": 218, "inlier_ratio": 0.6646, "verified": true, "coverage": 0.1471, "dispersion": 0.1695, "score": 94.43}
-  akaze            {"method": "akaze", "seconds": 0.69, "candidates": 485, "model": "affine", "inliers": 338, "inlier_ratio": 0.6969, "verified": true, "coverage": 0.1471, "dispersion": 0.1701, "score": 146.56}
-  orb              {"method": "orb", "seconds": 0.45, "candidates": 348, "model": "affine", "inliers": 241, "inlier_ratio": 0.6925, "verified": true, "coverage": 0.1029, "dispersion": 0.1694, "score": 97.27}
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 8.29, "candidates": 339, "model": "affine", "inliers": 245, "inlier_ratio": 0.7227, "verified": true, "coverage": 0.1618, "dispersion": 0.1458, "score": 104.7}
+  sift             {"method": "sift", "seconds": 1.34, "candidates": 328, "model": "affine", "inliers": 218, "inlier_ratio": 0.6646, "verified": true, "coverage": 0.1471, "dispersion": 0.1695, "score": 94.43}
+  akaze            {"method": "akaze", "seconds": 0.64, "candidates": 485, "model": "affine", "inliers": 338, "inlier_ratio": 0.6969, "verified": true, "coverage": 0.1471, "dispersion": 0.1701, "score": 146.56}
+  orb              {"method": "orb", "seconds": 0.41, "candidates": 348, "model": "affine", "inliers": 241, "inlier_ratio": 0.6925, "verified": true, "coverage": 0.1029, "dispersion": 0.1694, "score": 97.27}
 fine      : native probe -> akaze  (akaze 472/564)
 fine      : 22667 points from 8 native windows, 6104 verified inliers
 status    : warning  (matches cover 15% of the reference grid; the transform is extrapolated over the rest; 91% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
-wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/ohrc_nac/19cd4fc48fd1
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/ohrc_nac/965a4de75c23

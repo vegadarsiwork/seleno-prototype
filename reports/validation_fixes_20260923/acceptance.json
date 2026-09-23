@@ -22,9 +22,9 @@
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
       "accuracy_statement": "106.46 source px; reference sampling scale 4.17 source px",
-      "job_id": "19cd4fc48fd1",
-      "generated_utc": "2026-09-23T12:32:07Z",
-      "runtime_s": 32.28,
+      "job_id": "965a4de75c23",
+      "generated_utc": "2026-09-23T12:44:05Z",
+      "runtime_s": 34.21,
       "method_used": "akaze",
       "model": "affine",
       "accuracy": {
@@ -163,13 +163,13 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 1.19,
+          "seconds": 1.17,
           "candidates": 1,
           "note": ""
         },
         {
           "method": "disk_lightglue",
-          "seconds": 8.42,
+          "seconds": 8.29,
           "candidates": 339,
           "note": "",
           "model": "affine",
@@ -182,7 +182,7 @@
         },
         {
           "method": "sift",
-          "seconds": 1.58,
+          "seconds": 1.34,
           "candidates": 328,
           "note": "",
           "model": "affine",
@@ -195,7 +195,7 @@
         },
         {
           "method": "akaze",
-          "seconds": 0.69,
+          "seconds": 0.64,
           "candidates": 485,
           "note": "",
           "model": "affine",
@@ -208,7 +208,7 @@
         },
         {
           "method": "orb",
-          "seconds": 0.45,
+          "seconds": 0.41,
           "candidates": 348,
           "note": "",
           "model": "affine",
@@ -271,7 +271,15 @@
         "source reduced 10.2x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/ohrc_nac/19cd4fc48fd1",
+    "artifacts": "outputs/validation_fixes_20260923/ohrc_nac/965a4de75c23",
+    "robust_accuracy": {
+      "median_source_px": 27.383466339792072,
+      "p90_source_px": 55.39794979486001,
+      "within_1_source_px": 0.002411575562700965,
+      "within_2_source_px": 0.010610932475884245,
+      "within_3_source_px": 0.025241157556270096,
+      "held_out_n": 6220
+    },
     "artifact_checks": {
       "rmse_recomputed_exactly": true,
       "transform_sha256": "271b4a53def768e3805c940031dc4af7da910ccbcbe69aa5b022cd767f434a42"
@@ -319,9 +327,9 @@
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
       "accuracy_statement": "9.82 source px; reference sampling scale 1.35 source px",
-      "job_id": "21c70b8d6c1e",
-      "generated_utc": "2026-09-23T12:32:54Z",
-      "runtime_s": 46.38,
+      "job_id": "a36b733bc35a",
+      "generated_utc": "2026-09-23T12:44:52Z",
+      "runtime_s": 46.27,
       "method_used": "dense-ncc",
       "model": "affine",
       "accuracy": {
@@ -462,7 +470,7 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 1.29,
+          "seconds": 1.36,
           "candidates": 36,
           "note": "",
           "model": "affine",
@@ -475,19 +483,19 @@
         },
         {
           "method": "disk_lightglue",
-          "seconds": 6.68,
+          "seconds": 6.72,
           "candidates": 3,
           "note": ""
         },
         {
           "method": "sift",
-          "seconds": 1.41,
+          "seconds": 1.44,
           "candidates": 3,
           "note": ""
         },
         {
           "method": "akaze",
-          "seconds": 0.91,
+          "seconds": 0.93,
           "candidates": 12,
           "note": "",
           "model": "similarity",
@@ -497,7 +505,7 @@
         },
         {
           "method": "orb",
-          "seconds": 0.46,
+          "seconds": 0.47,
           "candidates": 7,
           "note": "",
           "model": "similarity",
@@ -552,7 +560,15 @@
         "source reduced 9.0x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/tmc2_selene/21c70b8d6c1e",
+    "artifacts": "outputs/validation_fixes_20260923/tmc2_selene/a36b733bc35a",
+    "robust_accuracy": {
+      "median_source_px": 6.026750023699854,
+      "p90_source_px": 15.96120817605412,
+      "within_1_source_px": 0.05010438413361169,
+      "within_2_source_px": 0.1524008350730689,
+      "within_3_source_px": 0.25052192066805845,
+      "held_out_n": 479
+    },
     "artifact_checks": {
       "rmse_recomputed_exactly": true,
       "transform_sha256": "388cb758b1c386add0b0b867ff17e7c8c3c8351f1fae698113006b4398bfbdc7"
@@ -593,9 +609,9 @@
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
       "accuracy_statement": "12.77 source px; reference sampling scale 1.17 source px",
-      "job_id": "0a1e578be4e3",
-      "generated_utc": "2026-09-23T12:33:50Z",
-      "runtime_s": 55.53,
+      "job_id": "43de64c4701f",
+      "generated_utc": "2026-09-23T12:45:44Z",
+      "runtime_s": 51.7,
       "method_used": "dense-ncc",
       "model": "similarity",
       "accuracy": {
@@ -744,7 +760,7 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 0.7,
+          "seconds": 0.66,
           "candidates": 29,
           "note": "",
           "model": "similarity",
@@ -757,13 +773,13 @@
         },
         {
           "method": "disk_lightglue",
-          "seconds": 0.58,
+          "seconds": 0.56,
           "candidates": 0,
           "note": ""
         },
         {
           "method": "sift",
-          "seconds": 1.21,
+          "seconds": 1.19,
           "candidates": 6,
           "note": "",
           "model": "similarity",
@@ -773,7 +789,7 @@
         },
         {
           "method": "akaze",
-          "seconds": 0.4,
+          "seconds": 0.38,
           "candidates": 9,
           "note": "",
           "model": "similarity",
@@ -783,7 +799,7 @@
         },
         {
           "method": "orb",
-          "seconds": 0.35,
+          "seconds": 0.34,
           "candidates": 8,
           "note": "",
           "model": "similarity",
@@ -846,7 +862,15 @@
         "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/iirs_20250729_wac/0a1e578be4e3",
+    "artifacts": "outputs/validation_fixes_20260923/iirs_20250729_wac/43de64c4701f",
+    "robust_accuracy": {
+      "median_source_px": 11.922576462737993,
+      "p90_source_px": 18.814440066352027,
+      "within_1_source_px": 0.012048192771084338,
+      "within_2_source_px": 0.04819277108433735,
+      "within_3_source_px": 0.07228915662650602,
+      "held_out_n": 166
+    },
     "artifact_checks": {
       "rmse_recomputed_exactly": true,
       "transform_sha256": "ac4cb67243adc7f57a76e9c0de642e7aead79099a07e7c6465c18a85a08c5b7c"
@@ -887,9 +911,9 @@
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
       "accuracy_statement": "23.42 source px; reference sampling scale 1.76 source px",
-      "job_id": "0dbd02971883",
-      "generated_utc": "2026-09-23T12:34:45Z",
-      "runtime_s": 49.42,
+      "job_id": "f9dcf8fba91e",
+      "generated_utc": "2026-09-23T12:46:36Z",
+      "runtime_s": 47.93,
       "method_used": "dense-ncc",
       "model": "similarity",
       "accuracy": {
@@ -1038,7 +1062,7 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 1.53,
+          "seconds": 1.47,
           "candidates": 28,
           "note": "",
           "model": "similarity",
@@ -1057,7 +1081,7 @@
         },
         {
           "method": "sift",
-          "seconds": 1.52,
+          "seconds": 1.45,
           "candidates": 9,
           "note": "",
           "model": "similarity",
@@ -1067,7 +1091,7 @@
         },
         {
           "method": "akaze",
-          "seconds": 1.24,
+          "seconds": 1.17,
           "candidates": 22,
           "note": "",
           "model": "similarity",
@@ -1140,7 +1164,15 @@
         "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/iirs_20240120_wac/0dbd02971883",
+    "artifacts": "outputs/validation_fixes_20260923/iirs_20240120_wac/f9dcf8fba91e",
+    "robust_accuracy": {
+      "median_source_px": 19.314010467825298,
+      "p90_source_px": 37.54580306369116,
+      "within_1_source_px": 0.0,
+      "within_2_source_px": 0.023622047244094488,
+      "within_3_source_px": 0.05511811023622047,
+      "held_out_n": 127
+    },
     "artifact_checks": {
       "rmse_recomputed_exactly": true,
       "transform_sha256": "796729d55f7c40bf6971b0feb66311328b377904b6dc68a8d87943d25073cb64"

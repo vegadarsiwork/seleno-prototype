@@ -33,7 +33,26 @@ CASES = [
     ("IIRS 2024-01-20 → WAC", "iirs_20240120_wac", DATA / "ch2/iirs/extracted/ch2_iir_ndi_20240120T1432235872_d_rfl_d18_srd.xml", WAC, {}),
 ]
 FIELDS = ["pair", "rmse_source_px", "rmse_reference_px", "rmse_working_px", "rmse_m",
+          "median_source_px", "p90_source_px", "within_1_source_px", "within_2_source_px",
+          "within_3_source_px", "held_out_n",
           "coverage", "extrapolated_fraction", "status", "subpixel", "accuracy_statement"]
+ROBUST = FIELDS[5:11]
+
+
+def robust_stats(e, units):
+    """Median, p90 and within-k fractions over every held-out residual.
+
+    Same sealed test set and residuals as the RMSE, no filtering; converted to
+    source pixels exactly as rmse_source_px is.
+    """
+    sampling = units.get("source_px_per_reference_px")
+    if len(e) < 3 or not sampling:
+        return {k: None for k in ROBUST[:-1]} | {"held_out_n": len(e)}
+    s = e * units["reference_decimation"] * sampling
+    return {"median_source_px": float(np.median(s)),
+            "p90_source_px": float(np.percentile(s, 90)),
+            **{"within_%d_source_px" % k: float(np.mean(s <= k)) for k in (1, 2, 3)},
+            "held_out_n": len(e)}
 
 
 def persist(results):
@@ -42,7 +61,9 @@ def persist(results):
     for result in results:
         m = result.get("metrics", {})
         a, d = m.get("accuracy", {}), m.get("distribution", {})
+        r = result.get("robust_accuracy", {})
         table.append({"pair": result["pair"], **{k: a.get(k) for k in FIELDS[1:5]},
+                      **{k: r.get(k) for k in ROBUST},
                       "coverage": d.get("coverage_fraction"),
                       "extrapolated_fraction": d.get("extrapolation_fraction"),
                       "status": result["status"], "subpixel": a.get("subpixel"),
@@ -51,15 +72,15 @@ def persist(results):
         writer = csv.DictWriter(fh, fieldnames=FIELDS)
         writer.writeheader()
         writer.writerows(table)
-    lines = ["| Pair | RMSE source px | RMSE reference px | RMSE working px | RMSE m | Coverage | Extrapolated | Status | Subpixel (source) | Accuracy statement |",
-             "|---|---:|---:|---:|---:|---:|---:|---|---|---|"]
+    lines = ["| Pair | RMSE source px | RMSE reference px | RMSE working px | RMSE m | Median source px | P90 source px | ≤1 source px | ≤2 source px | ≤3 source px | Held-out n | Coverage | Extrapolated | Status | Subpixel (source) | Accuracy statement |",
+             "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|---|"]
     for row in table:
         values = []
         for key in FIELDS:
             value = row[key]
             if value is None:
                 value = "unknown"
-            elif key in ("coverage", "extrapolated_fraction"):
+            elif key in ("coverage", "extrapolated_fraction") or key.startswith("within_"):
                 value = "%.2f%%" % (100 * value)
             elif isinstance(value, bool):
                 value = str(value).lower()
@@ -93,6 +114,12 @@ def main():
                 recomputed = float(np.sqrt(np.mean(e ** 2))) if len(e) >= 3 else None
                 assert recomputed == result.metrics["accuracy"]["rmse_px"]
                 assert WM.digest(model) == ev["transform_sha256"]
+                acc = result.metrics["accuracy"]
+                assert len(e) == acc["held_out_n"]
+                if len(e) >= 3:
+                    assert float(np.median(e)) == acc["held_out_median_px"]
+                    assert float(np.percentile(e, 90)) == acc["held_out_p90_px"]
+                row["robust_accuracy"] = robust_stats(e, acc["units"])
                 row["artifact_checks"] = {"rmse_recomputed_exactly": True,
                                           "transform_sha256": WM.digest(model)}
                 with rasterio.open(path / "registered.tif") as ds:

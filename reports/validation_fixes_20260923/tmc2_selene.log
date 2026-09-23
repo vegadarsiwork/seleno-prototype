@@ -4,12 +4,12 @@ settings  : max_side=2048, grid=(12, 12) (explicit options override sensor defau
 frame     : source geometry lattice -> reference lon/lat, source covers 31.1% of the reference grid
 character : {"cross_correlation": -0.5114, "anti_correlated": true, "same_sensor": false, "sensor_pair": "tmc2-selene_tc", "scale_ratio": 0.7402, "overlap_fraction": 0.3111}
 plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
-  dense-ncc        {"method": "dense-ncc", "seconds": 1.29, "candidates": 36, "model": "affine", "inliers": 30, "inlier_ratio": 0.8333, "verified": true, "coverage": 0.3519, "dispersion": 0.3185, "score": 20.92}
-  disk_lightglue   {"method": "disk_lightglue", "seconds": 6.68, "candidates": 3}
-  sift             {"method": "sift", "seconds": 1.41, "candidates": 3}
-  akaze            {"method": "akaze", "seconds": 0.91, "candidates": 12, "model": "similarity", "inliers": 2, "inlier_ratio": 0.1667, "verified": true}
-  orb              {"method": "orb", "seconds": 0.46, "candidates": 7, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2857, "verified": true}
+  dense-ncc        {"method": "dense-ncc", "seconds": 1.36, "candidates": 36, "model": "affine", "inliers": 30, "inlier_ratio": 0.8333, "verified": true, "coverage": 0.3519, "dispersion": 0.3185, "score": 20.92}
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 6.72, "candidates": 3}
+  sift             {"method": "sift", "seconds": 1.44, "candidates": 3}
+  akaze            {"method": "akaze", "seconds": 0.93, "candidates": 12, "model": "similarity", "inliers": 2, "inlier_ratio": 0.1667, "verified": true}
+  orb              {"method": "orb", "seconds": 0.47, "candidates": 7, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2857, "verified": true}
 fine      : native probe -> dense-ncc  (dense-ncc 12/20)
 fine      : 976 points from 8 native windows, 267 verified inliers
 status    : warning  (80% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
-wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/tmc2_selene/21c70b8d6c1e
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/tmc2_selene/a36b733bc35a

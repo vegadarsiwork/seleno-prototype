@@ -6,9 +6,9 @@
  ],
  "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
  "accuracy_statement": "23.42 source px; reference sampling scale 1.76 source px",
- "job_id": "0dbd02971883",
- "generated_utc": "2026-09-23T12:34:45Z",
- "runtime_s": 49.42,
+ "job_id": "f9dcf8fba91e",
+ "generated_utc": "2026-09-23T12:46:36Z",
+ "runtime_s": 47.93,
  "method_used": "dense-ncc",
  "model": "similarity",
  "accuracy": {
@@ -157,7 +157,7 @@
  "attempts": [
   {
    "method": "dense-ncc",
-   "seconds": 1.53,
+   "seconds": 1.47,
    "candidates": 28,
    "note": "",
    "model": "similarity",
@@ -176,7 +176,7 @@
   },
   {
    "method": "sift",
-   "seconds": 1.52,
+   "seconds": 1.45,
    "candidates": 9,
    "note": "",
    "model": "similarity",
@@ -186,7 +186,7 @@
   },
   {
    "method": "akaze",
-   "seconds": 1.24,
+   "seconds": 1.17,
    "candidates": 22,
    "note": "",
    "model": "similarity",
