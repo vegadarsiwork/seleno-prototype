@@ -1,12 +1,12 @@
 """Candidate correspondence methods, and the rule for choosing between them.
 
 This module exists because of a measured result, not a preference. Phase 2
-benchmarked matchers on real illumination change with exact ground truth and
+benchmarked matchers on real illumination change against controlled common-grid geometry and
 found that *which method works depends on the regime*:
 
 | regime | evidence | what works |
 |---|---|---|
-| same sensor, illumination change (NAC vs NAC) | 0/90 classical runs solved past 45 deg of Sun azimuth; DISK+LightGlue 7/12 at 45-90 deg | **sparse learned** |
+| same sensor, illumination change (NAC vs NAC) | see reconciled Phase 2 corner-error table; learned matching can survive moderate azimuth change | **sparse learned** |
 | cross-sensor, anti-correlated (TMC-2 vs SELENE, r = -0.410) | every sparse matcher failed in all three representations tried; dense gradient NCC locked with margins to 0.37 | **dense NCC** |
 
 So the tool runs candidates and takes the geometrically verified winner, and
@@ -274,6 +274,6 @@ def candidate_plan(character: dict, available: dict) -> list:
         # measured: every sparse matcher failed on the anti-correlated TMC-2 pair
         return dense + learned + classical
     if character.get("same_sensor"):
-        # measured: classical scored 0/90 past 45 deg of Sun azimuth, learned 7/12
+        # Ordering informed by the reconciled Phase 2 corner-error benchmark.
         return learned + dense + classical
     return dense + learned + classical

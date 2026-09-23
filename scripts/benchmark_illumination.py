@@ -1,4 +1,4 @@
-"""Matcher benchmark against real Sun-azimuth change, with exact ground truth.
+"""Matcher benchmark against real Sun-azimuth change, against independently controlled map geometry.
 
     python scripts/benchmark_illumination.py
 
@@ -20,8 +20,8 @@ illumination change is a gamma edit; here it is real.
 
 What is measured
 ----------------
-For each ordered pair of bins and each matcher: the residual translation the
-matcher implies, against a truth of zero. Reported per matcher and stratified by
+For each pair of bins and each matcher: fit a homography without using ground
+truth, then measure mean four-corner Euclidean error against identity. Reported per matcher and stratified by
 Sun-azimuth difference, which Phase 1 established is the variable that actually
 moves at the pole (incidence is pinned near 90 degrees there).
 
@@ -47,12 +47,12 @@ import cv2                                                       # noqa: E402
 from seleno import matchers, nac, verify                          # noqa: E402
 
 CACHE = os.path.join(ROOT, "results", "nac_cache")
-OUT = os.path.join(ROOT, "results", "illumination_bench")
+OUT = os.path.join(ROOT, "results", "illumination_reconciled_20260923")
 TILE = "P892S2250"
 BINS = ["005", "035", "065", "095", "125", "155", "185", "215", "245", "275", "305", "335"]
 PATCH = 512
 MIN_VALID = 0.45
-PASS_PX = 3.0            # a translation within 3 px of truth counts as solved
+PASS_PX = 3.0            # mean four-corner Euclidean error, in evaluation-grid pixels
 MATCHERS = ["sift", "akaze", "orb", "rift", "disk_lightglue"]
 
 
@@ -90,25 +90,32 @@ def norm_u8(z):
     return o, m
 
 
-def evaluate(res, truth_shift=(0.0, 0.0)):
-    """Residual of a matcher's implied translation against the known truth."""
+def evaluate(res, shape=(PATCH, PATCH)):
+    """One criterion: mean four-corner error <= 3 evaluation-grid pixels.
+
+    Ground truth is used only after fitting. No translation-only identity prior,
+    inlier error, match count, or tool status substitutes for this criterion.
+    """
     if res is None or len(res.kp_src) < 4:
-        return {"status": "insufficient_matches", "n": 0 if res is None else len(res.kp_src)}
-    d = res.kp_ref - res.kp_src
-    # MAGSAC on a translation-only model: fit as a 2-DoF problem by voting, then
-    # report the inlier set. Fitting a homography to a pair that must be identity
-    # is how this project previously manufactured scale factors of 0.157.
-    med = np.median(d, axis=0)
-    resid = np.linalg.norm(d - med, axis=1)
-    inl = resid < 3.0
-    if inl.sum() < 4:
-        return {"status": "no_consensus", "n": int(len(d)), "inliers": int(inl.sum())}
-    est = d[inl].mean(axis=0)
-    err = math.hypot(est[0] - truth_shift[0], est[1] - truth_shift[1])
-    return {"status": "ok", "n": int(len(d)), "inliers": int(inl.sum()),
-            "inlier_ratio": round(float(inl.mean()), 3),
-            "dx_px": round(float(est[0]), 2), "dy_px": round(float(est[1]), 2),
-            "error_px": round(err, 2), "solved": bool(err <= PASS_PX)}
+        return {"status": "insufficient_matches", "n": 0 if res is None else len(res.kp_src),
+                "solved": False}
+    cv2.setRNGSeed(0)
+    fit = verify.verify(res.kp_src, res.kp_ref, model_type="homography", threshold=3.)
+    if not fit.ok or fit.n_inliers < 4:
+        return {"status": "no_consensus", "n": len(res.kp_src), "solved": False}
+    h, w = shape
+    corners = np.array([[0., 0., 1.], [w-1., 0., 1.], [w-1., h-1., 1.], [0., h-1., 1.]])
+    q = corners @ fit.model.T
+    if np.any(np.abs(q[:, 2]) < 1e-12):
+        return {"status": "degenerate", "n": len(res.kp_src), "solved": False}
+    errors = np.linalg.norm(q[:, :2] / q[:, 2:] - corners[:, :2], axis=1)
+    error = float(errors.mean())
+    if not np.isfinite(error):
+        return {"status": "degenerate", "n": len(res.kp_src), "solved": False}
+    return {"status": "ok", "n": int(len(res.kp_src)), "inliers": fit.n_inliers,
+            "inlier_ratio": float(fit.inlier_ratio), "matrix": fit.model.tolist(),
+            "corner_errors_px": errors.tolist(), "error_px": error,
+            "corner_error_px": error, "solved": bool(error <= PASS_PX)}
 
 
 def main():
@@ -119,10 +126,15 @@ def main():
     ap.add_argument("--device", default=None,
                     help="cuda to run learned matchers on a GPU; sweeps over the "
                          "144-pair matrix are impractically slow on CPU")
+    ap.add_argument("--out", default=OUT)
     args = ap.parse_args()
+    out = args.out
+    import torch
+    torch.set_num_threads(2)
+    cv2.setNumThreads(2)
     if args.device:
         os.environ["SELENO_DEVICE"] = args.device
-    os.makedirs(OUT, exist_ok=True)
+    os.makedirs(out, exist_ok=True)
 
     print("loading %d illumination bins of tile %s ..." % (len(args.bins), TILE))
     imgs, res_m = {}, None
@@ -159,10 +171,12 @@ def main():
                 ev.update({"matcher": name, "bin_a": b1, "bin_b": b2, "d_az_deg": daz,
                            "patch": [j, i], "runtime_s": round(time.time() - t0, 2)})
                 rows.append(ev)
+                with open(os.path.join(out, "raw.json"), "w") as fh:
+                    json.dump(rows, fh, indent=1, allow_nan=False)
             if done % 50 < len(args.matchers):
                 print("  %d/%d ..." % (done, total), flush=True)
 
-    json.dump(rows, open(os.path.join(OUT, "raw.json"), "w"), indent=1)
+    json.dump(rows, open(os.path.join(out, "raw.json"), "w"), indent=1)
 
     # ---------------- summary ----------------
     def bucket(d):
@@ -204,9 +218,13 @@ def main():
     json.dump({"summary": summary, "stratified": strat, "res_m": res_m,
                "device": args.device or "cpu",
                "tile": TILE, "patch_px": PATCH, "pass_px": PASS_PX,
-               "bins": args.bins, "n_patches": len(boxes)},
-              open(os.path.join(OUT, "summary.json"), "w"), indent=1)
-    print("\nwrote %s" % os.path.relpath(OUT, ROOT))
+               "bins": args.bins, "n_patches": len(boxes), "patches": boxes,
+               "criterion": "mean four-corner Euclidean error <= 3 evaluation-grid pixels",
+               "estimator": "homography USAC_MAGSAC, threshold 3 px; no ground-truth fitting prior",
+               "truth": "identity on controlled NAC common map grid; inherits mosaic control uncertainty",
+               "evaluation_grid": "browse pixels, not native NAC detector pixels"},
+              open(os.path.join(out, "summary.json"), "w"), indent=1)
+    print("\nwrote %s" % os.path.relpath(out, ROOT))
 
 
 if __name__ == "__main__":

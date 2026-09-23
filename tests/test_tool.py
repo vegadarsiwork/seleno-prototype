@@ -357,7 +357,7 @@ def t_subpixel_flag_is_about_source_pixels():
         m["subpixel"], m["subpixel_basis"], m.get("subpixel_floor_source_px"))
 
 
-def t_unreachable_subpixel_is_a_note_not_a_failure():
+def t_reference_sampling_is_a_note_not_a_failure():
     """A coarse reference limits accuracy; that is not a defect in the run."""
     master = terrain(23, n=1024)
     src, ref = geo_pair(master, 2.0, 8.0, "fl")     # reference 4x coarser
@@ -369,9 +369,10 @@ def t_unreachable_subpixel_is_a_note_not_a_failure():
     assert acc["subpixel_floor_source_px"] is not None
     assert acc["subpixel_floor_source_px"] > 1.0, acc["subpixel_floor_source_px"]
     assert acc["subpixel_attainable"] is False, \
-        "a coarser reference cannot give sub-source-pixel; that must be stated"
+        "legacy flag describes the nominal one-reference-pixel sampling assumption"
     joined = " ".join(m.get("notes") or [])
-    assert "not reachable" in joined, "the limit must be stated in notes: %r" % joined
+    assert "sampling scale" in joined, "the reference sampling must be stated: %r" % joined
+    assert "source px" in m["accuracy_statement"]
     assert "reference pixel is" not in (m.get("reason") or ""), \
         "a limit of the reference must not be counted against the run's status"
     return "floor %.2f src px, attainable=%s, status %s" % (

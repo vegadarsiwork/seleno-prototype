@@ -18,7 +18,7 @@ label or README.
 | 3 | DEM-mediated illumination normalisation vs direct matching | **done, answer is negative** — §3. Does not lift the >50° bins; §6 shows what does |
 | 4 | Coarse-to-fine mandatory; report search radius needed | **done** — §4. ±8 km coarse needed; offsets are 3.9–4.6 km |
 | 5 | Add a non-polar site with real incidence variation | **done, via TMC-2** — 3 TMC-2 products acquired 2026-09-18 at lat −3.7…−41.1, incidence 39–46°. See `reports/TMC2_SELENE.md`. OHRC↔NAC is still not constructible off-pole (§5) |
-| 6 | Wire RIFT2 and a pretrained learned matcher into the seam | **done, and it is the phase's biggest result** — §6. Learned matcher solves 7/12 at Δaz 45–90° where every classical matcher scores 0/12 |
+| 6 | Wire RIFT2 and a pretrained learned matcher into the seam | **reconciled** — §6 uses the four-corner error criterion on the complete original sweep |
 | 7 | Keep the SELENE morning/evening experiment | **partly done** — TMC-2 ↔ SELENE TC evening registers at 60 m (`reports/TMC2_SELENE.md`); the morning/evening contrast still needs a site where both maps carry data |
 | 8 | Apply the `SELENO_OHRC_ROOT` backend fix | **done** — 28/28 dataset tests pass with no environment variable set |
 | — | T2 (SPICE/ISIS/ASP) feasibility | **infeasible, three independent reasons** — §8 |
@@ -34,7 +34,7 @@ label or README.
 | `backend/seleno/align.py` | masked NCC and feature-vote translation estimators on a shared grid, with a sign contract pinned by a self-test, and cluster-based cross-family agreement |
 | `backend/seleno/phasecong.py` | Kovesi phase congruency + RIFT-style max-index-map descriptor |
 | `scripts/measure_geolocation_offset.py` | the one-command item-2 measurement |
-| `scripts/benchmark_illumination.py` | matcher benchmark against real Sun-azimuth change with exact ground truth |
+| `scripts/benchmark_illumination.py` | matcher benchmark against real Sun-azimuth change and controlled common-grid geometry |
 
 `backend/seleno/matchers.py` gained `rift` and `disk_lightglue` behind the existing
 `run_matcher` seam; nothing else in the pipeline changed.
@@ -316,55 +316,59 @@ accidentally. Porting the authors' reference descriptor is the open task; the
 phase-congruency front end is already worth keeping on the repeatability number
 alone.
 
-### Benchmark harness
+### Reconciled illumination benchmark — 2026-09-23
 
-`scripts/benchmark_illumination.py` scores matchers against **real** Sun-azimuth
-change with **exact** ground truth: two sub-solar-longitude bins of the same
-LROC controlled tile are the same ground on the same grid, so the truth is the
-identity transform and no matcher is involved in defining it. Harness validated
-**[measured]**: SIFT solves 4/4 at Δaz = 30° with 0.35 px median error against
-that truth.
+This replaces the earlier translation-consensus result. The sole solve criterion
+is **mean Euclidean error at the four image corners ≤ 3 evaluation-grid pixels**.
+Each matcher feeds a homography fitted with USAC_MAGSAC (3 px inlier threshold).
+Identity ground truth is used only for final corner scoring; no translation-only
+or identity prior constrains the fitted model. Insufficient matches and failed
+fits remain failures in the denominator.
 
-This is the first evaluation in the project where the illumination change is real
-*and* the ground truth is independent of the matcher. The legacy `data/pairs/`
-fixtures are an image matched to a warped copy of itself.
+The complete original Phase 2 sweep was rerun: tile `P892S2250`, bins
+`005, 065, 125, 185, 245, 305`, all 15 unordered pairs, two 512 × 512 patches
+at **32.01099488134059 m per browse pixel**, four matchers, 120 runs on CPU.
+No azimuth range or failed case was omitted. The common controlled map grid
+provides the identity reference and inherits the mosaic's control uncertainty;
+it is not an exact independent survey of every detector pixel.
 
-### Result: the learned matcher is the only thing that survives past 45 degrees
+| Matcher | Runs | Solved | Rate | Median corner error among solved (px) |
+|---|---:|---:|---:|---:|
+| sift | 30 | 0 | 0.0% | — |
+| akaze | 30 | 0 | 0.0% | — |
+| orb | 30 | 0 | 0.0% | — |
+| disk_lightglue | 30 | 3 | 10.0% | 1.9 |
 
-Tile `P892S2250`, 6 sub-solar-longitude bins, 2 patches of 512 px at 32 m/px,
-15 bin pairs, truth = identity, solved = within 3 px. **[measured]**
-
-| matcher | runs | solved | rate | median error (px) | median inliers |
-|---|--:|--:|--:|--:|--:|
-| sift | 30 | 0 | 0.0% | — | 0 |
-| akaze | 30 | 0 | 0.0% | — | 0 |
-| orb | 30 | 0 | 0.0% | — | 0 |
-| **disk_lightglue** | 30 | **7** | **23.3%** | **1.26** | **367** |
-
-Stratified by Sun-azimuth difference — the variable Phase 1 established is the
-one that actually moves at the pole:
-
-| matcher | Δaz 45–90° | Δaz 90–135° | Δaz 135–180° |
-|---|--:|--:|--:|
+| Matcher | Δaz 45–90° | Δaz 90–135° | Δaz 135–180° |
+|---|---:|---:|---:|
 | sift | 0/12 | 0/12 | 0/6 |
 | akaze | 0/12 | 0/12 | 0/6 |
 | orb | 0/12 | 0/12 | 0/6 |
-| **disk_lightglue** | **7/12** | 0/12 | 0/6 |
+| disk_lightglue | 3/12 | 0/12 | 0/6 |
 
-Two things follow, and they are the most consequential results in this phase:
+**The reconciled DISK+LightGlue result is 3/12 at Δaz 45–90° under the stated
+corner criterion.** None of these six bins produces a <45° pair. No tested
+method solved a >90° case in this sweep. This is one tile and two patches,
+not a mission-wide success rate.
 
-1. **Classical matching is not marginal past 45° of Sun azimuth — it is zero.**
-   0 of 90 classical runs solved. This is the problem statement's headline
-   requirement, and SIFT/AKAZE/ORB do not address it at all.
-2. **A pretrained learned matcher lifts the 45–90° band from 0% to 58%**, at
-   1.26 px median error and 367 inliers, on CPU, with no training. Nothing else
-   tried in this phase moved that band — notably not the DEM-mediated arm (§3).
-3. **Beyond 90°, everything fails.** No method tested reaches the 90–180° band.
-   That is the honest boundary of the current system.
+The audit's native NAC fixture result used a different population and sampling,
+including larger azimuth differences, through the full registration tool. Its
+numerically matching fraction does not make the datasets equivalent. The
+reconciled table above is the illumination benchmark to quote; the earlier
+translation-based number is superseded.
 
-Caveat: 32 m/px browse sampling, 2 patches, one tile. This establishes the
-ordering and the cliff location, not a precise rate. Repeating at full resolution
-over more tiles is the obvious follow-up.
+Reproduce:
+
+```bash
+OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python -u \
+  scripts/benchmark_illumination.py --bins 005 065 125 185 245 305 \
+  --patches 2 --matchers sift akaze orb disk_lightglue
+```
+
+[All cases, matrices and corner errors](../results/illumination_reconciled_20260923/raw.json)
+and [criterion, grid and summary](../results/illumination_reconciled_20260923/summary.json)
+are committed. A regression with zero median translation but incorrect scale
+ensures this criterion cannot silently regress to translation consensus.
 
 ---
 

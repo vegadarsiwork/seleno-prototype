@@ -9,10 +9,9 @@ checkpoint that loads if present and changes nothing if it is absent.
 
 **Train on NAC↔NAC illumination pairs. Test on OHRC↔NAC cross-sensor pairs.**
 
-Both are illumination-change problems; the second adds a sensor gap. Phase 2
-measured that every classical matcher scores **0/12** past 45° of Sun-azimuth
-change while pretrained DISK+LightGlue scores **7/12** at 45–90° and **0/12**
-beyond 90°.
+Both are illumination-change problems; the second adds a sensor gap. The reconciled [Phase 2 benchmark](../reports/PHASE2.md#reconciled-illumination-benchmark--2026-09-23)
+uses mean four-corner error ≤ 3 browse pixels. Its earlier translation-consensus
+result is superseded; use the reconciled table for illumination claims.
 
 The question this experiment answers is narrow and worth answering either way:
 
@@ -47,8 +46,8 @@ The corpus is built from the **browse pyramids (~32 m/px)**, not full resolution
 - the full-resolution GeoTIFFs are striped, so cutting chips costs ~93 MB of
   scanline reads per tile-bin — roughly **13 GB** for this corpus versus **430 MB**
   for the pyramids;
-- the Phase 2 benchmark that produced the 0/12 vs 7/12 result ran at this same
-  sampling, so training and evaluation stay on one footing.
+- the reconciled Phase 2 benchmark ran at this same sampling; its corner-error
+  criterion and complete results are recorded in the linked report.
 
 **Caveat, not to be elided:** a matcher fine-tuned at 32 m/px is *not* thereby
 validated at 1 m/px. Re-running on a full-resolution subset is the obvious

@@ -127,6 +127,21 @@ class ValidationFixes(unittest.TestCase):
         self.assertEqual(wm.digest(model), evidence["transform_sha256"])
         self.assertGreater(metrics["accuracy"]["rmse_px"], 3.)
 
+    def test_illumination_criterion_detects_scale_error_with_zero_centre_shift(self):
+        from types import SimpleNamespace
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from benchmark_illumination import evaluate
+        y, x = np.mgrid[32:512:32, 32:512:32]
+        source = np.column_stack([x.ravel(), y.ravel()]).astype(np.float32)
+        identity = evaluate(SimpleNamespace(kp_src=source, kp_ref=source.copy()))
+        self.assertTrue(identity["solved"])
+        # Median translation is zero, but the corners are > 3 px wrong.
+        reference = (source - 256) * 1.04 + 256
+        scaled = evaluate(SimpleNamespace(kp_src=source, kp_ref=reference))
+        self.assertFalse(scaled["solved"])
+        self.assertGreater(scaled["corner_error_px"], 10.)
+        self.assertEqual(len(scaled["corner_errors_px"]), 4)
+
     def test_sensor_defaults_and_aspect_aware_memory_cap(self):
         from seleno.tool.profiles import Profiles
         profile = Profiles.load().get("iirs")["registration"]
