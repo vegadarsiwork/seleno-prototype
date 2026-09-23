@@ -18,9 +18,9 @@ def main(argv=None):
     r.add_argument("--out", default="outputs")
     r.add_argument("--model", default="auto",
                    choices=["auto", "similarity", "affine", "homography"])
-    r.add_argument("--max-side", type=int, default=2048,
-                   help="working grid cap; the reference is decimated to fit")
-    r.add_argument("--grid", type=int, default=8,
+    r.add_argument("--max-side", type=int, default=None,
+                   help="working grid cap; defaults to the source sensor profile")
+    r.add_argument("--grid", type=int, default=None,
                    help="N x N grid for tie points and the coverage metric")
     r.add_argument("--segments", type=int, default=0,
                    help="fit this many per-segment transforms along the long axis "
@@ -57,7 +57,7 @@ def main(argv=None):
 
     from seleno.tool import register
     res = register(a.source, a.reference, a.out, model=a.model, max_side=a.max_side,
-                   grid=(a.grid, a.grid), segments=a.segments,
+                   grid=(a.grid, a.grid) if a.grid is not None else None, segments=a.segments,
                    subpixel=not a.no_subpixel, fine=not a.no_fine,
                    fine_tiles=a.fine_tiles, locate=a.locate, verbose=not a.quiet)
     if a.json:

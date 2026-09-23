@@ -385,7 +385,7 @@ export default function ToolView({ view, setView }) {
   const [fb, setFb] = useState('')
 
   const [model, setModel] = useState('auto')
-  const [maxSide, setMaxSide] = useState(1024)
+  const [maxSide, setMaxSide] = useState('')
   const [grid, setGrid] = useState(8)
   const [segments, setSegments] = useState(0)
   const [subpixel, setSubpixel] = useState(true)
@@ -436,7 +436,7 @@ export default function ToolView({ view, setView }) {
   const run = useCallback(() => {
     setErr(null); setPreview(null); setTab('explore')
     api.toolRegister({
-      source: src, reference: ref_, model, max_side: maxSide,
+      source: src, reference: ref_, model, max_side: maxSide || null,
       grid, segments, subpixel,
     })
       .then((d) => setJob({ id: d.job, state: 'running', log: [], stage: 'starting' }))
@@ -486,7 +486,8 @@ export default function ToolView({ view, setView }) {
           </div>
           <div className="field">
             <label>Working grid (max side)</label>
-            <select value={maxSide} onChange={(e) => setMaxSide(+e.target.value)}>
+            <select value={maxSide} onChange={(e) => setMaxSide(e.target.value ? +e.target.value : '')}>
+              <option value="">Sensor default</option>
               {SIDES.map((x) => <option key={x} value={x}>{x} px</option>)}
             </select>
           </div>

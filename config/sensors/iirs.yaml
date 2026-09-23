@@ -19,8 +19,14 @@ nodata: 0
 # pseudo-pan; past ~2.5 um a lunar daytime spectrum is the surface's own thermal
 # emission, which tracks temperature rather than albedo or shape and does not
 # resemble the reflected-light reference it would be matched against.
-# See backend/seleno/tool/spectral.py. NOT yet validated against a real product.
+# See backend/seleno/tool/spectral.py. Exports remain a single pseudo-pan band.
 spectral:
   pseudo_pan_lo_um: 0.8
   pseudo_pan_hi_um: 1.6
   max_bands: 48
+
+# Preserve enough cross-track samples for correlation on long IIRS strips.
+# The runtime memory cap uses the target window area, including its aspect ratio.
+registration:
+  max_side: 6144
+  grid: [12, 12]

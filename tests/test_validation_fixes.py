@@ -127,6 +127,26 @@ class ValidationFixes(unittest.TestCase):
         self.assertEqual(wm.digest(model), evidence["transform_sha256"])
         self.assertGreater(metrics["accuracy"]["rmse_px"], 3.)
 
+    def test_sensor_defaults_and_aspect_aware_memory_cap(self):
+        from seleno.tool.profiles import Profiles
+        profile = Profiles.load().get("iirs")["registration"]
+        self.assertEqual(profile, {"max_side": 6144, "grid": [12, 12]})
+        with patch.object(REG, "_available_bytes", return_value=4_000_000_000):
+            square, _ = REG._cap_max_side(6144, shape=(10000, 10000))
+            strip, _ = REG._cap_max_side(6144, shape=(10000, 500))
+        self.assertLess(square, 2048)
+        self.assertEqual(strip, 6144)
+        # Actual dispatch must apply profile defaults, but keep explicit options.
+        src = self.root / "iirs_source.png"
+        cv2.imwrite(str(src), self.a)
+        for options, expected in [({}, 6144), ({"max_side": 512}, 512)]:
+            with patch.object(REG, "_cap_max_side", side_effect=lambda value, **kw: (value, None)) as cap:
+                result = register(str(src), str(self.ref), str(self.root / "out"),
+                                  fine=False, verbose=False, **options)
+            self.assertNotEqual(result.status, "failed")
+            self.assertEqual(cap.call_args.args[0], expected)
+            self.assertEqual(result.metrics["distribution"]["grid"], [12, 12])
+
     def test_pass_does_not_require_subpixel_and_statement_uses_source_pixels(self):
         from seleno.tool.scene import Scene
         from types import SimpleNamespace

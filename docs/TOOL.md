@@ -378,3 +378,11 @@ in one line. The scale is the size of one reference pixel in source pixels;
 it is not an independently established mathematical lower bound on localization.
 Legacy `subpixel_floor_source_px` / `subpixel_attainable` describe that nominal
 one-reference-pixel sampling assumption and should not be used as quality gates.
+
+### IIRS defaults
+
+A bare CLI/Python/API registration reads `registration.max_side: 6144` and
+`registration.grid: [12, 12]` from `config/sensors/iirs.yaml`. Explicit options
+still override these values. The memory cap accounts for the target window's
+aspect ratio, so a narrow strip is not budgeted as a square. The UI offers
+“Sensor default” for working-grid size.

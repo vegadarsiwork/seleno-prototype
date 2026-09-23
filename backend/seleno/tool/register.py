@@ -105,7 +105,7 @@ def _available_bytes() -> int:
     return 4 << 30
 
 
-def _cap_max_side(max_side: int, budget_fraction: float = 0.5) -> tuple[int, str | None]:
+def _cap_max_side(max_side: int, budget_fraction: float = 0.5, shape=None) -> tuple[int, str | None]:
     """Shrink the working grid so the run cannot exhaust memory.
 
     An earlier version of this tool asked for a 6144^2 working grid on a 15 GB
@@ -116,7 +116,8 @@ def _cap_max_side(max_side: int, budget_fraction: float = 0.5) -> tuple[int, str
     """
     budget = _available_bytes() * budget_fraction
     allowed_px = budget / _BYTES_PER_TARGET_PX
-    allowed_side = int(max(512, allowed_px ** 0.5))
+    aspect_factor = (max(shape) / math.sqrt(shape[0] * shape[1])) if shape else 1.0
+    allowed_side = int(max(512, allowed_px ** 0.5 * aspect_factor))
     if max_side <= allowed_side:
         return max_side, None
     return allowed_side, ("working grid capped at %d px a side (asked for %d): "
@@ -637,7 +638,7 @@ def _fail(out_dir, job_id, code, message, extra=None):
 
 
 def register(source: str, reference: str, out_dir: str = "outputs", *,
-             model: str = "auto", max_side: int = 2048, grid=(8, 8),
+             model: str = "auto", max_side: int | None = None, grid=None,
              holdout: float = 0.35, seed: int = 0, profiles: Profiles | None = None,
              segments: int = 0, subpixel: bool = True,
              fine: bool = True, fine_tiles: int = 0, locate: str = "auto",
@@ -665,10 +666,6 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                 progress(msg)
             except Exception:                                         # noqa: BLE001
                 pass                      # a broken listener must not fail a run
-    max_side, cap_note = _cap_max_side(max_side)
-    if cap_note:
-        log("memory   : %s" % cap_note)
-
     # ---- 1. read -----------------------------------------------------------
     try:
         S = load(source, profiles)
@@ -679,6 +676,17 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     log("reference : %s" % json.dumps(R.summary()))
 
     sp, rp = profiles.get(S.profile), profiles.get(R.profile)
+    defaults = sp.get("registration", {})
+    max_side = int(max_side if max_side is not None else defaults.get("max_side", 2048))
+    grid = tuple(grid) if grid is not None else tuple(defaults.get("grid", [8, 8]))
+    # A long narrow strip needs enough cross-track pixels to match. Its memory
+    # cost follows area, not the square of its longest dimension.
+    window = _source_window(S, R)
+    shape = (window[2] - window[0], window[3] - window[1]) if window else R.array.shape[:2]
+    max_side, cap_note = _cap_max_side(max_side, shape=shape)
+    if cap_note:
+        log("memory   : %s" % cap_note)
+    log("settings  : max_side=%d, grid=%s (explicit options override sensor defaults)" % (max_side, grid))
     degraded = ["source: " + d for d in S.degraded] + ["reference: " + d for d in R.degraded]
 
     # ---- 2. where the source lies, when no map projection says -------------

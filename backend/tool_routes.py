@@ -159,8 +159,8 @@ class RunRequest(BaseModel):
     source: str
     reference: str
     model: str = "auto"
-    max_side: int = 2048
-    grid: int = 8
+    max_side: int | None = None
+    grid: int | None = None
     segments: int = 0
     subpixel: bool = True
     locate: str = "auto"
@@ -191,7 +191,7 @@ def _worker(jid: str, req: RunRequest, src: str, ref: str):
 
     try:
         res = register(src, ref, OUTPUTS, model=req.model, max_side=req.max_side,
-                       grid=(req.grid, req.grid), segments=req.segments,
+                       grid=(req.grid, req.grid) if req.grid is not None else None, segments=req.segments,
                        subpixel=req.subpixel, locate=req.locate,
                        progress=progress, verbose=False)
         with _LOCK:
