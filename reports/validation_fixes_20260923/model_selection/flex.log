@@ -1,0 +1,12 @@
+FLEX OHRC → NAC
+FLEX TMC-2 → SELENE
+FLEX IIRS 2025-07-29 → WAC
+FLEX IIRS 2024-01-20 → WAC
+/home/paardhu/Projects/seleno-prototype/reports/validation_fixes_20260923/model_selection/flex.py:143: RuntimeWarning: divide by zero encountered in divide
+  d0 = (jy[:, 1] * err[:, 0] - jy[:, 0] * err[:, 1]) / det
+/home/paardhu/Projects/seleno-prototype/reports/validation_fixes_20260923/model_selection/flex.py:144: RuntimeWarning: divide by zero encountered in divide
+  d1 = (-jx[:, 1] * err[:, 0] + jx[:, 0] * err[:, 1]) / det
+/home/paardhu/Projects/seleno-prototype/reports/validation_fixes_20260923/model_selection/flex.py:143: RuntimeWarning: invalid value encountered in divide
+  d0 = (jy[:, 1] * err[:, 0] - jy[:, 0] * err[:, 1]) / det
+/home/paardhu/Projects/seleno-prototype/reports/validation_fixes_20260923/model_selection/flex.py:144: RuntimeWarning: invalid value encountered in divide
+  d1 = (-jx[:, 1] * err[:, 0] + jx[:, 0] * err[:, 1]) / det
