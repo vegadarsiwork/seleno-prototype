@@ -186,7 +186,12 @@ measures it rather than claiming it.
 
 A pushbroom strip is not well described by one global transform. `--segments N`
 splits the overlap into N along-track bands and fits each independently;
-`transform.json:segments` carries the per-band parameters and RMSE.
+`transform.json:segments` carries the fitted per-band matrices and fit-fold residuals.
+The exporter blends inverse coordinate maps with a smoothstep between segment centres
+and samples the source once. Bands without enough fit points use the global matrix.
+The preview and final held-out evaluation use this same serialized composite model;
+`accuracy.applied_model` identifies it and `transform_sha256` fingerprints the complete
+model. The global matrix alone does not reproduce a segmented export.
 
 Measured on TMC-2 → SELENE: global 1.4655 px against a per-band median of
 **1.103 px**, i.e. 65.1 m → 49.0 m at 44.4 m/px.

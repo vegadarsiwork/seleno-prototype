@@ -93,6 +93,40 @@ class ValidationFixes(unittest.TestCase):
             self.assertTrue(set(split.cells(pts[labels == k])).isdisjoint(
                 split.cells(pts[labels != k])))
 
+    def test_segment_export_blends_coordinates_and_scores_applied_model(self):
+        from seleno.tool import warp_model as wm
+        def translated(dx):
+            h = np.eye(3)
+            h[0, 2] = dx
+            return h.tolist()
+        segments = [{"axis": "row", "from": 0., "to": 128., "matrix": translated(8)},
+                    {"axis": "row", "from": 128., "to": 256., "matrix": translated(-8)}]
+        with patch.object(REG, "_segment_fit", return_value=segments):
+            result = self.run_pair(fine=False, subpixel=False, segments=2)
+        path = Path(result.out_dir)
+        model = json.loads((path / "transform.json").read_text())
+        evidence = json.loads((path / "evaluation.json").read_text())
+        metrics = json.loads((path / "metrics.json").read_text())
+        with rasterio.open(path / "registered.tif") as ds:
+            exported = ds.read(1)
+        # Independently sample the original input at three positions in the
+        # actual inverse field; global identity would fail at either end.
+        q = np.array([[100., 32.], [100., 128.], [100., 224.]])
+        src = wm.inverse_points(model, q)
+        np.testing.assert_allclose(src[:, 0], [92, 100, 108], atol=1e-9)
+        # Raster export preserves the source digital numbers.
+        expected = self.a[src[:, 1].astype(int), src[:, 0].astype(int)]
+        np.testing.assert_allclose(exported[q[:, 1].astype(int), q[:, 0].astype(int)], expected, atol=1e-6)
+        np.testing.assert_allclose(wm.forward_points(model, src), q, atol=1e-7)
+        seam = np.column_stack([np.full(1001, 100.), np.linspace(127.5, 128.5, 1001)])
+        field = wm.inverse_points(model, seam)
+        self.assertLess(np.max(np.abs(np.diff(field[:, 0]))), .001)
+        residual = wm.residuals(model, np.asarray(evidence["source"]), np.asarray(evidence["reference"]))
+        self.assertEqual(float(np.sqrt(np.mean(residual ** 2))), metrics["accuracy"]["rmse_px"])
+        self.assertEqual(metrics["accuracy"]["applied_model"]["kind"], "blended_segments")
+        self.assertEqual(wm.digest(model), evidence["transform_sha256"])
+        self.assertGreater(metrics["accuracy"]["rmse_px"], 3.)
+
     def test_identical_images_export_identical_pixel_centres(self):
         for georeferenced in (False, True):
             with self.subTest(georeferenced=georeferenced):

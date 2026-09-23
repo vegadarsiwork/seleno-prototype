@@ -45,6 +45,7 @@ from .. import spatial, verify as V
 from . import locate as LOC
 from . import methods as M
 from . import evaluation as E
+from . import warp_model as WM
 from .coordinates import grid_to_reference, project, sample_backmap
 from .profiles import Profiles
 from .scene import Scene, UnreadableInput, load, normalised
@@ -932,7 +933,8 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     with open(os.path.join(job_dir, "transform.json")) as fh:
         tj = json.load(fh)
     Hm = np.asarray(tj["matrix"], np.float64)
-    warped, wvalid = _warp(A_raw, Am, Hm, B_raw.shape, best["model"])
+    warped, wvalid = (WM.warp(A_raw, Am, tj, B_raw.shape) if seg else
+                       _warp(A_raw, Am, Hm, B_raw.shape, best["model"]))
     _write_registered(job_dir, warped, wvalid, R, frame)
     acc = E.score_export(job_dir, sealed_test, split)
     acc.update(subpixel_method="parabolic+ecc" if ecc.get("adopted") else "matcher", ecc=ecc)
@@ -948,7 +950,7 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                              time.time() - t_start, grid, eligible, ov_extrap,
                              conv, fine_info)
     layers = _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm,
-                             best["model"], corr, cache, log)
+                             best["model"], corr, cache, log, export_model=tj)
     _write_overlay(job_dir, *layers, vr)
     _write_preview_json(job_dir, layers[0], layers[2], layers[6], vr)
     _write_report(job_dir, job_id, S, R, metrics, tj, attempts)
@@ -1418,11 +1420,14 @@ def _segment_fit(corr, vr, model, shape, segments):
                "n_inliers": int(sel.sum())}
         if sel.sum() >= V._min_points(model):
             Hs = _rg.refit(pts_s[sel], pts_r[sel], model)
-            if Hs is not None:
+            if Hs is not None and np.isfinite(Hs).all() and abs(np.linalg.det(Hs)) > 1e-10:
                 res = V.transfer_error(Hs, pts_s[sel].astype(np.float64),
                                        pts_r[sel].astype(np.float64))
                 rec["matrix"] = np.asarray(Hs, float).tolist()
-                rec["rmse_px"] = round(float(np.sqrt((res ** 2).mean())), 4)
+                rec["fit_rmse_px"] = round(float(np.sqrt((res ** 2).mean())), 4)
+                rec["selection_basis"] = "fit fold only"
+        if "matrix" not in rec:
+            rec["fallback"] = "global matrix: insufficient or singular local fit"
         out.append(rec)
     return out
 
@@ -1505,9 +1510,14 @@ def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None):
           "pixel_convention": "zero-based pixel centres; world = GDAL affine * (x+0.5, y+0.5)",
           "coordinates": "`matrix` is in working-grid centre coordinates; "
                          "`matrix_reference_px` is the same transform in "
-                         "full-resolution reference pixels and is the one to apply "
-                         "to the delivered product",
-          "segments": seg}
+                         "full-resolution reference pixels. Both are residual corrections after "
+                         "metadata prealignment. For segmented exports use the complete "
+                         "blended inverse field, not the global matrix alone.",
+          "segments": seg,
+          "application": {"kind": "blended_segments" if seg else "global",
+                          "sampling": "inverse mapping; smoothstep between segment centres" if seg else "inverse matrix",
+                          "segment_fallback": "global matrix",
+                          "raster": "registered.tif"}}
     with open(os.path.join(job_dir, "transform.json"), "w") as fh:
         json.dump(tj, fh, indent=1)
     return tj
@@ -1632,7 +1642,7 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
 
 
 def _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm, model,
-                    corr, cache, log):
+                    corr, cache, log, export_model=None):
     """The preview panels at a resolution meant for looking at.
 
     The working grid is sized for matching, not viewing: `max_side` caps the LONG
@@ -1670,8 +1680,9 @@ def _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm, model
         Hw[:2, :] = np.asarray(Hm, float)[:2, :]
         if np.asarray(Hm).shape == (3, 3):
             Hw = np.asarray(Hm, float)
-        warped_d, wvalid_d = _warp(A_raw, Am_d, D @ Hw @ np.linalg.inv(D),
-                                   B_raw.shape, model)
+        warped_d, wvalid_d = (WM.warp(A_raw, Am_d, WM.conjugate(export_model, D), B_raw.shape)
+                              if export_model and export_model.get("segments") else
+                              _warp(A_raw, Am_d, D @ Hw @ np.linalg.inv(D), B_raw.shape, model))
         A_d = normalised(Scene(path=S.path, array=A_raw, valid=Am_d, reader=S.reader), sp)
         B_d = normalised(Scene(path=R.path, array=B_raw, valid=Bm_d, reader=R.reader), rp)
 

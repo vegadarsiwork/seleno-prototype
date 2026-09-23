@@ -13,7 +13,7 @@ import os
 
 import numpy as np
 
-from ..verify import transfer_error
+from . import warp_model as WM
 from .methods import Correspondences
 
 
@@ -84,6 +84,9 @@ def score_export(job_dir, test, split):
                 "source": test.src.astype(np.float64).tolist(),
                 "reference": test.ref.astype(np.float64).tolist(),
                 "matrix_sha256": matrix_digest(matrix),
+                "transform_sha256": WM.digest(transform),
+                "applied_model": transform["application"],
+                "residual_definition": "symmetric forward/backward transfer error of applied model",
                 "basis": "all held-out matcher correspondences; not external ground truth",
                 "model_selected_without_test": True}
     with open(os.path.join(job_dir, "evaluation.json"), "w") as fh:
@@ -91,9 +94,11 @@ def score_export(job_dir, test, split):
     acc = {"held_out_n": len(test), "held_out_rmse_px": None,
            "held_out_median_px": None, "held_out_p90_px": None,
            "evaluation_file": "evaluation.json", "matrix_sha256": evidence["matrix_sha256"],
-           "evaluation_basis": evidence["basis"]}
+           "evaluation_basis": evidence["basis"],
+           "transform_sha256": evidence["transform_sha256"],
+           "applied_model": evidence["applied_model"]}
     if len(test) >= 3:
-        residual = transfer_error(matrix, test.src.astype(np.float64), test.ref.astype(np.float64))
+        residual = WM.residuals(transform, test.src.astype(np.float64), test.ref.astype(np.float64))
         acc.update(held_out_rmse_px=float(np.sqrt(np.mean(residual ** 2))),
                    held_out_median_px=float(np.median(residual)),
                    held_out_p90_px=float(np.percentile(residual, 90)))
