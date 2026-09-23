@@ -127,6 +127,24 @@ class ValidationFixes(unittest.TestCase):
         self.assertEqual(wm.digest(model), evidence["transform_sha256"])
         self.assertGreater(metrics["accuracy"]["rmse_px"], 3.)
 
+    def test_pass_does_not_require_subpixel_and_statement_uses_source_pixels(self):
+        from seleno.tool.scene import Scene
+        from types import SimpleNamespace
+        scene = Scene(path="scaled", array=self.a, valid=self.a > 0, reader="test")
+        conv = {"reference_decimation": 2, "source_px_per_reference_px": 3.,
+                "reference_m_per_px": 6.}
+        # Use the actual conversion schema, overriding its measured scale.
+        conv = REG._unit_conversions(scene, scene, {"reference_decimation": 2}) | conv
+        vr = SimpleNamespace(inlier_mask=np.ones(100, bool), n_inliers=100, inlier_ratio=1.)
+        for error, subpixel in [(.2, False), (.1, True), (None, None)]:
+            m = REG._write_metrics(str(self.root), "test", scene, scene, {}, {}, [],
+                {"name": "test", "model": "affine"}, vr, {"held_out_rmse_px": error},
+                .9, .7, 12., [], [], {}, 0., (8, 8), list(range(64)), .1, conv, {})
+            self.assertEqual(m["status"], "pass")
+            self.assertIs(m["accuracy"]["subpixel"], subpixel)
+            self.assertIn("reference sampling scale 3.00 source px", m["accuracy_statement"])
+            self.assertIn("not an accuracy guarantee", m["status_meaning"])
+
     def test_finite_nodata_is_excluded_at_native_and_decimated_resolution(self):
         from seleno.tool.scene import Scene
         data = np.ones((256, 256), np.float32)

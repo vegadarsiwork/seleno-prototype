@@ -1571,23 +1571,25 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
     if character.get("overlap_fraction", 1) < 0.15:
         reasons.append("the images share only %.0f%% of the frame"
                        % (100 * character["overlap_fraction"]))
-    # A limit of the reference is not a defect in the registration, so this is
-    # stated rather than counted against the run's status. Quoting "sub-pixel:
-    # False" without it would read as a shortfall in the matching when in fact
-    # no method could do better against a reference this coarse.
+    # Status describes verified correspondences and geometric coverage. Accuracy
+    # stays separate: a coarse reference does not itself fail registration.
     notes = []
-    sp_floor = conv.get("source_px_per_reference_px")
-    if sp_floor and sp_floor >= 1.0 and units["rmse_source_px"] is not None:
-        notes.append("one reference pixel is %.2f source pixels, so sub-source-pixel "
-                     "accuracy is not reachable against this reference at all; the "
-                     "result is %.2f source px, %.2f reference px, %s m"
-                     % (sp_floor, units["rmse_source_px"], units["rmse_reference_px"],
-                        units["rmse_m"]))
+    sampling = conv.get("source_px_per_reference_px")
+    source_rmse = (None if rmse_px is None or not sampling else
+                   rmse_px * conv["reference_decimation"] * sampling)
+    accuracy_statement = ("Accuracy unknown in source pixels" if source_rmse is None else
+                          "%.2f source px" % source_rmse)
+    if sampling:
+        accuracy_statement += "; reference sampling scale %.2f source px" % sampling
+        notes.append("One reference pixel spans %.2f source pixels. This is a sampling "
+                     "scale, not an independently measured error bound." % sampling)
     reasons += list(warn or [])
     status = "pass" if not reasons else "warning"
 
     m = {"status": status, "reason": "; ".join(reasons) if reasons else None,
          "notes": notes,
+         "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
+         "accuracy_statement": accuracy_statement,
          "job_id": job_id, "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
          "runtime_s": round(secs, 2),
          "method_used": best["name"], "model": best["model"],
@@ -1603,16 +1605,13 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
              # IMAGE, so that is what the flag reports. It is None, not False,
              # when there is no scale to convert with - a bare PNG cannot answer
              # the question either way.
-             subpixel=(None if units["rmse_source_px"] is None
-                       else bool(units["rmse_source_px"] < 1.0)),
+             subpixel=(None if source_rmse is None else bool(source_rmse < 1.0)),
              subpixel_basis="source pixels",
              subpixel_working_grid=bool(rmse_px is not None and rmse_px < 1.0),
-             # One reference pixel, expressed in source pixels. Nothing can
-             # localise a source pixel against a reference better than about a
-             # reference pixel, so when this is >= 1 a sub-source-pixel result
-             # is not available from this pair at all - no method would give it,
-             # and the honest thing is to say so rather than keep reporting
-             # False as though it were a shortfall in the matching.
+             # Legacy sampling fields are retained for clients. They describe
+             # a one-reference-pixel sampling assumption, not a precision bound.
+             reference_sampling_source_px=sampling,
+             sampling_floor_basis="nominal one-reference-pixel sampling; not an error lower bound",
              subpixel_floor_source_px=(round(conv["source_px_per_reference_px"], 3)
                                        if conv["source_px_per_reference_px"] else None),
              subpixel_attainable=(None if not conv["source_px_per_reference_px"]
@@ -1813,6 +1812,8 @@ def _write_report(job_dir, job_id, S, R, m, tj, attempts):
          "\n## Result\n",
          "**Status: %s**%s\n" % (m["status"].upper(),
                                  ("  \n" + m["reason"]) if m.get("reason") else ""),
+         m.get("accuracy_statement", "") + "\n",
+         m.get("status_meaning", "") + "\n",
          "| metric | value |", "|---|--:|",
          "| method used | `%s` |" % m["method_used"],
          "| model | %s |" % m["model"],

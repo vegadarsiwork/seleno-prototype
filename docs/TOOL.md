@@ -366,3 +366,15 @@ declares that its selection was a guess · a `.qub` named only in the label is
 found · nanometre band centres convert · geometry is built from a `_loc_`
 backplane · a large raster reads lazily and its strided and fancy reads match an
 eager read exactly.
+
+### Status and accuracy
+
+`pass` means the fitted model is verified and its tie points provide adequate
+coverage. It does not promise sub-pixel accuracy. `accuracy.subpixel` compares
+the unrounded held-out RMSE with **one original source pixel**, independently
+of status (null when source scale or evaluation is unavailable).
+`accuracy_statement` gives the source-pixel error and reference sampling scale
+in one line. The scale is the size of one reference pixel in source pixels;
+it is not an independently established mathematical lower bound on localization.
+Legacy `subpixel_floor_source_px` / `subpixel_attainable` describe that nominal
+one-reference-pixel sampling assumption and should not be used as quality gates.

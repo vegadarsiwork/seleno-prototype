@@ -210,10 +210,8 @@ function MetricsTable({ m }) {
              v={`${num(a.held_out_median_px, 3)} / ${num(a.held_out_p90_px, 3)}`} />
         <Row k="sub-pixel (source)" v={a.subpixel == null ? 'unknown — no scale'
           : String(a.subpixel)} tone={a.subpixel ? 'ok' : ''} />
-        {a.subpixel_attainable === false && (
-          <Row k="sub-pixel floor" mono={false}
-               v={`1 reference px = ${num(a.subpixel_floor_source_px, 2)} source px, so sub-source-pixel is not reachable against this reference`} />
-        )}
+        <Row k="accuracy" mono={false} v={m.accuracy_statement} />
+        <Row k="status meaning" mono={false} v={m.status_meaning} />
         <Row k="refinement" v={a.subpixel_method} />
         {a.ecc?.attempted && (
           <Row k="ECC polish" v={a.ecc.adopted
