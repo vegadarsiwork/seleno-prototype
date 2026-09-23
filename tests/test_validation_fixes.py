@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 import cv2
 import numpy as np
+import rasterio
+from rasterio.transform import Affine
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
@@ -90,6 +92,33 @@ class ValidationFixes(unittest.TestCase):
         for k in range(3):
             self.assertTrue(set(split.cells(pts[labels == k])).isdisjoint(
                 split.cells(pts[labels != k])))
+
+    def test_identical_images_export_identical_pixel_centres(self):
+        for georeferenced in (False, True):
+            with self.subTest(georeferenced=georeferenced):
+                if georeferenced:
+                    path = self.root / "identity.tif"
+                    with rasterio.open(path, "w", driver="GTiff", height=256, width=256,
+                                       count=1, dtype="uint8",
+                                       crs="+proj=stere +lat_0=-90 +R=1737400 +units=m",
+                                       transform=Affine(2, 0, 100, 0, -2, 100)) as ds:
+                        ds.write(self.a, 1)
+                    self.src = self.ref = path
+                result = self.run_pair(fine=False)
+                self.assertNotEqual(result.status, "failed")
+                points = np.genfromtxt(Path(result.out_dir) / "matches.csv", delimiter=",", names=True)
+                np.testing.assert_allclose(points["src_x"], points["ref_x"], atol=1e-6, rtol=0)
+                np.testing.assert_allclose(points["src_y"], points["ref_y"], atol=1e-6, rtol=0)
+
+    def test_fractional_backmap_and_decimation_centres(self):
+        from seleno.tool.coordinates import grid_to_reference, project, sample_backmap
+        frame = {"reference_decimation": 6, "reference_origin": [30, 12],
+                 "reference_sample_offset": [1.5, 1.5]}
+        yy, xx = np.indices((20, 20))
+        bx, by = 12 + 1.5 + 6 * xx, 30 + 1.5 + 6 * yy
+        pts = np.array([[2.123456789, 3.87654321], [10.5, 9.25]])
+        np.testing.assert_allclose(sample_backmap(bx, by, pts),
+                                   project(grid_to_reference(frame), pts), atol=1e-10, rtol=0)
 
 
 if __name__ == "__main__":

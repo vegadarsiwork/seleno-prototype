@@ -45,6 +45,7 @@ from .. import spatial, verify as V
 from . import locate as LOC
 from . import methods as M
 from . import evaluation as E
+from .coordinates import grid_to_reference, project, sample_backmap
 from .profiles import Profiles
 from .scene import Scene, UnreadableInput, load, normalised
 
@@ -289,7 +290,9 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
     step, (orow, ocol), R, Rv, (tap_r, tap_c) = _target_grid(ref, max_side, window)
     H, W = R.shape
     info = {"target_shape": [H, W], "reference_decimation": step,
-            "reference_origin": [orow, ocol], "route": None, "notes": []}
+            "reference_origin": [orow, ocol], "reference_sample_offset": [tap_r, tap_c],
+            "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+            "route": None, "notes": []}
     if window is not None:
         info["reference_window"] = list(window)
 
@@ -304,13 +307,13 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
         for r0b in range(0, H, _CHUNK_ROWS):
             r1b = min(r0b + _CHUNK_ROWS, H)
             a, b = (_grid_xy if projected else _grid_lonlat)(
-                ref, orow, ocol, step, r0b, r1b, W, prewarp)
+                ref, orow, ocol, step, r0b, r1b, W, prewarp, (tap_r, tap_c))
             a, b = prep(a, b)
             S[r0b:r1b] = f_s(a, b)
             L[r0b:r1b] = f_l(a, b)
         info["route"] = ("source geometry lattice -> reference %s"
                          % ("projected plane" if projected else "lon/lat"))
-        return _sample(src, S, L, R, Rv, info, cache)
+        return _sample(src, S + 0.5, L + 0.5, R, Rv, info, cache)
 
     # --- route 2: both georeferenced
     if src.georeferenced and ref.georeferenced:
@@ -321,7 +324,7 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
         same = str(src.crs) == str(ref.crs)
         for r0b in range(0, H, _CHUNK_ROWS):
             r1b = min(r0b + _CHUNK_ROWS, H)
-            xs, ys = _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp)
+            xs, ys = _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp, (tap_r, tap_c))
             if not same:
                 xs, ys = warp_transform(ref.crs, src.crs, xs.ravel().tolist(),
                                         ys.ravel().tolist())
@@ -382,7 +385,7 @@ def prealign(src: Scene, ref: Scene, max_side: int = 2048, window=None, cache=No
     return _sample(src, S, L, R, Rv, info, cache)
 
 
-def _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp=None):
+def _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp=None, sample_offset=None):
     """Projected (x, y) of a block of target pixel centres, as arrays.
 
     `prewarp` maps full-resolution reference pixel coordinates through a known
@@ -395,8 +398,9 @@ def _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp=None):
     pixel the coarse solve says belongs at each reference pixel.
     """
     t = ref.transform
-    cols = ocol + (np.arange(W) + 0.5) * step
-    rows = orow + (np.arange(r0b, r1b) + 0.5) * step
+    dy, dx = sample_offset if sample_offset is not None else ((step - 1) / 2,) * 2
+    cols = ocol + np.arange(W) * step + dx
+    rows = orow + np.arange(r0b, r1b) * step + dy
     C, Rr = np.meshgrid(cols, rows)
     if prewarp is not None:
         P = np.asarray(prewarp, float)
@@ -404,15 +408,15 @@ def _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp=None):
         den = np.where(np.abs(den) < 1e-12, 1e-12, den)
         C, Rr = ((P[0, 0] * C + P[0, 1] * Rr + P[0, 2]) / den,
                  (P[1, 0] * C + P[1, 1] * Rr + P[1, 2]) / den)
-    x = t.a * C + t.b * Rr + t.c
-    y = t.d * C + t.e * Rr + t.f
+    x = t.a * (C + 0.5) + t.b * (Rr + 0.5) + t.c
+    y = t.d * (C + 0.5) + t.e * (Rr + 0.5) + t.f
     return x, y
 
 
-def _grid_lonlat(ref, orow, ocol, step, r0b, r1b, W, prewarp=None):
+def _grid_lonlat(ref, orow, ocol, step, r0b, r1b, W, prewarp=None, sample_offset=None):
     """Same block, converted to lon/lat on the Moon."""
     from rasterio.warp import transform as warp_transform
-    x, y = _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp)
+    x, y = _grid_xy(ref, orow, ocol, step, r0b, r1b, W, prewarp, sample_offset)
     if ref.crs is not None and not ref.crs.is_geographic:
         lon, lat = warp_transform(ref.crs, "+proj=longlat +R=1737400 +no_defs",
                                   x.ravel().tolist(), y.ravel().tolist())
@@ -570,8 +574,8 @@ def _sample(src: Scene, S, L, R, Rv, info, cache=None):
             info["source_taps"] = "area"
             info.setdefault("notes", []).append(
                 "source reduced %.1fx onto the working grid by area averaging" % f)
-            back_x = np.where(ok, np.nan_to_num(S), np.nan).astype(np.float32)
-            back_y = np.where(ok, np.nan_to_num(L), np.nan).astype(np.float32)
+            back_x = np.where(ok, S - 0.5, np.nan).astype(np.float64)
+            back_y = np.where(ok, L - 0.5, np.nan).astype(np.float64)
             info["source_coverage"] = round(float(ov.mean()), 4)
             return out, ov, R, Rv, back_x, back_y, info
         if not aa:
@@ -598,8 +602,8 @@ def _sample(src: Scene, S, L, R, Rv, info, cache=None):
         vals = np.where(cnt > 0, acc / np.maximum(cnt, 1.0), np.nan)
         out[ok] = np.nan_to_num(vals)
         ov[ok] = cnt > 0
-    back_x = np.where(ok, np.nan_to_num(S), np.nan).astype(np.float32)
-    back_y = np.where(ok, np.nan_to_num(L), np.nan).astype(np.float32)
+    back_x = np.where(ok, S - 0.5, np.nan).astype(np.float64)
+    back_y = np.where(ok, L - 0.5, np.nan).astype(np.float64)
     info["source_coverage"] = round(float(ov.mean()), 4)
     return out, ov, R, Rv, back_x, back_y, info
 
@@ -829,7 +833,7 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     corr, vr = best["corr"], best["vr"]
     validation, sealed_test = best["validation"], best["test"]
     step0 = int(frame.get("reference_decimation", 1) or 1)
-    orow0, ocol0 = frame.get("reference_origin", [0, 0])
+    ocol0, orow0 = grid_to_reference(frame)[:2, 2]
     fine_info = {"attempted": False}
     per_point_back = None
     if fine:
@@ -842,9 +846,9 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             # lives. The positions are now measured at native resolution, so
             # these are sub-working-pixel by construction.
             w_src = np.column_stack([(fcorr.src[:, 0] - ocol0) / step0,
-                                     (fcorr.src[:, 1] - orow0) / step0]).astype(np.float32)
+                                     (fcorr.src[:, 1] - orow0) / step0]).astype(np.float64)
             w_ref = np.column_stack([(fcorr.ref[:, 0] - ocol0) / step0,
-                                     (fcorr.ref[:, 1] - orow0) / step0]).astype(np.float32)
+                                     (fcorr.ref[:, 1] - orow0) / step0]).astype(np.float64)
             whole_fine = M.Correspondences(w_src, w_ref, fcorr.confidence,
                                           fcorr.method, fcorr.kind, dict(fcorr.detail))
             fit_fine, val_fine, test_fine = E.partition(whole_fine, split)
@@ -1030,7 +1034,7 @@ def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
                     note="the coarse grid was already at native reference resolution")
         return None, info
 
-    orow, ocol = frame.get("reference_origin", [0, 0])
+    ocol, orow = grid_to_reference(frame)[:2, 2]
 
     # The coarse model, expressed in full-resolution reference pixels, inverted:
     # this is what tells each native window which source ground belongs in it.
@@ -1144,7 +1148,7 @@ def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
                 probe = ci
                 if ci is not None and split is not None:
                     fr_r, fr_c = fr["reference_origin"]
-                    full = ci.src.astype(np.float64) * fr["reference_decimation"] + [fr_c, fr_r]
+                    full = project(grid_to_reference(fr), ci.src)
                     if prewarp is not None:
                         ph = np.column_stack([full, np.ones(len(full))]) @ prewarp.T
                         full = ph[:, :2] / ph[:, 2:]
@@ -1172,14 +1176,13 @@ def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
         wr0, wc0 = fr["reference_origin"]
         st = fr["reference_decimation"]
         # window-local -> full-resolution reference pixels
-        ref_all.append(np.column_stack([wc0 + c.ref[:, 0] * st, wr0 + c.ref[:, 1] * st]))
-        src_all.append(np.column_stack([wc0 + c.src[:, 0] * st, wr0 + c.src[:, 1] * st]))
+        ref_all.append(project(grid_to_reference(fr), c.ref))
+        src_all.append(project(grid_to_reference(fr), c.src))
         conf_all.append(np.asarray(c.confidence, np.float32))
         # original source pixel behind each point, for matches.csv
-        sj = np.clip(np.round(c.src[:, 1]).astype(int), 0, bx.shape[0] - 1)
-        si = np.clip(np.round(c.src[:, 0]).astype(int), 0, bx.shape[1] - 1)
-        bx_all.append(bx[sj, si])
-        by_all.append(by[sj, si])
+        original = sample_backmap(bx, by, c.src)
+        bx_all.append(original[:, 0])
+        by_all.append(original[:, 1])
         info["windows_used"] += 1
 
     if not ref_all:
@@ -1201,8 +1204,8 @@ def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
             (P[1, 0] * src_pts[:, 0] + P[1, 1] * src_pts[:, 1] + P[1, 2]) / den])
 
     out = M.Correspondences(
-        src=src_pts.astype(np.float32),
-        ref=np.vstack(ref_all).astype(np.float32),
+        src=src_pts.astype(np.float64),
+        ref=np.vstack(ref_all).astype(np.float64),
         confidence=np.concatenate(conf_all),
         method=(method or "?") + "@native", kind="dense",
         detail={"stage": "fine", "windows": info["windows_used"]})
@@ -1433,29 +1436,18 @@ def _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back=None
     coordinate to the decimation - which would throw away exactly the precision
     the fine stage was run to obtain.
     """
-    step = frame.get("reference_decimation", 1)
-    orow, ocol = frame.get("reference_origin", [0, 0])
-    pb_x, pb_y = per_point_back if per_point_back is not None else (None, None)
+    original = sample_backmap(back_x, back_y, corr.src)
+    if per_point_back is not None:
+        measured = np.column_stack(per_point_back)
+        good = np.isfinite(measured).all(axis=1)
+        original[good] = measured[good]
+    reference = project(grid_to_reference(frame), corr.ref)
     with open(os.path.join(job_dir, "matches.csv"), "w", newline="") as fh:
-        w = csv.writer(fh)
-        w.writerow(["src_x", "src_y", "ref_x", "ref_y", "confidence", "inlier"])
+        writer = csv.writer(fh)
+        writer.writerow(["src_x", "src_y", "ref_x", "ref_y", "confidence", "inlier"])
         for k in range(len(corr)):
-            sx, sy = corr.src[k]
-            # map back to ORIGINAL source pixel coordinates where we can
-            if pb_x is not None and k < len(pb_x) and np.isfinite(pb_x[k]):
-                osx, osy = float(pb_x[k]), float(pb_y[k])
-            else:
-                j, i = int(round(sy)), int(round(sx))
-                if 0 <= j < back_x.shape[0] and 0 <= i < back_x.shape[1] \
-                        and np.isfinite(back_x[j, i]):
-                    osx, osy = float(back_x[j, i]), float(back_y[j, i])
-                else:
-                    osx, osy = float(sx), float(sy)
-            w.writerow(["%.3f" % osx, "%.3f" % osy,
-                        "%.3f" % (ocol + float(corr.ref[k][0]) * step),
-                        "%.3f" % (orow + float(corr.ref[k][1]) * step),
-                        "%.4f" % float(corr.confidence[k]),
-                        int(bool(vr.inlier_mask[k]))])
+            writer.writerow([*original[k], *reference[k], float(corr.confidence[k]),
+                             int(vr.inlier_mask[k])])
 
 
 def _write_registered(job_dir, warped, wvalid, R: Scene, frame):
@@ -1468,7 +1460,8 @@ def _write_registered(job_dir, warped, wvalid, R: Scene, frame):
         tr = None
         if R.georeferenced:
             t, (orow, ocol) = R.transform, frame.get("reference_origin", [0, 0])
-            x0, y0 = t * (ocol, orow)
+            dy, dx = frame.get("reference_sample_offset", [(step - 1) / 2] * 2)
+            x0, y0 = t * (ocol + dx + 0.5 - step / 2, orow + dy + 0.5 - step / 2)
             tr = Affine(t.a * step, t.b, x0, t.d, t.e * step, y0)
         with rasterio.open(path, "w", driver="GTiff", height=out.shape[0],
                            width=out.shape[1], count=1, dtype="float32",
@@ -1495,10 +1488,8 @@ def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None):
         Hw[:2, :] = np.asarray(Hm, float)[:2, :]
         if np.asarray(Hm).shape == (3, 3):
             Hw = np.asarray(Hm, float)
-        T = np.array([[1.0 / step, 0, -ocol / float(step)],
-                      [0, 1.0 / step, -orow / float(step)],
-                      [0, 0, 1.0]])
-        Hn = np.linalg.inv(T) @ Hw @ T
+        C = grid_to_reference(frame)
+        Hn = C @ Hw @ np.linalg.inv(C)
         if abs(Hn[2, 2]) > 1e-12:
             Hn = Hn / Hn[2, 2]
         native = Hn.tolist()
@@ -1511,7 +1502,8 @@ def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None):
           "decomposition": {k: (round(float(v), 6) if isinstance(v, (int, float)) else v)
                             for k, v in (decomp or {}).items()},
           "frame": frame, "method": method,
-          "coordinates": "`matrix` is in working-grid coordinates; "
+          "pixel_convention": "zero-based pixel centres; world = GDAL affine * (x+0.5, y+0.5)",
+          "coordinates": "`matrix` is in working-grid centre coordinates; "
                          "`matrix_reference_px` is the same transform in "
                          "full-resolution reference pixels and is the one to apply "
                          "to the delivered product",
@@ -1673,9 +1665,7 @@ def _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm, model
         orow_d, ocol_d = fr["reference_origin"]
         # working-grid pixels -> display-grid pixels, through full resolution
         k = step_w / float(step_d)
-        D = np.array([[k, 0.0, (ocol_w - ocol_d) / float(step_d)],
-                      [0.0, k, (orow_w - orow_d) / float(step_d)],
-                      [0.0, 0.0, 1.0]])
+        D = np.linalg.inv(grid_to_reference(fr)) @ grid_to_reference(frame)
         Hw = np.eye(3)
         Hw[:2, :] = np.asarray(Hm, float)[:2, :]
         if np.asarray(Hm).shape == (3, 3):

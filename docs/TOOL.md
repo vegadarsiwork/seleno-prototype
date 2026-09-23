@@ -38,6 +38,15 @@ On failure, `status` is `failed` and `reason` is exactly one of:
 `unreadable_input` · `no_overlap` · `insufficient_matches` ·
 `verification_failed` · `degenerate_transform`
 
+**Coordinate convention.** CSV and JSON coordinates are zero-based pixel
+centres: `(0, 0)` is the centre of the first pixel. Convert to world coordinates
+with the GDAL geotransform at `(x + 0.5, y + 0.5)`. Fractional keypoints use a
+continuous source mapping, with no integer rounding. `reference_sample_offset`
+records the actual centre of averaged samples on a decimated grid; matrices,
+CSV points, previews and the exported GeoTIFF use that same offset.
+`matrix_reference_px` is the residual correction after initial prealignment,
+expressed in full-resolution reference centres, not a direct raw-source matrix.
+
 ---
 
 ## 2. Method selection
