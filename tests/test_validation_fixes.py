@@ -82,6 +82,33 @@ class ValidationFixes(unittest.TestCase):
         self.assertLess(clean.metrics["accuracy"]["rmse_px"], 1e-6)
         self.assertGreater(poisoned.metrics["accuracy"]["rmse_px"], 100)
 
+    def test_heldout_does_not_control_ecc_adoption_or_segment_fits(self):
+        split = E.SpatialSplit((256, 256))
+        y, x = np.mgrid[16:256:16, 16:256:16]
+        source = np.column_stack([x.ravel(), y.ravel()]).astype(np.float32)
+        labels = split.labels(source)
+        proposal = np.eye(3)
+        proposal[:2, 2] = [.25, -.25]
+        models = []
+        for poison in (False, True):
+            reference = source.copy()
+            reference[labels == split.VALIDATION] += [.25, -.25]
+            if poison:
+                reference[labels == split.TEST] += [90, -70]
+            corr = Correspondences(source, reference, np.ones(len(source), np.float32), "fixed", "sparse")
+            def polish(a, am, b, bm, initial, model):
+                self.assertFalse(np.any(am & ~split.fit_mask()))
+                return proposal.copy(), {"attempted": True, "adopted": False}
+            with patch.object(REG, "_run_one", return_value=(corr, "")), \
+                    patch.object(REG, "_ecc_polish", side_effect=polish):
+                result = self.run_pair(fine=False, subpixel=True, segments=4)
+            self.assertTrue(result.metrics["accuracy"]["ecc"]["adopted"])
+            self.assertLess(result.metrics["accuracy"]["ecc"]["validation_rmse_px_after"], 1e-6)
+            models.append(result.transform)
+        self.assertEqual(models[0]["matrix"], models[1]["matrix"])
+        self.assertEqual(models[0]["segments"], models[1]["segments"])
+        self.assertGreater(result.metrics["accuracy"]["rmse_px"], 100.)
+
     def test_spatial_membership_does_not_depend_on_reference_or_confidence(self):
         split = E.SpatialSplit((1024, 512))
         rng = np.random.default_rng(2)

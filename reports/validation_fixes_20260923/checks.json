@@ -1,0 +1,21 @@
+{
+  "regressions": {
+    "passed": 12,
+    "failed": 0
+  },
+  "tool_suite": {
+    "passed": 35,
+    "failed": 0
+  },
+  "ohrc_dataset": {
+    "passed": 28,
+    "failed": 0
+  },
+  "frontend_build": "passed",
+  "illumination_cases": 120,
+  "illumination_execution_errors": 0,
+  "real_products": 4,
+  "exact_export_rmse_checks": 4,
+  "all_products_exported": true,
+  "application_commit": "cd5b97ee1a14703d000e91b96b6663500498bae4"
+}

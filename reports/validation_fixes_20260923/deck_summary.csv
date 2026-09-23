@@ -1,0 +1,5 @@
+pair,rmse_source_px,rmse_reference_px,rmse_working_px,rmse_m,coverage,extrapolated_fraction,status,subpixel,accuracy_statement
+OHRC → NAC,106.4569,25.5497,6.3874,25.55,0.1471,0.9118,warning,False,106.46 source px; reference sampling scale 4.17 source px
+TMC-2 → SELENE,9.8237,7.2717,1.212,53.834,0.2778,0.7963,warning,False,9.82 source px; reference sampling scale 1.35 source px
+IIRS 2025-07-29 → WAC,12.7748,10.8816,5.4408,1088.155,0.2346,0.8395,warning,False,12.77 source px; reference sampling scale 1.17 source px
+IIRS 2024-01-20 → WAC,23.4204,13.2864,6.6432,1328.637,0.1389,0.9028,warning,False,23.42 source px; reference sampling scale 1.76 source px

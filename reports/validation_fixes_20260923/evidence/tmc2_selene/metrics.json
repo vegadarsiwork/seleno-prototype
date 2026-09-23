@@ -1,0 +1,241 @@
+{
+ "status": "warning",
+ "reason": "80% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+ "notes": [
+  "One reference pixel spans 1.35 source pixels. This is a sampling scale, not an independently measured error bound."
+ ],
+ "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
+ "accuracy_statement": "9.82 source px; reference sampling scale 1.35 source px",
+ "job_id": "21c70b8d6c1e",
+ "generated_utc": "2026-09-23T12:32:54Z",
+ "runtime_s": 46.38,
+ "method_used": "dense-ncc",
+ "model": "affine",
+ "accuracy": {
+  "held_out_n": 479,
+  "held_out_rmse_px": 1.2119543789689955,
+  "held_out_median_px": 0.7435244417219551,
+  "held_out_p90_px": 1.9691456177276443,
+  "evaluation_file": "evaluation.json",
+  "matrix_sha256": "f884e992f4686ef4af203801327b92fdeb3fd18455ceacb9987f8c787b043daf",
+  "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
+  "transform_sha256": "388cb758b1c386add0b0b867ff17e7c8c3c8351f1fae698113006b4398bfbdc7",
+  "applied_model": {
+   "kind": "blended_segments",
+   "sampling": "inverse mapping; smoothstep between segment centres",
+   "segment_fallback": "global matrix",
+   "raster": "registered.tif"
+  },
+  "subpixel_method": "matcher",
+  "ecc": {
+   "attempted": false,
+   "adopted": false,
+   "note": "ECC disabled or too few validation points"
+  },
+  "rmse_px": 1.2119543789689955,
+  "rmse_reference_px": 7.2717,
+  "rmse_working_px": 1.212,
+  "rmse_source_px": 9.8237,
+  "rmse_m": 53.834,
+  "metres_per_pixel": 44.4189703480194,
+  "units": {
+   "reference_decimation": 6,
+   "metres_per_reference_px": 7.4031617246699,
+   "source_px_per_reference_px": 1.3509419205602007,
+   "metres_per_working_px": 44.4189703480194
+  },
+  "subpixel": false,
+  "subpixel_basis": "source pixels",
+  "subpixel_working_grid": false,
+  "reference_sampling_source_px": 1.3509419205602007,
+  "sampling_floor_basis": "nominal one-reference-pixel sampling; not an error lower bound",
+  "subpixel_floor_source_px": 1.351,
+  "subpixel_attainable": false
+ },
+ "fine_stage": {
+  "attempted": true,
+  "windows": 8,
+  "windows_used": 8,
+  "points": 976,
+  "native": true,
+  "note": null,
+  "method": "dense-ncc",
+  "probe": [
+   {
+    "method": "dense-ncc",
+    "candidates": 20,
+    "inliers": 12
+   }
+  ],
+  "placement": "8 windows tiling 2486 x 10235 reference px (2 x 5 grid)",
+  "adopted": true,
+  "inliers": 267
+ },
+ "matches": {
+  "candidates": 497,
+  "inliers": 267,
+  "inlier_ratio": 0.5372
+ },
+ "distribution": {
+  "grid": [
+   12,
+   12
+  ],
+  "coverage_fraction": 0.2778,
+  "dispersion": 0.1673,
+  "extrapolation_fraction": 0.7963,
+  "eligible_cells": 54,
+  "total_cells": 144,
+  "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+ },
+ "illumination": {
+  "delta_sun_azimuth_deg": null,
+  "source_sun_azimuth_deg": 69.556239,
+  "reference_sun_azimuth_deg": null,
+  "source_sun_incidence_deg": 39.064886,
+  "reference_sun_incidence_deg": null
+ },
+ "pair": {
+  "cross_correlation": -0.5114,
+  "anti_correlated": true,
+  "same_sensor": false,
+  "sensor_pair": "tmc2-selene_tc",
+  "scale_ratio": 0.7402,
+  "overlap_fraction": 0.3111
+ },
+ "frame": {
+  "target_shape": [
+   2048,
+   1503
+  ],
+  "reference_decimation": 6,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "reference_sample_offset": [
+   1.5,
+   0.5
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "source geometry lattice -> reference lon/lat",
+  "notes": [
+   "source reduced 9.0x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+  ],
+  "reference_window": [
+   0,
+   0,
+   12288,
+   9014
+  ],
+  "source_oversample": 8.984,
+  "source_taps": 1,
+  "source_coverage": 0.3111
+ },
+ "decomposition": {
+  "est_scale_x": 1.0133,
+  "est_scale_y": 0.9999,
+  "est_rotation_deg": -0.009,
+  "est_shear_det": 1.0132,
+  "est_translation_px": [
+   -8.84,
+   1.62
+  ],
+  "est_perspective": [
+   0.0,
+   0.0
+  ]
+ },
+ "attempts": [
+  {
+   "method": "dense-ncc",
+   "seconds": 1.29,
+   "candidates": 36,
+   "note": "",
+   "model": "affine",
+   "inliers": 30,
+   "inlier_ratio": 0.8333,
+   "verified": true,
+   "coverage": 0.3519,
+   "dispersion": 0.3185,
+   "score": 20.92
+  },
+  {
+   "method": "disk_lightglue",
+   "seconds": 6.68,
+   "candidates": 3,
+   "note": ""
+  },
+  {
+   "method": "sift",
+   "seconds": 1.41,
+   "candidates": 3,
+   "note": ""
+  },
+  {
+   "method": "akaze",
+   "seconds": 0.91,
+   "candidates": 12,
+   "note": "",
+   "model": "similarity",
+   "inliers": 2,
+   "inlier_ratio": 0.1667,
+   "verified": true
+  },
+  {
+   "method": "orb",
+   "seconds": 0.46,
+   "candidates": 7,
+   "note": "",
+   "model": "similarity",
+   "inliers": 2,
+   "inlier_ratio": 0.2857,
+   "verified": true
+  }
+ ],
+ "source": {
+  "path": "ch2_tmc_ncn_20260813T0627378557_d_img_d18.img",
+  "reader": "pds4",
+  "profile": "tmc2",
+  "instrument": "TMC-2",
+  "shape": [
+   148108,
+   4000
+  ],
+  "gsd_m": 5.48,
+  "bit_depth": 16,
+  "georeferenced": false,
+  "crs": null,
+  "has_lonlat_lattice": true,
+  "acquired_utc": "2026-08-13T06:27:37.855700+00:00",
+  "sun_azimuth_deg": 69.556239,
+  "sun_incidence_deg": 39.064886,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 1.0,
+  "degraded": []
+ },
+ "reference": {
+  "path": "TCO_MAPe04_S15E141S18E144SC.img",
+  "reader": "pds3",
+  "profile": "selene_tc",
+  "instrument": "SELENE-TC",
+  "shape": [
+   12288,
+   12288
+  ],
+  "gsd_m": 7.4031617246699,
+  "bit_depth": 16,
+  "georeferenced": true,
+  "crs": "GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Longitude\",EAST],AXIS[\"Latitude\",NORTH]]",
+  "has_lonlat_lattice": false,
+  "acquired_utc": "UNK",
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 1.0,
+  "degraded": []
+ },
+ "degraded": [
+  "source reduced 9.0x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+ ]
+}

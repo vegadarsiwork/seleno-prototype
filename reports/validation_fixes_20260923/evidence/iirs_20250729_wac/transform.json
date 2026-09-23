@@ -1,0 +1,96 @@
+{
+ "model": "similarity",
+ "matrix": [
+  [
+   0.9882978239931208,
+   0.00032258136059120534,
+   -2.827435013871691
+  ],
+  [
+   -0.0037137819274732126,
+   0.9976672576425059,
+   9.4764613045898
+  ],
+  [
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "matrix_reference_px": [
+  [
+   0.9882978239931208,
+   0.00032258136059120534,
+   981.9859749880852
+  ],
+  [
+   -0.0037137819274732126,
+   0.9976672576425059,
+   375.75829803742454
+  ],
+  [
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "units": {
+  "reference_decimation": 2,
+  "metres_per_reference_px": 100.0,
+  "source_px_per_reference_px": 1.173984503404555,
+  "metres_per_working_px": 200.0
+ },
+ "decomposition": {
+  "est_scale_x": 0.9883,
+  "est_scale_y": 0.9977,
+  "est_rotation_deg": -0.215,
+  "est_shear_det": 0.986,
+  "est_translation_px": [
+   -2.83,
+   9.48
+  ],
+  "est_perspective": [
+   0.0,
+   0.0
+  ]
+ },
+ "frame": {
+  "target_shape": [
+   5327,
+   236
+  ],
+  "reference_decimation": 2,
+  "reference_origin": [
+   17810,
+   84889
+  ],
+  "reference_sample_offset": [
+   0.0,
+   0.0
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "source geometry lattice -> reference projected plane",
+  "notes": [
+   "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
+  ],
+  "reference_window": [
+   17810,
+   84889,
+   28463,
+   85360
+  ],
+  "source_oversample": 2.451,
+  "source_taps": 2,
+  "source_coverage": 0.4755
+ },
+ "method": "dense-ncc",
+ "pixel_convention": "zero-based pixel centres; world = GDAL affine * (x+0.5, y+0.5)",
+ "coordinates": "`matrix` is in working-grid centre coordinates; `matrix_reference_px` is the same transform in full-resolution reference pixels. Both are residual corrections after metadata prealignment. For segmented exports use the complete blended inverse field, not the global matrix alone.",
+ "segments": null,
+ "application": {
+  "kind": "global",
+  "sampling": "inverse matrix",
+  "segment_fallback": "global matrix",
+  "raster": "registered.tif"
+ }
+}

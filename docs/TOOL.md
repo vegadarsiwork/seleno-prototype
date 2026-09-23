@@ -27,7 +27,8 @@ that leaves no artifact is indistinguishable from a crash, so there is always a
 |---|---|
 | `matches.csv` | `src_x, src_y, ref_x, ref_y, confidence, inlier` — original source pixels, full-resolution reference pixels |
 | `registered.tif` | the source resampled onto the reference grid, georeferenced when the reference is, no-data preserved as NaN |
-| `transform.json` | model, the working-grid matrix, the same transform in **full-resolution reference pixels** (`matrix_reference_px`, the one to apply to the product), decomposition, per-segment parameters, unit conversions |
+| `transform.json` | model, the working-grid matrix, the same transform in **full-resolution reference pixels** (`matrix_reference_px`, the residual correction after prealignment), decomposition, per-segment parameters, unit conversions |
+| `evaluation.json` | sealed test coordinates, split, exact matrix and complete-model hashes for recomputation |
 | `metrics.json` | accuracy, match counts, distribution, illumination, pair character, every method tried, status and reason |
 | `overlay.png` | source and reference with tie lines, over a checkerboard of reference and registered |
 | `report.md` | the same numbers as prose |
@@ -90,7 +91,8 @@ a separate validation fold. The test fold is scored once, at the end, without
 model-based filtering. All retained test correspondences count, including wrong
 matches. This is correspondence error, not independently surveyed ground truth.
 `evaluation.json` stores the exact test coordinates, partition and matrix hash.
-Scoring reloads `transform.json`; the raster warp uses the same matrix bytes.
+Scoring reloads `transform.json`; the raster warp uses the same matrix bytes
+and, when requested, the same smoothly blended segment field.
 
 **Four units, always.** The solver runs on a working grid that exists only
 inside the run and is usually much coarser than either input, so a residual
@@ -121,7 +123,8 @@ Two things make it work, and it produces nothing without either:
    claim on a different grid — see `reports/RESOLUTION_RANKING.md`. The stage
    probes the plan once and records the winner in `fine_stage.method`.
 
-Measured: OHRC→NAC **6.27 m → 1.45 m**, TMC-2→SELENE **59.4 m → 12.52 m**.
+Pre-audit accuracy figures are superseded. Use only the corrected
+[real-product summary](../reports/validation_fixes_20260923/deck_summary.md).
 
 **Sub-pixel.** The flag is on **source** pixels, which is what the problem
 statement asks for. Within the fine stage two refinements run:
@@ -137,17 +140,12 @@ statement asks for. Within the fine stage two refinements run:
    the separate validation RMSE**; the guard against a runaway warp is proportional to the
    frame, not a fixed pixel count.
 
-**The floor.** Nothing can localise a source pixel against a reference to better
-than about one reference pixel. When the reference is coarser than the source,
-sub-source-pixel is unreachable *by any method*, and the tool says so:
+**Reference sampling.** One reference pixel can span several source pixels.
+`accuracy_statement` reports that scale next to the measured source-pixel RMSE.
+It is contextual information, not an accuracy gate or a mathematically established
+lower bound. A verified, adequately covered run can pass with `subpixel: false`.
+The legacy floor fields represent a nominal one-reference-pixel sampling assumption.
 
-```json
-"subpixel": false, "subpixel_basis": "source pixels",
-"subpixel_floor_source_px": 1.351, "subpixel_attainable": false
-```
-
-That statement goes in `notes`, not in `reason` — a limit of the reference is
-not a defect in the registration and does not downgrade the run's status.
 
 **Metres.** `rmse_m` is `null` unless the reference genuinely carries a scale.
 A bare PNG has an identity geotransform; treating that as 1 m pixels would turn
@@ -348,7 +346,7 @@ results.
 
 ## 10. Tests
 
-`python tests/test_tool.py` — 26 tests, run in CI by
+`python tests/test_tool.py` — 35 tests, run in CI by
 `.github/workflows/tests.yml`. It builds its own rasters, so it needs no archive
 data:
 

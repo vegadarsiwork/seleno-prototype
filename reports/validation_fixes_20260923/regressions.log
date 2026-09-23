@@ -1,0 +1,18 @@
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+..../home/paardhu/Projects/seleno-prototype/backend/seleno/tool/register.py:1481: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+  tr = (t * Affine.translation(ocol + dx + 0.5 - step / 2,
+..../home/paardhu/Projects/seleno-prototype/tests/test_validation_fixes.py:239: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+  expected = transform * Affine.translation(11, 29) * Affine.scale(6)
+/home/paardhu/Projects/seleno-prototype/tests/test_validation_fixes.py:241: PendingDeprecationWarning: Use `@` matmul instead of `*` mul operator for matrix multiplication
+  np.testing.assert_allclose(ds.transform * (.5, .5), transform * (14, 32), atol=1e-12)
+....
+----------------------------------------------------------------------
+Ran 12 tests in 5.794s
+
+OK
+Loaded LightGlue model

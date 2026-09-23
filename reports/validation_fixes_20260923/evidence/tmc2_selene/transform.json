@@ -1,0 +1,217 @@
+{
+ "model": "affine",
+ "matrix": [
+  [
+   1.0132650640326546,
+   0.0011561754899096885,
+   -8.83983955247835
+  ],
+  [
+   -0.0001569742405051748,
+   0.9999475364165996,
+   1.6198290993860163
+  ],
+  [
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "matrix_reference_px": [
+  [
+   1.0132650640326546,
+   0.0011561754899096885,
+   -53.04740411012129
+  ],
+  [
+   -0.0001569742405051748,
+   0.9999475364165995,
+   9.719131778811452
+  ],
+  [
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "units": {
+  "reference_decimation": 6,
+  "metres_per_reference_px": 7.4031617246699,
+  "source_px_per_reference_px": 1.3509419205602007,
+  "metres_per_working_px": 44.4189703480194
+ },
+ "decomposition": {
+  "est_scale_x": 1.0133,
+  "est_scale_y": 0.9999,
+  "est_rotation_deg": -0.009,
+  "est_shear_det": 1.0132,
+  "est_translation_px": [
+   -8.84,
+   1.62
+  ],
+  "est_perspective": [
+   0.0,
+   0.0
+  ]
+ },
+ "frame": {
+  "target_shape": [
+   2048,
+   1503
+  ],
+  "reference_decimation": 6,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "reference_sample_offset": [
+   1.5,
+   0.5
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "source geometry lattice -> reference lon/lat",
+  "notes": [
+   "source reduced 9.0x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+  ],
+  "reference_window": [
+   0,
+   0,
+   12288,
+   9014
+  ],
+  "source_oversample": 8.984,
+  "source_taps": 1,
+  "source_coverage": 0.3111
+ },
+ "method": "dense-ncc",
+ "pixel_convention": "zero-based pixel centres; world = GDAL affine * (x+0.5, y+0.5)",
+ "coordinates": "`matrix` is in working-grid centre coordinates; `matrix_reference_px` is the same transform in full-resolution reference pixels. Both are residual corrections after metadata prealignment. For segmented exports use the complete blended inverse field, not the global matrix alone.",
+ "segments": [
+  {
+   "segment": 0,
+   "axis": "row",
+   "from": 0.0,
+   "to": 341.3333333333333,
+   "n_inliers": 0,
+   "fallback": "global matrix: insufficient or singular local fit"
+  },
+  {
+   "segment": 1,
+   "axis": "row",
+   "from": 341.3333333333333,
+   "to": 682.6666666666666,
+   "n_inliers": 0,
+   "fallback": "global matrix: insufficient or singular local fit"
+  },
+  {
+   "segment": 2,
+   "axis": "row",
+   "from": 682.6666666666666,
+   "to": 1024.0,
+   "n_inliers": 32,
+   "matrix": [
+    [
+     1.020532105643085,
+     -0.0010500094831409606,
+     -10.631062581360643
+    ],
+    [
+     0.00030823719262891667,
+     1.0005064023398014,
+     0.8295238573018712
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "fit_rmse_px": 0.2497,
+   "selection_basis": "fit fold only"
+  },
+  {
+   "segment": 3,
+   "axis": "row",
+   "from": 1024.0,
+   "to": 1365.3333333333333,
+   "n_inliers": 117,
+   "matrix": [
+    [
+     1.0115680103696425,
+     0.0021546731484074614,
+     -8.975697917891893
+    ],
+    [
+     -0.0006558387978772079,
+     1.0003414700899478,
+     1.4789628952218885
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "fit_rmse_px": 0.1863,
+   "selection_basis": "fit fold only"
+  },
+  {
+   "segment": 4,
+   "axis": "row",
+   "from": 1365.3333333333333,
+   "to": 1706.6666666666665,
+   "n_inliers": 111,
+   "matrix": [
+    [
+     1.0158055909194768,
+     -0.00041712979510510255,
+     -7.95797024648342
+    ],
+    [
+     -1.725211197992768e-05,
+     0.9994154841034824,
+     2.3391491648592178
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "fit_rmse_px": 0.2219,
+   "selection_basis": "fit fold only"
+  },
+  {
+   "segment": 5,
+   "axis": "row",
+   "from": 1706.6666666666665,
+   "to": 2048.0,
+   "n_inliers": 7,
+   "matrix": [
+    [
+     1.0151124107462244,
+     0.0005175162313782287,
+     -9.221513375659926
+    ],
+    [
+     0.0008503556552215941,
+     0.9982977209893955,
+     3.818484980391719
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ],
+   "fit_rmse_px": 0.1579,
+   "selection_basis": "fit fold only"
+  }
+ ],
+ "application": {
+  "kind": "blended_segments",
+  "sampling": "inverse mapping; smoothstep between segment centres",
+  "segment_fallback": "global matrix",
+  "raster": "registered.tif"
+ }
+}

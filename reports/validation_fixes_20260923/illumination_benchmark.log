@@ -1,0 +1,25 @@
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+loading 6 illumination bins of tile P892S2250 ...
+  32.01 m/px, (1421, 1421)
+  2 patches of 512 px where every bin has >=45% coverage
+Loaded LightGlue model
+  52/120 ...
+  100/120 ...
+
+matcher             runs  solved     rate   med err   med inl
+--------------------------------------------------------------
+sift                  30       0     0.0%      None         4
+akaze                 30       0     0.0%      None         4
+orb                   30       0     0.0%      None         4
+disk_lightglue        30       3    10.0%       1.9         7
+
+solve rate by Sun-azimuth difference
+matcher                  0-45       45-90      90-135     135-180
+----------------------------------------------------------------
+sift                        -        0/12        0/12         0/6
+akaze                       -        0/12        0/12         0/6
+orb                         -        0/12        0/12         0/6
+disk_lightglue              -        3/12        0/12         0/6
+
+wrote results/illumination_reconciled_20260923

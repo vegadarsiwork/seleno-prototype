@@ -1,0 +1,257 @@
+{
+ "status": "warning",
+ "reason": "matches cover 15% of the reference grid; the transform is extrapolated over the rest; 91% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+ "notes": [
+  "One reference pixel spans 4.17 source pixels. This is a sampling scale, not an independently measured error bound."
+ ],
+ "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
+ "accuracy_statement": "106.46 source px; reference sampling scale 4.17 source px",
+ "job_id": "19cd4fc48fd1",
+ "generated_utc": "2026-09-23T12:32:07Z",
+ "runtime_s": 32.28,
+ "method_used": "akaze",
+ "model": "affine",
+ "accuracy": {
+  "held_out_n": 6220,
+  "held_out_rmse_px": 6.387415805387857,
+  "held_out_median_px": 1.6430079803875244,
+  "held_out_p90_px": 3.3238769876916003,
+  "evaluation_file": "evaluation.json",
+  "matrix_sha256": "841f605e42bf0430e67d3d5ecdc468ec47a916f9b83e3c90aff60eedb2e95a57",
+  "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
+  "transform_sha256": "271b4a53def768e3805c940031dc4af7da910ccbcbe69aa5b022cd767f434a42",
+  "applied_model": {
+   "kind": "blended_segments",
+   "sampling": "inverse mapping; smoothstep between segment centres",
+   "segment_fallback": "global matrix",
+   "raster": "registered.tif"
+  },
+  "subpixel_method": "matcher",
+  "ecc": {
+   "attempted": true,
+   "converged": true,
+   "adopted": false,
+   "correlation": 0.861961,
+   "max_corner_shift_px": 72.1841,
+   "note": "ECC moved the frame corners by 72.18 px, beyond the 11.13 px (0.5% of the frame diagonal) this stage is allowed to change a verified model; rejected",
+   "max_corner_shift_allowed_px": 11.13
+  },
+  "rmse_px": 6.387415805387857,
+  "rmse_reference_px": 25.5497,
+  "rmse_working_px": 6.3874,
+  "rmse_source_px": 106.4569,
+  "rmse_m": 25.55,
+  "metres_per_pixel": 4.0,
+  "units": {
+   "reference_decimation": 4,
+   "metres_per_reference_px": 1.0,
+   "source_px_per_reference_px": 4.166666666666667,
+   "metres_per_working_px": 4.0
+  },
+  "subpixel": false,
+  "subpixel_basis": "source pixels",
+  "subpixel_working_grid": false,
+  "reference_sampling_source_px": 4.166666666666667,
+  "sampling_floor_basis": "nominal one-reference-pixel sampling; not an error lower bound",
+  "subpixel_floor_source_px": 4.167,
+  "subpixel_attainable": false
+ },
+ "fine_stage": {
+  "attempted": true,
+  "windows": 8,
+  "windows_used": 8,
+  "points": 22667,
+  "native": true,
+  "note": null,
+  "method": "akaze",
+  "probe": [
+   {
+    "method": "akaze",
+    "candidates": 564,
+    "inliers": 472
+   }
+  ],
+  "placement": "8 windows tiling 2955 x 1355 reference px (4 x 2 grid)",
+  "adopted": true,
+  "inliers": 6104
+ },
+ "matches": {
+  "candidates": 15905,
+  "inliers": 6104,
+  "inlier_ratio": 0.3838
+ },
+ "distribution": {
+  "grid": [
+   12,
+   12
+  ],
+  "coverage_fraction": 0.1471,
+  "dispersion": 0.1193,
+  "extrapolation_fraction": 0.9118,
+  "eligible_cells": 68,
+  "total_cells": 144,
+  "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+ },
+ "illumination": {
+  "delta_sun_azimuth_deg": null,
+  "source_sun_azimuth_deg": null,
+  "reference_sun_azimuth_deg": null,
+  "source_sun_incidence_deg": null,
+  "reference_sun_incidence_deg": null
+ },
+ "pair": {
+  "cross_correlation": -0.5813,
+  "anti_correlated": true,
+  "same_sensor": false,
+  "sensor_pair": "ohrc-nac",
+  "scale_ratio": 0.24,
+  "overlap_fraction": 0.3648
+ },
+ "frame": {
+  "target_shape": [
+   1574,
+   1574
+  ],
+  "reference_decimation": 4,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "reference_sample_offset": [
+   1.5,
+   1.5
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "source geometry lattice -> reference projected plane",
+  "notes": [
+   "source reduced 10.2x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+  ],
+  "source_oversample": 10.215,
+  "source_taps": 1,
+  "source_coverage": 0.5145
+ },
+ "decomposition": {
+  "est_scale_x": 0.9925,
+  "est_scale_y": 1.1014,
+  "est_rotation_deg": -0.611,
+  "est_shear_det": 1.093,
+  "est_translation_px": [
+   -626.87,
+   947.59
+  ],
+  "est_perspective": [
+   0.0,
+   0.0
+  ]
+ },
+ "attempts": [
+  {
+   "method": "dense-ncc",
+   "seconds": 1.19,
+   "candidates": 1,
+   "note": ""
+  },
+  {
+   "method": "disk_lightglue",
+   "seconds": 8.42,
+   "candidates": 339,
+   "note": "",
+   "model": "affine",
+   "inliers": 245,
+   "inlier_ratio": 0.7227,
+   "verified": true,
+   "coverage": 0.1618,
+   "dispersion": 0.1458,
+   "score": 104.7
+  },
+  {
+   "method": "sift",
+   "seconds": 1.58,
+   "candidates": 328,
+   "note": "",
+   "model": "affine",
+   "inliers": 218,
+   "inlier_ratio": 0.6646,
+   "verified": true,
+   "coverage": 0.1471,
+   "dispersion": 0.1695,
+   "score": 94.43
+  },
+  {
+   "method": "akaze",
+   "seconds": 0.69,
+   "candidates": 485,
+   "note": "",
+   "model": "affine",
+   "inliers": 338,
+   "inlier_ratio": 0.6969,
+   "verified": true,
+   "coverage": 0.1471,
+   "dispersion": 0.1701,
+   "score": 146.56
+  },
+  {
+   "method": "orb",
+   "seconds": 0.45,
+   "candidates": 348,
+   "note": "",
+   "model": "affine",
+   "inliers": 241,
+   "inlier_ratio": 0.6925,
+   "verified": true,
+   "coverage": 0.1029,
+   "dispersion": 0.1694,
+   "score": 97.27
+  }
+ ],
+ "source": {
+  "path": "ch2_ohr_ncp_20241115T1326321339_d_img_d18.img",
+  "reader": "pds4",
+  "profile": "ohrc",
+  "instrument": "OHRC",
+  "shape": [
+   101074,
+   12000
+  ],
+  "gsd_m": 0.24,
+  "bit_depth": 8,
+  "georeferenced": false,
+  "crs": null,
+  "has_lonlat_lattice": true,
+  "acquired_utc": "2024-11-15T13:26:32.133900+00:00",
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 0.9995,
+  "degraded": [
+   "label Sun angles are confounded by 14.6 deg of roll; treated as untrusted",
+   "reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error"
+  ]
+ },
+ "reference": {
+  "path": "NAC_CM355_P892S2250_pole_6km.tif",
+  "reader": "gdal",
+  "profile": "nac",
+  "instrument": "NAC",
+  "shape": [
+   6296,
+   6296
+  ],
+  "gsd_m": 1.0,
+  "bit_depth": 8,
+  "georeferenced": true,
+  "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+  "has_lonlat_lattice": false,
+  "acquired_utc": null,
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 0.8136,
+  "degraded": []
+ },
+ "degraded": [
+  "source: label Sun angles are confounded by 14.6 deg of roll; treated as untrusted",
+  "source: reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error",
+  "source reduced 10.2x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+ ]
+}
