@@ -258,7 +258,7 @@ def _job_dir(jid: str) -> str:
     return d
 
 
-ARTIFACTS = ("metrics.json", "transform.json", "matches.csv", "report.md",
+ARTIFACTS = ("evaluation.json", "metrics.json", "transform.json", "matches.csv", "report.md",
              "preview.json", "overlay.png", "source.png", "reference.png",
              "registered.png", "registered.tif")
 

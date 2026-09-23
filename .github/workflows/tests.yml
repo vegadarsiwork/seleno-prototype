@@ -45,6 +45,9 @@ jobs:
       - name: Adversarial registration tests
         run: python tests/test_tool.py
 
+      - name: Audit regression tests
+        run: python tests/test_validation_fixes.py
+
       - name: Archive dataset tests
         # Skips cleanly when SELENO_OHRC_ROOT is unset, which it is on CI -
         # the Chandrayaan-2 products are far too large to ship to a runner.

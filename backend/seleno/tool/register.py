@@ -23,10 +23,10 @@ carries `status: "failed"` and one of `unreadable_input`, `no_overlap`,
 
 Accuracy reporting
 ------------------
-RMSE is computed on **held-out** correspondences: the inlier set is split, the
-transform is fitted on one part and the error measured on the other. Reporting
-the residual of the points a model was fitted to measures self-consistency, not
-accuracy, and this project has a written record of that distinction mattering.
+A spatial split is frozen before candidate selection. Only fit points influence
+verification, method/model selection and fine-window placement. ECC adoption uses
+a separate validation fold. The test fold is scored once, after serialization,
+against the exact exported transform; it is never filtered by that transform.
 """
 from __future__ import annotations
 
@@ -44,6 +44,7 @@ import numpy as np
 from .. import spatial, verify as V
 from . import locate as LOC
 from . import methods as M
+from . import evaluation as E
 from .profiles import Profiles
 from .scene import Scene, UnreadableInput, load, normalised
 
@@ -743,9 +744,13 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     A = normalised(Scene(path=S.path, array=A_raw, valid=Am, reader=S.reader), sp)
     B = normalised(Scene(path=R.path, array=B_raw, valid=Bm, reader=R.reader), rp)
 
+    split = E.SpatialSplit(B.shape, holdout, seed)
+    fit_pixels = split.fit_mask()
+
     # ---- 3. pair character and candidate plan ------------------------------
     gsd_ratio = (S.gsd_m / R.gsd_m) if (S.gsd_m and R.gsd_m) else None
-    character = M.pair_character(A, Am, B, Bm, S.profile, R.profile, gsd_ratio)
+    character = M.pair_character(A, Am & fit_pixels, B, Bm & fit_pixels, S.profile, R.profile, gsd_ratio)
+    character["overlap_fraction"] = round(float(both.mean()), 4)
     from .. import matchers as _mt
     available = {k: v["available"] for k, v in _mt.MATCHERS.items()}
     plan = M.candidate_plan(character, available)
@@ -763,6 +768,8 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     for name in plan:
         t0 = time.time()
         corr, note = _run_one(name, A, Am, B, Bm, max_shift, grid)
+        if corr is not None:
+            corr, validation, sealed_test = E.partition(corr, split)
         rec = {"method": name, "seconds": round(time.time() - t0, 2),
                "candidates": 0 if corr is None else len(corr), "note": note}
         if corr is not None and len(corr) >= 4:
@@ -780,7 +787,7 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                             "score": round(float(score), 2)})
                 if best is None or score > best["score"]:
                     best = {"name": name, "corr": corr, "vr": vr, "model": mt,
-                            "score": float(score)}
+                            "score": float(score), "validation": validation, "test": sealed_test}
         attempts.append(rec)
         log("  %-16s %s" % (name, json.dumps({k: v for k, v in rec.items()
                                               if k != "note" or v})))
@@ -820,6 +827,7 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     # than either input's own. Re-measure at native resolution before believing
     # any number.
     corr, vr = best["corr"], best["vr"]
+    validation, sealed_test = best["validation"], best["test"]
     step0 = int(frame.get("reference_decimation", 1) or 1)
     orow0, ocol0 = frame.get("reference_origin", [0, 0])
     fine_info = {"attempted": False}
@@ -828,7 +836,7 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
         fine_plan = [best["name"]] + [p for p in plan if p != best["name"]]
         fcorr, fine_info = _fine_stage(S, R, corr, vr, frame, fine_plan, max_side,
                                        grid, log, cache, Hcoarse=Hm,
-                                       tiles=fine_tiles)
+                                       tiles=fine_tiles, split=split)
         if fcorr is not None:
             # Back onto the working grid, where every downstream stage already
             # lives. The positions are now measured at native resolution, so
@@ -837,6 +845,10 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                                      (fcorr.src[:, 1] - orow0) / step0]).astype(np.float32)
             w_ref = np.column_stack([(fcorr.ref[:, 0] - ocol0) / step0,
                                      (fcorr.ref[:, 1] - orow0) / step0]).astype(np.float32)
+            whole_fine = M.Correspondences(w_src, w_ref, fcorr.confidence,
+                                          fcorr.method, fcorr.kind, dict(fcorr.detail))
+            fit_fine, val_fine, test_fine = E.partition(whole_fine, split)
+            w_src, w_ref = fit_fine.src, fit_fine.ref
             fvr = V.verify(w_src, w_ref, model_type=best["model"], threshold=3.0 / step0)
 
             # Verifying is not enough to be adopted: the fine set must also not
@@ -854,14 +866,12 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             fine_gates = _gates(fvr, w_ref) if verified else {}
             regressed = [k for k in fine_gates if k not in _gates(vr, corr.ref)]
             if verified and not regressed:
-                corr = M.Correspondences(src=w_src, ref=w_ref,
-                                         confidence=fcorr.confidence,
-                                         method=fcorr.method, kind=fcorr.kind,
-                                         detail=dict(fcorr.detail))
+                corr = fit_fine
+                validation, sealed_test = val_fine, test_fine
                 vr = fvr
                 Hm = fvr.model
                 d = V.decompose(Hm)
-                per_point_back = (fcorr.detail["back_x"], fcorr.detail["back_y"])
+                per_point_back = (corr.detail["back_x"], corr.detail["back_y"])
                 fine_info["adopted"] = True
                 fine_info["inliers"] = int(fvr.n_inliers)
                 log("fine      : %d points from %d native windows, %d verified inliers"
@@ -881,78 +891,49 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             log("fine      : not used (%s)" % fine_info.get("note"))
     fine_info.setdefault("adopted", False)
 
-    # ---- 6. held-out accuracy ---------------------------------------------
-    idx = np.nonzero(vr.inlier_mask)[0]
-    rng = np.random.default_rng(seed)
-    perm = rng.permutation(len(idx))
-    n_hold = int(round(holdout * len(idx)))
-    hold = idx[perm[:n_hold]]
-    fit = idx[perm[n_hold:]]
-    acc = {}
-    Hf = None
-    if len(fit) >= V._min_points(best["model"]) and len(hold) >= 3:
-        from .. import register as _rg
-        Hf = _rg.refit(corr.src[fit], corr.ref[fit], best["model"])
-        if Hf is not None:
-            res = V.transfer_error(Hf, corr.src[hold].astype(np.float64),
-                                   corr.ref[hold].astype(np.float64))
-            acc = {"held_out_n": int(len(hold)),
-                   "held_out_rmse_px": round(float(np.sqrt((res ** 2).mean())), 4),
-                   "held_out_median_px": round(float(np.median(res)), 4),
-                   "held_out_p90_px": round(float(np.percentile(res, 90)), 4)}
-    else:
-        degraded.append("too few inliers to hold points out; RMSE is fit-set "
-                        "self-consistency, not accuracy")
-        res = vr.residuals[vr.inlier_mask]
-        acc = {"held_out_n": 0,
-               "fit_rmse_px": round(float(np.sqrt((res ** 2).mean())), 4)}
-
-    # ---- 6b. sub-pixel polish ----------------------------------------------
-    # Warm-started from the FIT-SUBSET model, not the all-inlier one, so the
-    # held-out points remain points the delivered transform was never fitted to
-    # and the improvement below is a real measurement rather than a restatement
-    # of the fit.
-    ecc = {"attempted": False}
-    ecc_base = Hf if Hf is not None else Hm
-    if subpixel and ecc_base is not None:
-        Hp, ecc = _ecc_polish(A, Am, B, Bm, ecc_base, best["model"])
+    # ---- 6. ECC: optimize only fit pixels, adopt only on validation ---------
+    # The test fold remains sealed; no metric from it is used for any decision.
+    ecc = {"attempted": False, "adopted": False}
+    if subpixel and len(validation) >= 3:
+        # Erode the source mask to exclude gradient/filter support across folds.
+        fit_mask = cv2.erode((Am & fit_pixels).astype(np.uint8), np.ones((9, 9), np.uint8)).astype(bool)
+        ref_mask = cv2.warpPerspective(fit_mask.astype(np.uint8), Hm,
+                                      (B.shape[1], B.shape[0]), flags=cv2.INTER_NEAREST).astype(bool) & Bm
+        Hp, ecc = _ecc_polish(A, fit_mask, B, ref_mask, Hm, best["model"])
         if Hp is not None:
-            if len(hold) >= 3 and "held_out_rmse_px" in acc:
-                resp = V.transfer_error(Hp, corr.src[hold].astype(np.float64),
-                                        corr.ref[hold].astype(np.float64))
-                r_new = float(np.sqrt((resp ** 2).mean()))
-                if r_new < acc["held_out_rmse_px"]:
-                    ecc["adopted"] = True
-                    ecc["rmse_px_before"] = acc["held_out_rmse_px"]
-                    Hm = Hp
-                    d = V.decompose(Hm)          # the warp changed; so did these
-                    acc.update(held_out_rmse_px=round(r_new, 4),
-                               held_out_median_px=round(float(np.median(resp)), 4),
-                               held_out_p90_px=round(float(np.percentile(resp, 90)), 4))
-                    log("subpixel : ECC polish adopted, held-out RMSE %.4f -> %.4f px"
-                        % (ecc["rmse_px_before"], r_new))
-                else:
-                    ecc["note"] = ("ECC converged but did not improve held-out RMSE "
-                                   "(%.4f vs %.4f px); the unpolished model was kept"
-                                   % (r_new, acc["held_out_rmse_px"]))
+            before = V.transfer_error(Hm, validation.src.astype(np.float64), validation.ref.astype(np.float64))
+            after = V.transfer_error(Hp, validation.src.astype(np.float64), validation.ref.astype(np.float64))
+            old, new = float(np.sqrt(np.mean(before ** 2))), float(np.sqrt(np.mean(after ** 2)))
+            ecc.update(validation_n=len(validation), validation_rmse_px_before=old,
+                       validation_rmse_px_after=new, adoption_basis="validation fold, never test")
+            if new < old:
+                Hm = Hp
+                ecc["adopted"] = True
+                d = V.decompose(Hm)
+                log("subpixel : ECC adopted on validation %.4f -> %.4f px" % (old, new))
             else:
-                # Nothing independent to score it against, so leave the verified
-                # model alone rather than adopt an unmeasured change.
-                ecc["note"] = ("no held-out points to score the polish against; "
-                               "the unpolished model was kept")
-    acc["subpixel_method"] = ("parabolic+ecc" if ecc.get("adopted") else "parabolic")
-    acc["ecc"] = ecc
+                ecc["note"] = "ECC did not improve the validation fold; fit model retained"
+    else:
+        ecc["note"] = "ECC disabled or too few validation points"
 
     # ---- 7. write artifacts ------------------------------------------------
     os.makedirs(job_dir, exist_ok=True)
     m_per_px = _metres_per_pixel(R, frame)
-    warped, wvalid = _warp(A_raw, Am, Hm, B_raw.shape, best["model"])
     seg = _segment_fit(corr, vr, best["model"], B.shape, segments)
 
     conv = _unit_conversions(S, R, frame)
     _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back)
-    _write_registered(job_dir, warped, wvalid, R, frame)
     tj = _write_transform(job_dir, Hm, best["model"], d, seg, frame, best["name"], conv)
+    # JSON round-trip is the single model used by both raster export and scoring.
+    with open(os.path.join(job_dir, "transform.json")) as fh:
+        tj = json.load(fh)
+    Hm = np.asarray(tj["matrix"], np.float64)
+    warped, wvalid = _warp(A_raw, Am, Hm, B_raw.shape, best["model"])
+    _write_registered(job_dir, warped, wvalid, R, frame)
+    acc = E.score_export(job_dir, sealed_test, split)
+    acc.update(subpixel_method="parabolic+ecc" if ecc.get("adopted") else "matcher", ecc=ecc)
+    if acc["held_out_rmse_px"] is None:
+        degraded.append("fewer than three held-out matches; accuracy is unknown, no fit-set fallback")
     ov_cov = spatial.cell_coverage(corr.ref[vr.inlier_mask], B.shape, grid,
                                    eligible=eligible)
     ov_disp = spatial.dispersion(corr.ref[vr.inlier_mask], B.shape)
@@ -1021,7 +1002,7 @@ def _rmse_units(rmse_ref_px, conv: dict) -> dict:
 
 
 def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
-                grid, log, cache, Hcoarse=None, tiles: int = 0):
+                grid, log, cache, Hcoarse=None, tiles: int = 0, split=None):
     """Re-measure the surviving tie points at NATIVE reference resolution.
 
     The coarse solve runs on a decimated working grid, so the residual it can
@@ -1160,10 +1141,19 @@ def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
                     ci, _ = _run_one(name, A, Am, B, Bm, max_shift, grid)
                 except Exception:                                     # noqa: BLE001
                     ci = None
-                n_i = 0 if ci is None else len(ci)
+                probe = ci
+                if ci is not None and split is not None:
+                    fr_r, fr_c = fr["reference_origin"]
+                    full = ci.src.astype(np.float64) * fr["reference_decimation"] + [fr_c, fr_r]
+                    if prewarp is not None:
+                        ph = np.column_stack([full, np.ones(len(full))]) @ prewarp.T
+                        full = ph[:, :2] / ph[:, 2:]
+                    working = (full - [ocol, orow]) / step
+                    probe = E.subset(ci, split.labels(working) == split.FIT)
+                n_i = 0 if probe is None else len(probe)
                 vi = None
                 if n_i >= 4:
-                    vi = V.verify(ci.src, ci.ref, model_type="affine", threshold=3.0)
+                    vi = V.verify(probe.src, probe.ref, model_type="affine", threshold=3.0)
                 info["probe"].append({"method": name, "candidates": n_i,
                                       "inliers": (0 if vi is None else int(vi.n_inliers))})
                 if vi is not None and vi.n_inliers >= 8:
@@ -1305,7 +1295,7 @@ def _ecc_polish(A, Am, B, Bm, H0, model, iters=60, eps=1e-6,
     refuses only warps that have clearly run away from the verified model. That
     guard is proportional to the frame, not a fixed pixel count: a fixed budget
     is strict on a large working grid and loose on a small one, which is the
-    wrong way round. The decisive test is the held-out RMSE the caller applies;
+    wrong way round. The decisive test is the separate validation RMSE the caller applies;
     this is only a rail against divergence.
     """
     motion = _ECC_MOTION.get(model)

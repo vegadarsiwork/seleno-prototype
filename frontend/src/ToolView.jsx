@@ -217,7 +217,7 @@ function MetricsTable({ m }) {
         <Row k="refinement" v={a.subpixel_method} />
         {a.ecc?.attempted && (
           <Row k="ECC polish" v={a.ecc.adopted
-            ? `adopted, ${num(a.ecc.rmse_px_before, 4)} -> ${num(a.rmse_px, 4)} px`
+            ? `adopted on validation, ${num(a.ecc.validation_rmse_px_before, 4)} -> ${num(a.ecc.validation_rmse_px_after, 4)} px`
             : (a.ecc.note || 'not adopted')} mono={false} />
         )}
         {m.fine_stage?.adopted && (
@@ -510,7 +510,7 @@ export default function ToolView({ view, setView }) {
             <input type="checkbox" checked={subpixel}
                    onChange={(e) => setSubpixel(e.target.checked)} />
             <span>ECC sub-pixel polish
-              <span className="hint">adopted only if it beats the held-out RMSE</span>
+              <span className="hint">adopted only if it improves the separate validation set</span>
             </span>
           </label>
           <button className="btn" style={{ width: '100%', marginTop: 10 }}

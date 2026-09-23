@@ -74,9 +74,14 @@ used — their weights are non-commercial only.
 
 ## 3. Accuracy, and what the numbers are allowed to say
 
-**Held-out RMSE.** The reported error is measured on tie points that were *not*
-used to fit the transform. Fitting a model and then scoring it on its own fit
-set measures how flexible the model is, not how accurate it is.
+**Held-out RMSE.** A seeded spatial partition is frozen before method selection.
+Only the fit fold enters geometric verification, method/model selection and
+native-window selection. ECC optimizes fit-region pixels and is adopted using
+a separate validation fold. The test fold is scored once, at the end, without
+model-based filtering. All retained test correspondences count, including wrong
+matches. This is correspondence error, not independently surveyed ground truth.
+`evaluation.json` stores the exact test coordinates, partition and matrix hash.
+Scoring reloads `transform.json`; the raster warp uses the same matrix bytes.
 
 **Four units, always.** The solver runs on a working grid that exists only
 inside the run and is usually much coarser than either input, so a residual
@@ -120,7 +125,7 @@ statement asks for. Within the fine stage two refinements run:
    brightness change but not an inversion — and inversion is exactly what a Sun
    azimuth reversal does here. Gradient magnitude is polarity-blind. The polish
    is warm-started from the **fit-subset** model and adopted **only if it lowers
-   the held-out RMSE**; the guard against a runaway warp is proportional to the
+   the separate validation RMSE**; the guard against a runaway warp is proportional to the
    frame, not a fixed pixel count.
 
 **The floor.** Nothing can localise a source pixel against a reference to better
