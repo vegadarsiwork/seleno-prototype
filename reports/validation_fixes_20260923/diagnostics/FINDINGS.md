@@ -88,12 +88,15 @@ systematic/random split, are what describe the transform.
 
 1. **Held-out points lying exactly on the exported model.** In both OHRC controls,
    22–23% of held-out correspondences have residual below 1e-6. Their reference
-   coordinates are integer native pixels, all in the segments that fall back to the
-   global matrix. In both runs ORB was chosen as the fine-stage matcher.
+   coordinates are integer native pixels. In both runs ORB was chosen as the
+   fine-stage matcher. (Corrected later: the points are in the **fitted** segments,
+   not the fallback ones, and the mechanism is now verified; see
+   `../ohrc_offset/README.md`.)
 
-   Likely mechanism, not verified: `_fine_stage` sets each source position to
-   `prewarp(window point)`. A match with zero integer displacement therefore lands
-   exactly on the model it was built through. Held-out points built this way make
+   Mechanism: `_fine_stage` sets each source position to `prewarp(window point)`. A
+   match with zero integer displacement therefore lands exactly on the prewarp
+   model, and the LMEDS segment refit returns that model when such points are the
+   majority of a segment. Held-out points built this way make
    held-out accuracy look better than it is: the 4.6 km control reports a held-out
    median of 0.00 while its true transform error is 0.78 ref px.
 

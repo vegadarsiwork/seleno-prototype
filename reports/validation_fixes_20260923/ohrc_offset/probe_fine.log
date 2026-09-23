@@ -1,0 +1,67 @@
+PROBE control_ohrc_nac
+{
+ "name": "control_ohrc_nac",
+ "fine_method": "orb",
+ "fine_points": 44141,
+ "reference_decimation": 4,
+ "matcher_displacement_exactly_zero": 0.6317256065789175,
+ "matcher_displacement_whole_pixels": 0.7366167508665413,
+ "coarse_vs_truth_ref_px": {
+  "median": 0.5937145931606926,
+  "max": 1.792949236820216
+ },
+ "final_vs_truth_ref_px": {
+  "median": 0.20991568999505092,
+  "max": 0.5870673172296319
+ },
+ "final_vs_coarse_ref_px": {
+  "median": 0.3904555958519862,
+  "max": 1.2223000599443519
+ },
+ "held_out_exactly_on_model": 0.2192560471576665
+}
+PROBE control_ohrc_nac_km
+{
+ "name": "control_ohrc_nac_km",
+ "fine_method": "orb",
+ "fine_points": 48084,
+ "reference_decimation": 4,
+ "matcher_displacement_exactly_zero": 0.6880459196406289,
+ "matcher_displacement_whole_pixels": 0.7802387488561684,
+ "coarse_vs_truth_ref_px": {
+  "median": 4.701539260455703,
+  "max": 5.821125013878029
+ },
+ "final_vs_truth_ref_px": {
+  "median": 1.3694115664278188,
+  "max": 1.6912355563999124
+ },
+ "final_vs_coarse_ref_px": {
+  "median": 3.385326952276044,
+  "max": 4.194417611960444
+ },
+ "held_out_exactly_on_model": 0.2329225352112676
+}
+PROBE control_tmc2_selene
+{
+ "name": "control_tmc2_selene",
+ "status": "pass",
+ "fine_method": "sift",
+ "fine_points": 45146,
+ "reference_decimation": 6,
+ "matcher_displacement_exactly_zero": 0.0,
+ "matcher_displacement_whole_pixels": 0.0,
+ "coarse_vs_truth_ref_px": {
+  "median": 0.22814426941143573,
+  "max": 0.7020842915747905
+ },
+ "final_vs_truth_ref_px": {
+  "median": 0.013153719306153767,
+  "max": 0.028290599247144138
+ },
+ "final_vs_coarse_ref_px": {
+  "median": 0.2219425227936691,
+  "max": 0.6883938357770331
+ },
+ "held_out_exactly_on_model": 0.0
+}
