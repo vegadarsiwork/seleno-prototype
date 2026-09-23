@@ -127,6 +127,39 @@ class ValidationFixes(unittest.TestCase):
         self.assertEqual(wm.digest(model), evidence["transform_sha256"])
         self.assertGreater(metrics["accuracy"]["rmse_px"], 3.)
 
+    def test_finite_nodata_is_excluded_at_native_and_decimated_resolution(self):
+        from seleno.tool.scene import Scene
+        data = np.ones((256, 256), np.float32)
+        data[64:192, 64:192] = -9999
+        scene = Scene(path="finite-fill", array=data, valid=data != -9999,
+                      reader="test", nodata=-9999, meta_scale=2., meta_offset=3.)
+        for side, missing in [(256, 128 ** 2), (128, 64 ** 2)]:
+            step, origin, raster, valid, taps = REG._target_grid(scene, side)
+            self.assertEqual(int((~valid).sum()), missing)
+            np.testing.assert_array_equal(raster[valid], 5.)
+        source = self.root / "nodata.tif"
+        with rasterio.open(source, "w", driver="GTiff", height=256, width=256,
+                           count=1, dtype="float32", nodata=-9999) as ds:
+            ds.write(np.where(data == -9999, data, self.a).astype(np.float32), 1)
+        self.src = self.ref = source
+        result = self.run_pair(fine=False)
+        with rasterio.open(Path(result.out_dir) / "registered.tif") as ds:
+            self.assertTrue(np.isnan(ds.read(1)[80:176, 80:176]).all())
+
+    def test_rotated_geotiff_scales_entire_affine_and_preserves_centres(self):
+        from seleno.tool.scene import Scene
+        transform = Affine(2, .3, 100, .2, -2, 200)
+        scene = Scene(path="rotated", array=self.a, valid=np.ones(self.a.shape, bool),
+                      reader="test", transform=transform,
+                      crs="+proj=stere +lat_0=-90 +R=1737400 +units=m")
+        frame = {"reference_decimation": 6, "reference_origin": [30, 12],
+                 "reference_sample_offset": [1.5, 1.5]}
+        REG._write_registered(str(self.root), self.a, np.ones(self.a.shape, bool), scene, frame)
+        with rasterio.open(self.root / "registered.tif") as ds:
+            expected = transform * Affine.translation(11, 29) * Affine.scale(6)
+            np.testing.assert_allclose(tuple(ds.transform), tuple(expected), atol=1e-12)
+            np.testing.assert_allclose(ds.transform * (.5, .5), transform * (14, 32), atol=1e-12)
+
     def test_identical_images_export_identical_pixel_centres(self):
         for georeferenced in (False, True):
             with self.subTest(georeferenced=georeferenced):

@@ -155,7 +155,10 @@ def _boxcar_decimate(arr, r0, r1, c0, c1, step, nodata, scale, offset, taps=4):
     """
     base = np.asarray(arr[r0:r1:step, c0:c1:step], np.float32)
     if step <= 1:
-        return base * scale + offset, (0.0, 0.0)
+        good = np.isfinite(base) & (base > -1e30)
+        if nodata is not None:
+            good &= base != nodata
+        return np.where(good, base * scale + offset, np.nan), (0.0, 0.0)
     k = int(min(step, taps))
     h, w = base.shape
     acc = np.zeros((h, w), np.float32)
@@ -168,10 +171,11 @@ def _boxcar_decimate(arr, r0, r1, c0, c1, step, nodata, scale, offset, taps=4):
             if blk.shape != (h, w):            # ragged tail; skip this offset
                 continue
             used.append((dy, dx))
-            blk = blk * scale + offset
             good = np.isfinite(blk) & (blk > -1e30)
-            if nodata is not None and scale == 1.0 and offset == 0.0:
+            if nodata is not None:
                 good &= blk != nodata
+            blk = blk * scale + offset
+            good &= np.isfinite(blk)
             acc += np.where(good, blk, 0.0)
             cnt += good
     out = np.where(cnt > 0, acc / np.maximum(cnt, 1.0), np.nan)
@@ -1466,8 +1470,8 @@ def _write_registered(job_dir, warped, wvalid, R: Scene, frame):
         if R.georeferenced:
             t, (orow, ocol) = R.transform, frame.get("reference_origin", [0, 0])
             dy, dx = frame.get("reference_sample_offset", [(step - 1) / 2] * 2)
-            x0, y0 = t * (ocol + dx + 0.5 - step / 2, orow + dy + 0.5 - step / 2)
-            tr = Affine(t.a * step, t.b, x0, t.d, t.e * step, y0)
+            tr = (t * Affine.translation(ocol + dx + 0.5 - step / 2,
+                                         orow + dy + 0.5 - step / 2) * Affine.scale(step))
         with rasterio.open(path, "w", driver="GTiff", height=out.shape[0],
                            width=out.shape[1], count=1, dtype="float32",
                            crs=R.crs if R.georeferenced else None,
