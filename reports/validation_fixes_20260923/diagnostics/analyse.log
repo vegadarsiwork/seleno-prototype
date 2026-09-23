@@ -1,0 +1,11 @@
+ANALYSE OHRC → NAC
+ANALYSE TMC-2 → SELENE
+/home/paardhu/Projects/seleno-prototype/reports/validation_fixes_20260923/diagnostics/analyse.py:111: UserWarning: Could not determine RMS error between images with the normalized average intensities np.float32(0.0) and np.float32(0.0). Either the reference or moving image may be empty.
+  shift, err, _ = phase_cross_correlation(ref_w * HANN[n], reg_w * HANN[n],
+ANALYSE IIRS 2025-07-29 → WAC
+ANALYSE IIRS 2024-01-20 → WAC
+/home/paardhu/Projects/seleno-prototype/reports/validation_fixes_20260923/diagnostics/analyse.py:111: UserWarning: Could not determine RMS error between images with the normalized average intensities np.float32(0.0) and np.float32(0.0). Either the reference or moving image may be empty.
+  shift, err, _ = phase_cross_correlation(ref_w * HANN[n], reg_w * HANN[n],
+ANALYSE Control: TMC-2 → synthetic SELENE (1.35x)
+ANALYSE Control: OHRC → synthetic NAC (4.17x)
+ANALYSE Control: OHRC → synthetic NAC (4.17x, 4.6 km offset)

@@ -1,0 +1,14 @@
+BUILD Control: TMC-2 → synthetic SELENE (1.35x)
+  wrote outputs/validation_fixes_20260923/diagnostics/synthetic/synthetic_selene_control_a.tif {"geometry_footprint_rows": [0, 12288], "geometry_footprint_cols": [1936, 5233], "rotation_scale_centre_ref_px": [3584.5, 6144.0], "blur_sigma_source_px": 0.6754709602801003, "noise_sigma_dn": 0.7554797649383544, "snr": 40.0, "scene_std_dn": 30.21919059753418, "valid_pixels": 34265973, "geometry_bilinear_vs_exact_source_px": {"median": 9.239922740150782e-11, "max": 3.2529722878517284, "n": 4522}}
+START Control: TMC-2 → synthetic SELENE (1.35x) {'max_side': 2048, 'grid': (12, 12), 'segments': 6}
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+DONE Control: TMC-2 → synthetic SELENE (1.35x) pass 42.86 source px; reference sampling scale 1.35 source px
+BUILD Control: OHRC → synthetic NAC (4.17x)
+  wrote outputs/validation_fixes_20260923/diagnostics/synthetic/synthetic_nac_control_b.tif {"geometry_footprint_rows": [0, 6296], "geometry_footprint_cols": [0, 6296], "rotation_scale_centre_ref_px": [3148.0, 3148.0], "blur_sigma_source_px": 2.0833333333333335, "noise_sigma_dn": 1.3857141494750977, "snr": 40.0, "scene_std_dn": 55.428565979003906, "valid_pixels": 20376512, "geometry_bilinear_vs_exact_source_px": {"median": 7.332580706405269e-12, "max": 2.786155215391776, "n": 10169}}
+START Control: OHRC → synthetic NAC (4.17x) {'max_side': 2048, 'grid': (12, 12), 'segments': 6}
+DONE Control: OHRC → synthetic NAC (4.17x) warning 70.43 source px; reference sampling scale 4.17 source px
+BUILD Control: OHRC → synthetic NAC (4.17x, 4.6 km offset)
+  wrote outputs/validation_fixes_20260923/diagnostics/synthetic/synthetic_nac_control_c.tif {"geometry_footprint_rows": [0, 6296], "geometry_footprint_cols": [0, 6296], "rotation_scale_centre_ref_px": [3148.0, 3148.0], "blur_sigma_source_px": 2.0833333333333335, "noise_sigma_dn": 1.4186331748962402, "snr": 40.0, "scene_std_dn": 56.74532699584961, "valid_pixels": 23020792, "geometry_bilinear_vs_exact_source_px": {"median": 7.332580706405269e-12, "max": 0.4812265368539352, "n": 11494}}
+START Control: OHRC → synthetic NAC (4.17x, 4.6 km offset) {'max_side': 2048, 'grid': (12, 12), 'segments': 6}
+DONE Control: OHRC → synthetic NAC (4.17x, 4.6 km offset) warning 5.60 source px; reference sampling scale 4.17 source px
