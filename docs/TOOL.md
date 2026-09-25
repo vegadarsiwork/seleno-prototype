@@ -6,7 +6,9 @@ assumes nothing about where those files came from: no ISRO geometry, no `.spm`,
 no refined corners. Whatever is missing is recorded rather than guessed.
 
 ```bash
-python -m seleno register --source A --reference B --out outputs/
+systemd-run --user --scope -q -p MemoryMax=5G -p MemorySwapMax=0 \
+  env OPENBLAS_NUM_THREADS=2 OMP_NUM_THREADS=2 .venv/bin/python \
+  -m seleno register --source A --reference B --out outputs/
 ```
 
 ```python
@@ -25,9 +27,11 @@ that leaves no artifact is indistinguishable from a crash, so there is always a
 
 | file | contents |
 |---|---|
-| `matches.csv` | `src_x, src_y, ref_x, ref_y, confidence, inlier` — original source pixels, full-resolution reference pixels |
-| `registered.tif` | the source resampled onto the reference grid, georeferenced when the reference is, no-data preserved as NaN |
-| `transform.json` | model, the working-grid matrix, the same transform in **full-resolution reference pixels** (`matrix_reference_px`, the residual correction after prealignment), decomposition, per-segment parameters, unit conversions |
+| `matches.csv` | verified fit points with a strict per-cell quota; `src_x, src_y, ref_x, ref_y, confidence, inlier` in original source and full-resolution reference pixel centres |
+| `matches_all.csv` | every fit candidate before the delivery quota, including outliers with `inlier=0`; excludes validation/test points |
+| `tiepoints.npz` | when the native fit is adopted: all measured native-stage points, working coordinates, native source coordinates, confidence and fit/validation/test labels |
+| `registered.tif` | all original source bands on the native reference grid, cropped to the registered footprint; adaptive 1–4× supersampling per axis and NaN nodata |
+| `transform.json` | working-grid residual matrix, `matrix_reference_px`, frame, decomposition, optional `local_field` B-spline coefficients and `parallax` DEM sampler/coefficient, optional segment matrices and unit conversions |
 | `evaluation.json` | sealed test coordinates, split, exact matrix and complete-model hashes for recomputation |
 | `metrics.json` | accuracy, match counts, distribution, illumination, pair character, every method tried, status and reason |
 | `overlay.png` | source and reference with tie lines, over a checkerboard of reference and registered |
@@ -52,8 +56,8 @@ expressed in full-resolution reference centres, not a direct raw-source matrix.
 
 ## 2. Method selection
 
-The tool does **not** have one matcher. It runs candidates and keeps the first
-that a geometric verification stage accepts, and it records which one won in
+The tool runs ordered matcher candidates and chooses a geometrically verified
+model using fit-fold evidence. It records which one won in
 `metrics.json:method_used`. The ordering is not a preference — it encodes what
 was measured in Phase 2:
 
@@ -84,20 +88,40 @@ used — their weights are non-commercial only.
 
 ## 3. Accuracy, and what the numbers are allowed to say
 
-**Held-out RMSE.** A seeded spatial partition is frozen before method selection.
-Only the fit fold enters geometric verification, method/model selection and
-native-window selection. ECC optimizes fit-region pixels and is adopted using
-a separate validation fold. The test fold is scored once, at the end, without
-model-based filtering. All retained test correspondences count, including wrong
-matches. This is correspondence error, not independently surveyed ground truth.
-`evaluation.json` stores the exact test coordinates, partition and matrix hash.
-Scoring reloads `transform.json`; the raster warp uses the same matrix bytes
-and, when requested, the same smoothly blended segment field.
+**Sealed folds and check points.** Spatial cells are frozen before candidate
+selection, aligned to an elongated overlap's principal axes and sized roughly
+square. Only fit cells influence model/method choice, patch selection and outward
+growth. ECC and the coarse balanced refit are adopted on the validation fold.
+The test fold is scored after `transform.json` is finalized and reloaded.
+
+Every test correspondence is reported under `held_out_*`. Headline RMSE and
+acceptance use `check_point_*`: test correspondences that agree with their ten
+nearest held-out neighbours' displacements relative to the **coarse** model.
+The screen uses a fixed 3-reference-pixel / robust-spread threshold and never
+consults the exported model. It retains shared model errors and counts isolated
+mismatches separately; at least 80% of the held-out measurements must survive.
+This is matcher consistency, not surveyed accuracy. `evaluation.json` records
+the coordinates, screen flags, rule, partition and complete-model fingerprint.
+Both raw and screened statistics remain visible. Invalid predictions retain
+`invalid_n` and fail acceptance, while valid predictions still have statistics.
+
+**Significance and model terms.** Each coarse candidate must pass an a-contrario
+number-of-false-alarms test (`log10_nfa`) and geometry checks for folds, scale,
+anisotropy and area-scale variation across the overlap. Dense fitting uses loose
+RANSAC, neighbour consistency and cell-balanced least squares. Optional terrain
+parallax and a smooth B-spline inverse correction are selected by spatial
+cross-validation over fit cells only. Their CV tables are in `fine_stage.model_fit`.
+Raster export, previews and scoring all apply the complete model through
+`warp_model.inverse_points`; the matrix alone is insufficient when terms are adopted.
 
 **Four units, always.** The solver runs on a working grid that exists only
 inside the run and is usually much coarser than either input, so a residual
-quoted only in its pixels says nothing about either image. Every run reports the
-same error four ways:
+quoted only in its pixels says nothing about either image. Every run reports
+working/reference transfer error in several units, plus backward transfer measured
+directly in native source coordinates (`check_point_source_*`). The source error
+is not inferred by multiplying a symmetric transfer distance by a nominal GSD ratio.
+`check_point_reference_*` separately measures forward transfer in native reference
+coordinates; metres use the reference's declared sampling. For example:
 
 ```json
 "rmse_source_px": 2.285, "rmse_reference_px": 1.6914,
@@ -109,9 +133,11 @@ same error four ways:
 **The fine stage.** A coarse solve cannot report a residual finer than its own
 decimation. A TMC-2 strip against a 3° SELENE tile decimates 6x: every "pixel"
 is 44 m wide, and 1.3 px is 59 m — **10.8 TMC-2 pixels**. So after the coarse
-solve the tool re-places the source over native-resolution **windows** tiled
-across the surviving tie points, re-correlates inside each, and refits from the
-refined points. Peak memory is one window, the same as one coarse pass.
+solve the tool lays roughly 6,000 **lattice seeds over the predicted overlap**,
+places padded native-resolution tiles and measures the seeds using local NCC,
+ECC and a forward/backward check. Patches shrink near valid-data boundaries.
+The probe retains at most three tiles; subsequent processing streams tiles.
+Weak tiles are retried using an affine fitted only to previously measured fit points.
 
 Two things make it work, and it produces nothing without either:
 
@@ -123,8 +149,15 @@ Two things make it work, and it produces nothing without either:
    claim on a different grid — see `reports/RESOLUTION_RANKING.md`. The stage
    probes the plan once and records the winner in `fine_stage.method`.
 
+Patch sizes 41 and 61 are compared on common fit-fold probe seeds by whole-cell
+cross-validation. The larger patch must improve median prediction by 5%, avoid
+a worse tail and retain at least 80% of the default's fit measurements. Insufficient
+evidence keeps 41. `fine_stage.patch_cv` and `patch_selection` record the decision.
+An explicit Python `fine_patch` or sensor `registration.fine_patch` overrides it.
+Peak correlation and forward/backward thresholds stay at 0.55 and 0.35.
+
 Pre-audit accuracy figures are superseded. Use only the corrected
-[real-product summary](../reports/validation_fixes_20260923/deck_summary.md).
+[real-product summary](../reports/validation_20260925/deck_summary.md).
 
 **Sub-pixel.** The flag is on **source** pixels, which is what the problem
 statement asks for. Within the fine stage two refinements run:
@@ -149,8 +182,9 @@ The legacy floor fields represent a nominal one-reference-pixel sampling assumpt
 
 **Metres.** `rmse_m` is `null` unless the reference genuinely carries a scale.
 A bare PNG has an identity geotransform; treating that as 1 m pixels would turn
-a pixel error into an invented metre error. `subpixel` is `null`, not `false`,
-in that case — without a scale the question cannot be answered either way.
+a pixel error into an invented metre error. Native source-pixel errors can still
+be measured without a physical GSD. `subpixel` is null only when that source
+error is unavailable; lack of metre scale alone does not hide pixel statistics.
 
 **Resampling.** Reference decimation is a boxcar average, not striding: keeping
 one pixel in `step` is aliasing. The source is averaged too, but only when the
@@ -161,8 +195,14 @@ AKAZE 442 inliers → 70. Past that point the grid is sampled nearest and
 
 ## 4. Uniform distribution
 
-The problem statement asks for match points spread across the image, so the tool
-measures it rather than claiming it.
+The fine stage starts from uniform lattice seeds throughout predicted overlap.
+Coarse dense matching also uses lattice seeds around the locked translation,
+falling back to the older grid matcher if needed. Successful measurements can
+still cluster in textured regions, so distribution is measured explicitly.
+`matches.csv` applies a strict quota to verified fit points; `matches_all.csv`
+preserves all fit candidates. `tiepoints.npz` retains the complete measured
+native set with fold labels for reproducible diagnostics. Delivery thinning
+does not change the fitted model or held-out evaluation.
 
 - **`coverage_fraction`** — fraction of *eligible* reference grid cells holding at
   least one inlier. Eligible means both images actually have data there. Against
@@ -175,14 +215,16 @@ measures it rather than claiming it.
   hull of the inliers**. This is the one that catches the dangerous case:
   tie points crowded into a single lit strip can clear the coverage bar while
   most of the frame is still extrapolated, and extrapolation beyond the hull is
-  where a fitted transform's error grows fastest. Over 50% downgrades the run to
+  where a fitted transform's error grows fastest. Over 25% downgrades the run to
   `warning`.
 
 ---
 
 ## 5. Long strips
 
-A pushbroom strip is not well described by one global transform. `--segments N`
+A pushbroom strip can need more than one global transform. When spatial CV
+adopts a local field or terrain term, that continuous model replaces segment
+fitting. Otherwise `--segments N`
 splits the overlap into N along-track bands and fits each independently;
 `transform.json:segments` carries the fitted per-band matrices and fit-fold residuals.
 The exporter blends inverse coordinate maps with a smoothstep between segment centres
@@ -191,14 +233,35 @@ The preview and final held-out evaluation use this same serialized composite mod
 `accuracy.applied_model` identifies it and `transform_sha256` fingerprints the complete
 model. The global matrix alone does not reproduce a segmented export.
 
-Measured on TMC-2 → SELENE: global 1.4655 px against a per-band median of
-**1.103 px**, i.e. 65.1 m → 49.0 m at 44.4 m/px.
+The geometry lattice is inverted by Newton iteration on its bilinear forward
+map. Inverse Delaunay interpolation previously filled curved-edge hull slivers
+with the edge detector column. Queries outside the image now return NaN;
+limited rim extrapolation seeds the solve without clamping a whole band to an
+edge. Lattice subsampling keeps the final row and column.
+
+## 5b. Terrain parallax
+
+`terrain.HeightSampler` samples LOLA DEM heights at reference pixel centres.
+The inverse affine may add `(height - height_origin_m) * coefficient_px_per_m`:
+a fitted two-component source displacement per metre of relief. It is adopted
+only when fit-cell CV improves over the inverse affine without height. A local
+field can then model remaining smooth error. The fitted coefficients describe
+an effective image displacement, not an independently calibrated viewing angle.
+
+`transform.json:parallax` stores the DEM path, reference CRS and affine,
+working-to-reference map, height origin and coefficient. Reapplying the model
+requires that DEM; the JSON does not embed raster heights. Grid conjugation
+transforms both sample positions and displacement vectors. Heights outside the
+DEM contribute zero correction. The current archive contains polar LOLA DEMs;
+equatorial TMC-2/IIRS pairs have no available terrain term.
 
 ---
 
 ## 6. Memory
 
-The working grid is capped against `MemAvailable` before anything is read. The
+The working grid is capped against the smaller of `MemAvailable` and cgroup v2
+headroom, checking limits on all ancestors and discounting reclaimable page
+cache from current usage. The
 dominant cost is not the imagery — it is masked NCC, which correlates in *full*
 mode and allocates FFT buffers of (2H−1)×(2W−1) in float64, several at once.
 Measured at roughly 900 bytes per target-grid pixel, so a 2048² grid peaks near
@@ -207,6 +270,14 @@ Measured at roughly 900 bytes per target-grid pixel, so a 2048² grid peaks near
 Rasters are opened as memmaps and sampled lazily; validity comes from a decimated
 read. Loading a TMC-2 strip as float32 up front costs 2.37 GB before a single
 pixel is needed.
+
+`LazyRaster` copies strided samples out of each read block so a tiny slice does
+not keep a full block alive. Large exports stream all bands in native tiles;
+tiles without finite Jacobians use one sample without an all-NaN median warning.
+On the 15 GB development machine every registration/test suite must run in a
+systemd scope with `MemoryMax=5G` (3 GB for unit tests), `MemorySwapMax=0`,
+`OPENBLAS_NUM_THREADS=2` and `OMP_NUM_THREADS=2`. Run one heavy job at a time.
+Use `outputs/` for rasters and set `TMPDIR` to a directory there: `/tmp` is RAM.
 
 ---
 
@@ -316,7 +387,7 @@ python -m seleno register --source X --reference Y --out DIR
     --grid N            N x N coverage grid
     --segments N        per-band transforms for long strips
     --no-fine           skip the native-resolution fine stage
-    --fine-tiles N      cap on native windows (0 = tile the overlap, max 24)
+    --fine-tiles N      cap on native windows (0 = tile the overlap, max 400)
     --no-subpixel       skip the ECC polish
     --locate {auto,force,off}   find where the source lies in the reference (§6d)
     --json              print metrics.json to stdout
@@ -365,12 +436,22 @@ found · nanometre band centres convert · geometry is built from a `_loc_`
 backplane · a large raster reads lazily and its strided and fancy reads match an
 eager read exactly.
 
+The focused unittest modules cover native export, matcher refinement, evaluation
+acceptance, validation isolation, dense models, and geometry/terrain. Run
+`tests.test_geometry_terrain` for curved-edge inversion, cache invalidation, rim
+extrapolation, DEM centres/conjugation, coarse lattice measurements and patch-CV
+isolation. `tests/test_ohrc_dataset.py` additionally checks 28 archive contracts.
+Apply the caps and thread settings in §6 to every test command.
+
 ### Status and accuracy
 
-`pass` means the fitted model is verified and its tie points provide adequate
-coverage. It does not promise sub-pixel accuracy. `accuracy.subpixel` compares
-the unrounded held-out RMSE with **one original source pixel**, independently
-of status (null when source scale or evaluation is unavailable).
+`pass` requires source check-point RMSE and p90 below 1 px, at least 95% below
+1 px, bias below 0.5 px, at least 12 check points, at least 80% check-point retention,
+at least 50% fit-cell coverage and at most 25% extrapolation. No invalid held-out
+predictions are allowed. This establishes internal consistency and support;
+independent controls are required for verified accuracy. `accuracy.subpixel` compares
+the unrounded check-point source RMSE with **one original source pixel**, independently
+of status (null when source-pixel evaluation is unavailable).
 `accuracy_statement` gives the source-pixel error and reference sampling scale
 in one line. The scale is the size of one reference pixel in source pixels;
 it is not an independently established mathematical lower bound on localization.
