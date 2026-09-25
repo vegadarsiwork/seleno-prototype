@@ -1,0 +1,535 @@
+{
+ "status": "warning",
+ "reason": "57% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it; check-point source rmse_px 1.87 fails < 1; check-point source p90_px 2.596 fails < 1; check-point source within_1_px 0.363 fails >= 0.95; more than 25% of eligible area is outside fit-point support",
+ "notes": [
+  "One reference pixel spans 1.17 source pixels. This is a sampling scale, not an independently measured error bound."
+ ],
+ "status_meaning": "pass requires source-pixel consistency and spatial support; not an accuracy guarantee",
+ "acceptance": {
+  "passed": false,
+  "independently_verified": false,
+  "status": "failed",
+  "reasons": [
+   "check-point source rmse_px 1.87 fails < 1",
+   "check-point source p90_px 2.596 fails < 1",
+   "check-point source within_1_px 0.363 fails >= 0.95",
+   "more than 25% of eligible area is outside fit-point support"
+  ],
+  "independent_reasons": [
+   "independent reference points were not supplied"
+  ],
+  "basis": "held-out check points (model-independent neighbour screen)",
+  "thresholds": {
+   "minimum_check_points": 12,
+   "check_point_fraction_at_least": 0.8,
+   "source_rmse_px_below": 1.0,
+   "source_p90_px_below": 1.0,
+   "within_1_source_px_at_least": 0.95,
+   "source_bias_px_below": 0.5,
+   "coverage_at_least": 0.5,
+   "extrapolation_at_most": 0.25
+  },
+  "meaning": "internal consistency and spatial support; independent check points required for verified accuracy"
+ },
+ "accuracy_statement": "1.87 source px RMSE over 292 held-out check points (6 of 298 held-out correspondences set aside as isolated mismatches); reference sampling scale 1.17 source px",
+ "job_id": "b38636650c6a",
+ "generated_utc": "2026-09-25T09:51:10Z",
+ "runtime_s": 160.02,
+ "method_used": "dense-ncc",
+ "model": "affine",
+ "accuracy": {
+  "held_out_n": 298,
+  "held_out_rmse_px": 0.9408961493985581,
+  "held_out_median_px": 0.5600056527163781,
+  "held_out_p90_px": 1.1714741627717022,
+  "held_out_exactly_on_model_n": 0,
+  "evaluation_file": "evaluation.json",
+  "matrix_sha256": "34af83406ea0be03ee667a434a68c72fe01b64e80b42dbafbffbab1135f3b158",
+  "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
+  "transform_sha256": "33ac033f3fd5740f2e74208357f449807477b0add7f7952ed8f4e3d81c480bfa",
+  "applied_model": {
+   "kind": "global+local_field",
+   "sampling": "inverse matrix; plus the cubic B-spline correction in `local_field`, evaluated at the working-grid reference position",
+   "segment_fallback": "global matrix",
+   "raster": "registered.tif"
+  },
+  "held_out_invalid_n": 0,
+  "held_out_reference_n": 298,
+  "held_out_reference_valid_n": 298,
+  "held_out_reference_invalid_n": 0,
+  "held_out_reference_rmse_px": 1.767461975205513,
+  "held_out_reference_median_px": 1.0712765448641892,
+  "held_out_reference_p90_px": 2.255188925821655,
+  "held_out_reference_max_px": 7.273976445166484,
+  "held_out_reference_within_1_px": 0.4563758389261745,
+  "held_out_reference_bias_xy_px": [
+   0.2480329119630505,
+   0.11742329388509316
+  ],
+  "held_out_reference_bias_px": 0.2744240429767321,
+  "held_out_source_n": 298,
+  "held_out_source_valid_n": 298,
+  "held_out_source_invalid_n": 0,
+  "held_out_source_rmse_px": 2.037676898959202,
+  "held_out_source_median_px": 1.2568119529854163,
+  "held_out_source_p90_px": 2.6684593238317964,
+  "held_out_source_max_px": 8.04052436609462,
+  "held_out_source_within_1_px": 0.35570469798657717,
+  "held_out_source_bias_xy_px": [
+   -0.2890997570305587,
+   -0.14054126733661873
+  ],
+  "held_out_source_bias_px": 0.3214506452625519,
+  "source_error_definition": "backward transfer in native source pixel centres",
+  "check_point_n": 292,
+  "check_point_rejected_n": 6,
+  "check_point_fraction": 0.9798657718120806,
+  "check_point_rule": "held-out correspondence within max(3 reference px, 3 robust sigma) of the median displacement of its 10 nearest held-out neighbours, displacements taken against the coarse model; the exported model is not consulted",
+  "check_point_rmse_px": 0.8594239494791144,
+  "check_point_median_px": 0.5522588997723084,
+  "check_point_p90_px": 1.129609943223834,
+  "check_point_invalid_n": 0,
+  "check_point_reference_n": 292,
+  "check_point_reference_valid_n": 292,
+  "check_point_reference_invalid_n": 0,
+  "check_point_reference_rmse_px": 1.6157194623902225,
+  "check_point_reference_median_px": 1.0621368762702743,
+  "check_point_reference_p90_px": 2.1331257808072244,
+  "check_point_reference_max_px": 7.273976445166484,
+  "check_point_reference_within_1_px": 0.4657534246575342,
+  "check_point_reference_bias_xy_px": [
+   0.22955987142281695,
+   0.13104620086319624
+  ],
+  "check_point_reference_bias_px": 0.2643309314634544,
+  "check_point_source_n": 292,
+  "check_point_source_valid_n": 292,
+  "check_point_source_invalid_n": 0,
+  "check_point_source_rmse_px": 1.8699030623363957,
+  "check_point_source_median_px": 1.2360698683733693,
+  "check_point_source_p90_px": 2.5955078800309757,
+  "check_point_source_max_px": 8.04052436609462,
+  "check_point_source_within_1_px": 0.363013698630137,
+  "check_point_source_bias_xy_px": [
+   -0.2674487968564683,
+   -0.15748029722076232
+  ],
+  "check_point_source_bias_px": 0.31036897872163716,
+  "subpixel_method": "matcher",
+  "ecc": {
+   "attempted": false,
+   "adopted": false,
+   "note": "not run: the model was measured at native resolution"
+  },
+  "rmse_px": 0.8594239494791144,
+  "rmse_reference_px": 1.7188,
+  "rmse_working_px": 0.8594,
+  "rmse_source_px": 1.8699030623363957,
+  "rmse_m": 171.885,
+  "metres_per_pixel": 200.0,
+  "units": {
+   "reference_decimation": 2,
+   "metres_per_reference_px": 100.0,
+   "source_px_per_reference_px": 1.173984503404555,
+   "metres_per_working_px": 200.0
+  },
+  "subpixel": false,
+  "independently_verified_subpixel": false,
+  "subpixel_basis": "source pixels",
+  "subpixel_working_grid": true,
+  "reference_sampling_source_px": 1.173984503404555,
+  "sampling_floor_basis": "nominal one-reference-pixel sampling; not an error lower bound",
+  "subpixel_floor_source_px": 1.174,
+  "subpixel_attainable": false
+ },
+ "fine_stage": {
+  "attempted": true,
+  "windows": 12,
+  "windows_used": 12,
+  "points": 858,
+  "native": true,
+  "note": null,
+  "method": "grid-refined",
+  "probe": [
+   {
+    "method": "grid-refined",
+    "candidates": 171,
+    "inliers": 138
+   }
+  ],
+  "seeds": 4505,
+  "seed_spacing_px": 20.5,
+  "search_px": 8,
+  "patch_px": 41,
+  "placement": "12 tiles over 4505 lattice seeds at 20.5 px spacing",
+  "patch_cv": [
+   {
+    "patch_px": 41,
+    "fit_n": 171,
+    "common_n": 94,
+    "fit_cells": 13,
+    "cv_median": 1.0454558693766367,
+    "cv_p90": 3.0271996259893963,
+    "measurement_fraction": 1.0
+   },
+   {
+    "patch_px": 61,
+    "fit_n": 187,
+    "common_n": 94,
+    "fit_cells": 13,
+    "cv_median": 1.055509006249141,
+    "cv_p90": 2.657203167531855,
+    "measurement_fraction": 1.0935672514619883
+   }
+  ],
+  "patch_selection": "spatial cross-validation on common fit-fold probe seeds only",
+  "passes": [
+   {
+    "prewarp": "coarse model",
+    "tiles_with_points": 5
+   },
+   {
+    "prewarp": "affine from 260 fit-fold points",
+    "retried": 7,
+    "tiles_with_points": 6
+   },
+   {
+    "prewarp": "affine from 295 fit-fold points",
+    "retried": 6,
+    "tiles_with_points": 6
+   }
+  ],
+  "refinement_counts": {
+   "intensity": 134,
+   "inverted_intensity": 39,
+   "gradient": 1762,
+   "boundary": 891,
+   "texture": 0,
+   "peak": 5792,
+   "ecc": 10,
+   "forward_backward": 2449,
+   "reduced_patch": 1740
+  },
+  "model_fit": {
+   "points": 505,
+   "tight_threshold_px": 1.5,
+   "loose_threshold_px": 6.0,
+   "loose_inliers": 505,
+   "consistent": 487,
+   "field_cv": [
+    {
+     "spacing": null,
+     "smoothness": null,
+     "cv_median": 0.6649555324326555,
+     "cv_p90": 1.2512505859132872
+    },
+    {
+     "spacing": 203.13927331707978,
+     "smoothness": 0.01,
+     "cv_median": 0.5051834318627834,
+     "cv_p90": 1.2192311958571553
+    },
+    {
+     "spacing": 203.13927331707978,
+     "smoothness": 0.1,
+     "cv_median": 0.5022034760978408,
+     "cv_p90": 1.1235080792808039
+    },
+    {
+     "spacing": 203.13927331707978,
+     "smoothness": 1.0,
+     "cv_median": 0.5073075777096779,
+     "cv_p90": 1.1501237531910697
+    },
+    {
+     "spacing": 101.56963665853989,
+     "smoothness": 0.01,
+     "cv_median": 0.6294554164439076,
+     "cv_p90": 1.770766173984353
+    },
+    {
+     "spacing": 101.56963665853989,
+     "smoothness": 0.1,
+     "cv_median": 0.5215425169565084,
+     "cv_p90": 1.2262121451620955
+    },
+    {
+     "spacing": 101.56963665853989,
+     "smoothness": 1.0,
+     "cv_median": 0.4813851414226589,
+     "cv_p90": 1.1586473919713836
+    },
+    {
+     "spacing": 50.784818329269946,
+     "smoothness": 0.01,
+     "cv_median": 0.9646652716311415,
+     "cv_p90": 2.9874267054190073
+    },
+    {
+     "spacing": 50.784818329269946,
+     "smoothness": 0.1,
+     "cv_median": 0.6594732655432659,
+     "cv_p90": 1.8980700538695867
+    },
+    {
+     "spacing": 50.784818329269946,
+     "smoothness": 1.0,
+     "cv_median": 0.5320048796298603,
+     "cv_p90": 1.2576826982333769
+    }
+   ],
+   "field": {
+    "spacing_px": 203.139,
+    "smoothness": 0.01
+   }
+  },
+  "adopted": true,
+  "inliers": 474
+ },
+ "matches": {
+  "candidates": 505,
+  "inliers": 474,
+  "inlier_ratio": 0.9386
+ },
+ "distribution": {
+  "grid": [
+   57,
+   3
+  ],
+  "coverage_fraction": 0.6897,
+  "dispersion": 0.498,
+  "extrapolation_fraction": 0.569,
+  "eligible_cells": 116,
+  "total_cells": 171,
+  "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated",
+  "delivered": {
+   "file": "matches.csv",
+   "all_candidates_file": "matches_all.csv",
+   "points": 257,
+   "per_cell_limit": 4,
+   "grid": [
+    57,
+    3
+   ],
+   "quota_enforced": true,
+   "occupied_cells": 80,
+   "basis": "verified fit points; uniform cell quota, no relaxation"
+  }
+ },
+ "illumination": {
+  "delta_sun_azimuth_deg": null,
+  "source_sun_azimuth_deg": 110.14417,
+  "reference_sun_azimuth_deg": null,
+  "source_sun_incidence_deg": 31.721852,
+  "reference_sun_incidence_deg": null
+ },
+ "pair": {
+  "cross_correlation": 0.1289,
+  "anti_correlated": false,
+  "same_sensor": false,
+  "sensor_pair": "iirs-wac",
+  "scale_ratio": 0.8518,
+  "overlap_fraction": 0.4514,
+  "registered_overlap_fraction": 0.38331796355773207
+ },
+ "frame": {
+  "target_shape": [
+   5330,
+   236
+  ],
+  "reference_decimation": 2,
+  "reference_origin": [
+   17816,
+   84889
+  ],
+  "reference_sample_offset": [
+   0.0,
+   0.0
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "source geometry lattice -> reference projected plane",
+  "notes": [
+   "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
+  ],
+  "reference_window": [
+   17816,
+   84889,
+   28475,
+   85360
+  ],
+  "source_oversample": 2.451,
+  "source_taps": 2,
+  "source_coverage": 0.4514
+ },
+ "decomposition": {
+  "est_scale_x": 0.8496,
+  "est_scale_y": 0.9975,
+  "est_rotation_deg": 0.001,
+  "est_shear_det": 0.8475,
+  "est_translation_px": [
+   23.79,
+   9.24
+  ],
+  "est_perspective": [
+   0.0,
+   0.0
+  ]
+ },
+ "attempts": [
+  {
+   "method": "dense-ncc",
+   "seconds": 1.01,
+   "candidates": 43,
+   "note": "",
+   "model": "affine",
+   "inliers": 33,
+   "inlier_ratio": 0.7674,
+   "verified": true,
+   "log10_nfa": -25.71,
+   "coverage": 0.1905,
+   "dispersion": 0.4706,
+   "score": 22.12
+  },
+  {
+   "method": "disk_lightglue",
+   "seconds": 0.56,
+   "candidates": 0,
+   "note": ""
+  },
+  {
+   "method": "sift",
+   "seconds": 1.2,
+   "candidates": 6,
+   "note": "",
+   "model": "similarity",
+   "inliers": 2,
+   "inlier_ratio": 0.3333,
+   "verified": true,
+   "log10_nfa": null,
+   "rejected": "too few points to judge the model"
+  },
+  {
+   "method": "sift-gradient",
+   "seconds": 1.42,
+   "candidates": 29,
+   "note": "",
+   "model": "similarity",
+   "inliers": 2,
+   "inlier_ratio": 0.069,
+   "verified": true,
+   "log10_nfa": null,
+   "rejected": "too few points to judge the model"
+  },
+  {
+   "method": "sift-phase",
+   "seconds": 5.21,
+   "candidates": 13,
+   "note": "",
+   "model": "similarity",
+   "inliers": 2,
+   "inlier_ratio": 0.1538,
+   "verified": true,
+   "log10_nfa": null,
+   "rejected": "too few points to judge the model"
+  },
+  {
+   "method": "akaze",
+   "seconds": 0.5,
+   "candidates": 11,
+   "note": "",
+   "model": "similarity",
+   "inliers": 2,
+   "inlier_ratio": 0.1818,
+   "verified": true,
+   "log10_nfa": null,
+   "rejected": "too few points to judge the model"
+  },
+  {
+   "method": "orb",
+   "seconds": 0.4,
+   "candidates": 13,
+   "note": "",
+   "model": "similarity",
+   "inliers": 2,
+   "inlier_ratio": 0.1538,
+   "verified": true,
+   "log10_nfa": null,
+   "rejected": "too few points to judge the model"
+  }
+ ],
+ "source": {
+  "path": "ch2_iir_ndi_20250729T0936115604_d_rfl_d18_srd.qub",
+  "reader": "pds4",
+  "profile": "iirs",
+  "instrument": "IIRS",
+  "shape": [
+   13067,
+   250
+  ],
+  "gsd_m": 85.18,
+  "bands": 256,
+  "bit_depth": 32,
+  "georeferenced": false,
+  "crs": null,
+  "has_lonlat_lattice": true,
+  "acquired_utc": "2025-07-29T09:36:11.560400+00:00",
+  "sun_azimuth_deg": 110.14417,
+  "sun_incidence_deg": 31.721852,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 1.0,
+  "degraded": [
+   "pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)",
+   "geometry from the loc backplane"
+  ]
+ },
+ "reference": {
+  "path": "Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif",
+  "reader": "gdal",
+  "profile": "wac",
+  "instrument": "WAC",
+  "shape": [
+   54582,
+   109164
+  ],
+  "gsd_m": 100.0,
+  "bands": 1,
+  "bit_depth": 8,
+  "georeferenced": true,
+  "crs": "PROJCS[\"SimpleCylindrical MOON\",GEOGCS[\"GCS_MOON\",DATUM[\"D_MOON\",SPHEROID[\"MOON\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",0],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]",
+  "has_lonlat_lattice": false,
+  "acquired_utc": null,
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 1.0,
+  "degraded": [
+   "5958 megapixels: read lazily, in windows"
+  ]
+ },
+ "degraded": [
+  "source: pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)",
+  "source: geometry from the loc backplane",
+  "reference: 5958 megapixels: read lazily, in windows",
+  "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
+ ],
+ "export": {
+  "raster": "registered.tif",
+  "shape": [
+   10591,
+   389
+  ],
+  "bands": 256,
+  "reference_decimation": 1,
+  "reference_origin": [
+   17854,
+   84927
+  ],
+  "resolution": "native reference",
+  "dtype": "float32",
+  "supersampling": [
+   1
+  ],
+  "sampling": "bilinear original bands, averaged over k x k samples per output pixel where the source is finer; complete inverse registration field",
+  "radiometry": "stored values with original per-band scale and offset"
+ }
+}

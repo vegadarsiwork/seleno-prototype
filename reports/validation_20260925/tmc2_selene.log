@@ -1,0 +1,20 @@
+source    : {"path": "ch2_tmc_ncn_20260813T0627378557_d_img_d18.img", "reader": "pds4", "profile": "tmc2", "instrument": "TMC-2", "shape": [148108, 4000], "gsd_m": 5.48, "bands": 1, "bit_depth": 16, "georeferenced": false, "crs": null, "has_lonlat_lattice": true, "acquired_utc": "2026-08-13T06:27:37.855700+00:00", "sun_azimuth_deg": 69.556239, "sun_incidence_deg": 39.064886, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": []}
+reference : {"path": "TCO_MAPe04_S15E141S18E144SC.img", "reader": "pds3", "profile": "selene_tc", "instrument": "SELENE-TC", "shape": [12288, 12288], "gsd_m": 7.4031617246699, "bands": 1, "bit_depth": 16, "georeferenced": true, "crs": "GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Longitude\",EAST],AXIS[\"Latitude\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": "UNK", "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": []}
+memory   : working grid capped at 1893 px a side (asked for 2048): 5.0 GB available, budgeting 50% of it
+settings  : max_side=1893, grid=(12, 12) (explicit options override sensor defaults)
+frame     : source geometry lattice -> reference lon/lat, source covers 32.1% of the reference grid
+character : {"cross_correlation": -0.4921, "anti_correlated": true, "same_sensor": false, "sensor_pair": "tmc2-selene_tc", "scale_ratio": 0.7402, "overlap_fraction": 0.3206}
+plan      : dense-ncc -> disk_lightglue -> sift -> sift-gradient -> sift-phase -> akaze -> orb
+  dense-ncc        {"method": "dense-ncc", "seconds": 1.46, "candidates": 76, "model": "affine", "inliers": 70, "inlier_ratio": 0.9211, "verified": true, "log10_nfa": -75.14, "coverage": 0.4915, "dispersion": 0.3712, "score": 60.47}
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 7.5, "candidates": 45, "model": "affine", "inliers": 4, "inlier_ratio": 0.0889, "verified": true, "log10_nfa": 2.97, "rejected": "scale 4.286, rotation 84.9 deg is not a residual correction of a shared map frame"}
+  sift             {"method": "sift", "seconds": 2.05, "candidates": 4, "model": "similarity", "inliers": 2, "inlier_ratio": 0.5, "verified": true, "log10_nfa": null, "rejected": "too few points to judge the model"}
+  sift-gradient    {"method": "sift-gradient", "seconds": 2.05, "candidates": 37, "model": "affine", "inliers": 4, "inlier_ratio": 0.1081, "verified": true, "log10_nfa": 2.52, "rejected": "local anisotropy 27.0 exceeds 10.0"}
+  sift-phase       {"method": "sift-phase", "seconds": 10.28, "candidates": 11, "model": "similarity", "inliers": 2, "inlier_ratio": 0.1818, "verified": true, "log10_nfa": null, "rejected": "too few points to judge the model"}
+  akaze            {"method": "akaze", "seconds": 0.9, "candidates": 20, "model": "similarity", "inliers": 2, "inlier_ratio": 0.1, "verified": true, "log10_nfa": null, "rejected": "too few points to judge the model"}
+  orb              {"method": "orb", "seconds": 0.5, "candidates": 16, "model": "similarity", "inliers": 2, "inlier_ratio": 0.125, "verified": true, "log10_nfa": null, "rejected": "too few points to judge the model"}
+fine      : native probe -> grid-refined  (grid-refined 156/211)
+model     : local field adopted (spacing 55.3 working px, smoothness 0.01); cross-validated median 0.653 -> 0.150 px
+fine      : 2302 points from 53 native tiles, 1295 fit points, 1249 inliers
+preview   : panels at 1586 x 2048 (6x decimation; working grid 7x)
+status    : warning  (32% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it; check-point source rmse_px 2.336 fails < 1; check-point source p90_px 3.443 fails < 1; check-point source within_1_px 0.3359 fails >= 0.95; more than 25% of eligible area is outside fit-point support)
+wrote     : outputs/validation_20260925/tmc2_selene/5bf375cb167f

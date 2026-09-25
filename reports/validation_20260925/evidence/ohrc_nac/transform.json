@@ -1,0 +1,129 @@
+{
+ "model": "affine",
+ "matrix": [
+  [
+   0.9918382911162756,
+   -0.008210226889980354,
+   -625.3503603593589
+  ],
+  [
+   -0.011109692665399854,
+   0.9926122889106267,
+   968.9717512449714
+  ],
+  [
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "matrix_reference_px": [
+  [
+   0.9918382911162756,
+   -0.008210226889980354,
+   -2501.376883533775
+  ],
+  [
+   -0.011109692665399854,
+   0.9926122889106267,
+   3875.9147510855178
+  ],
+  [
+   0.0,
+   0.0,
+   1.0
+  ]
+ ],
+ "units": {
+  "reference_decimation": 4,
+  "metres_per_reference_px": 1.0,
+  "source_px_per_reference_px": 4.166666666666667,
+  "metres_per_working_px": 4.0
+ },
+ "decomposition": {
+  "est_scale_x": 0.9919,
+  "est_scale_y": 0.9926,
+  "est_rotation_deg": -0.642,
+  "est_shear_det": 0.9844,
+  "est_translation_px": [
+   -625.35,
+   968.97
+  ],
+  "est_perspective": [
+   0.0,
+   0.0
+  ]
+ },
+ "frame": {
+  "target_shape": [
+   1574,
+   1574
+  ],
+  "reference_decimation": 4,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "reference_sample_offset": [
+   1.5,
+   1.5
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "source geometry lattice -> reference projected plane",
+  "notes": [
+   "source reduced 16.1x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+  ],
+  "source_oversample": 16.052,
+  "source_taps": 1,
+  "source_coverage": 0.5145
+ },
+ "method": "akaze",
+ "pixel_convention": "zero-based pixel centres; world = GDAL affine * (x+0.5, y+0.5)",
+ "coordinates": "`matrix` is in working-grid centre coordinates; `matrix_reference_px` is the same transform in full-resolution reference pixels. Both are residual corrections after metadata prealignment. For segmented exports use the complete blended inverse field, not the global matrix alone.",
+ "segments": null,
+ "local_field": null,
+ "parallax": {
+  "kind": "dem_height",
+  "sampler": {
+   "dem": "/home/paardhu/Projects/seleno-prototype/data/raw/lola/ldem_875s_5m.lbl",
+   "reference_crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+   "reference_transform": [
+    1.0,
+    0.0,
+    -10067.0,
+    0.0,
+    -1.0,
+    -5790.0
+   ],
+   "grid_to_reference": [
+    [
+     4.0,
+     0.0,
+     1.5
+    ],
+    [
+     0.0,
+     4.0,
+     1.5
+    ],
+    [
+     0.0,
+     0.0,
+     1.0
+    ]
+   ]
+  },
+  "height_origin_m": 1635.3818874158287,
+  "coefficient_px_per_m": [
+   -0.003317252076155115,
+   -0.08259966139985028
+  ],
+  "definition": "source working px added per metre of DEM height above height_origin_m at the reference position"
+ },
+ "application": {
+  "kind": "global+terrain_parallax",
+  "sampling": "inverse matrix",
+  "segment_fallback": "global matrix",
+  "raster": "registered.tif"
+ }
+}

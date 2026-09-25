@@ -1,0 +1,589 @@
+{
+ "status": "warning",
+ "reason": "53% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it; check-point source rmse_px 3.84 fails < 1; check-point source p90_px 5.844 fails < 1; check-point source within_1_px 0.0801 fails >= 0.95; more than 25% of eligible area is outside fit-point support",
+ "notes": [
+  "One reference pixel spans 4.17 source pixels. This is a sampling scale, not an independently measured error bound."
+ ],
+ "status_meaning": "pass requires source-pixel consistency and spatial support; not an accuracy guarantee",
+ "acceptance": {
+  "passed": false,
+  "independently_verified": false,
+  "status": "failed",
+  "reasons": [
+   "check-point source rmse_px 3.84 fails < 1",
+   "check-point source p90_px 5.844 fails < 1",
+   "check-point source within_1_px 0.0801 fails >= 0.95",
+   "more than 25% of eligible area is outside fit-point support"
+  ],
+  "independent_reasons": [
+   "independent reference points were not supplied"
+  ],
+  "basis": "held-out check points (model-independent neighbour screen)",
+  "thresholds": {
+   "minimum_check_points": 12,
+   "check_point_fraction_at_least": 0.8,
+   "source_rmse_px_below": 1.0,
+   "source_p90_px_below": 1.0,
+   "within_1_source_px_at_least": 0.95,
+   "source_bias_px_below": 0.5,
+   "coverage_at_least": 0.5,
+   "extrapolation_at_most": 0.25
+  },
+  "meaning": "internal consistency and spatial support; independent check points required for verified accuracy"
+ },
+ "accuracy_statement": "3.84 source px RMSE over 412 held-out check points (3 of 415 held-out correspondences set aside as isolated mismatches); reference sampling scale 4.17 source px",
+ "job_id": "999e0fc08a02",
+ "generated_utc": "2026-09-25T09:43:27Z",
+ "runtime_s": 138.26,
+ "method_used": "akaze",
+ "model": "affine",
+ "accuracy": {
+  "held_out_n": 415,
+  "held_out_rmse_px": 0.48212704350228536,
+  "held_out_median_px": 0.21037261934360268,
+  "held_out_p90_px": 0.39759913651477086,
+  "held_out_exactly_on_model_n": 0,
+  "evaluation_file": "evaluation.json",
+  "matrix_sha256": "bb30f2c8fa3a635d29b2cabc440bbbd389ad840003d68160b43ce1f6612a6911",
+  "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
+  "transform_sha256": "5d49b2cd23a6ad927193658b552facf3403a955f8178fbc37a3fbec9336ec0fc",
+  "applied_model": {
+   "kind": "global+terrain_parallax",
+   "sampling": "inverse matrix",
+   "segment_fallback": "global matrix",
+   "raster": "registered.tif"
+  },
+  "held_out_invalid_n": 0,
+  "held_out_reference_n": 415,
+  "held_out_reference_valid_n": 415,
+  "held_out_reference_invalid_n": 0,
+  "held_out_reference_rmse_px": 1.9394437351365041,
+  "held_out_reference_median_px": 0.8477829923887795,
+  "held_out_reference_p90_px": 1.6682275300677014,
+  "held_out_reference_max_px": 26.08200034131154,
+  "held_out_reference_within_1_px": 0.6216867469879518,
+  "held_out_reference_bias_xy_px": [
+   0.013670600839173725,
+   -0.1025389588820795
+  ],
+  "held_out_reference_bias_px": 0.1034462344211949,
+  "held_out_source_n": 415,
+  "held_out_source_valid_n": 415,
+  "held_out_source_invalid_n": 0,
+  "held_out_source_rmse_px": 7.279941820568841,
+  "held_out_source_median_px": 3.0861456332256147,
+  "held_out_source_p90_px": 5.8989753218882495,
+  "held_out_source_max_px": 96.66844371106339,
+  "held_out_source_within_1_px": 0.07951807228915662,
+  "held_out_source_bias_xy_px": [
+   -0.2901168026958863,
+   -0.31918734341333144
+  ],
+  "held_out_source_bias_px": 0.4313331883842742,
+  "source_error_definition": "backward transfer in native source pixel centres",
+  "check_point_n": 412,
+  "check_point_rejected_n": 3,
+  "check_point_fraction": 0.9927710843373494,
+  "check_point_rule": "held-out correspondence within max(3 reference px, 3 robust sigma) of the median displacement of its 10 nearest held-out neighbours, displacements taken against the coarse model; the exported model is not consulted",
+  "check_point_rmse_px": 0.25831747885612427,
+  "check_point_median_px": 0.20984942164535725,
+  "check_point_p90_px": 0.39150698888220836,
+  "check_point_invalid_n": 0,
+  "check_point_reference_n": 412,
+  "check_point_reference_valid_n": 412,
+  "check_point_reference_invalid_n": 0,
+  "check_point_reference_rmse_px": 1.057308526014156,
+  "check_point_reference_median_px": 0.8466828182211825,
+  "check_point_reference_p90_px": 1.6421107095780956,
+  "check_point_reference_max_px": 3.4788042341340235,
+  "check_point_reference_within_1_px": 0.6237864077669902,
+  "check_point_reference_bias_xy_px": [
+   0.03390658808129922,
+   -0.11621287927551942
+  ],
+  "check_point_reference_bias_px": 0.12105820924175838,
+  "check_point_source_n": 412,
+  "check_point_source_valid_n": 412,
+  "check_point_source_invalid_n": 0,
+  "check_point_source_rmse_px": 3.839696132329282,
+  "check_point_source_median_px": 3.0856663604520707,
+  "check_point_source_p90_px": 5.843804672842859,
+  "check_point_source_max_px": 11.142967310873383,
+  "check_point_source_within_1_px": 0.08009708737864078,
+  "check_point_source_bias_xy_px": [
+   -0.2645833411828703,
+   -0.4070027591721016
+  ],
+  "check_point_source_bias_px": 0.48544370467150455,
+  "subpixel_method": "matcher",
+  "ecc": {
+   "attempted": false,
+   "adopted": false,
+   "note": "not run: the model was measured at native resolution"
+  },
+  "rmse_px": 0.25831747885612427,
+  "rmse_reference_px": 1.0333,
+  "rmse_working_px": 0.2583,
+  "rmse_source_px": 3.839696132329282,
+  "rmse_m": 1.033,
+  "metres_per_pixel": 4.0,
+  "units": {
+   "reference_decimation": 4,
+   "metres_per_reference_px": 1.0,
+   "source_px_per_reference_px": 4.166666666666667,
+   "metres_per_working_px": 4.0
+  },
+  "subpixel": false,
+  "independently_verified_subpixel": false,
+  "subpixel_basis": "source pixels",
+  "subpixel_working_grid": true,
+  "reference_sampling_source_px": 4.166666666666667,
+  "sampling_floor_basis": "nominal one-reference-pixel sampling; not an error lower bound",
+  "subpixel_floor_source_px": 4.167,
+  "subpixel_attainable": false
+ },
+ "fine_stage": {
+  "attempted": true,
+  "windows": 11,
+  "windows_used": 10,
+  "points": 1986,
+  "native": true,
+  "note": null,
+  "method": "grid-refined",
+  "probe": [
+   {
+    "method": "grid-refined",
+    "candidates": 639,
+    "inliers": 344
+   }
+  ],
+  "seeds": 5995,
+  "seed_spacing_px": 36.47,
+  "search_px": 12,
+  "patch_px": 41,
+  "placement": "11 tiles over 5995 lattice seeds at 36.5 px spacing",
+  "patch_cv": [
+   {
+    "patch_px": 41,
+    "fit_n": 639,
+    "common_n": 622,
+    "fit_cells": 7,
+    "cv_median": 5.380807276517123,
+    "cv_p90": 9.309704270150474,
+    "measurement_fraction": 1.0
+   },
+   {
+    "patch_px": 61,
+    "fit_n": 656,
+    "common_n": 622,
+    "fit_cells": 7,
+    "cv_median": 5.42951832568596,
+    "cv_p90": 9.269385840935138,
+    "measurement_fraction": 1.02660406885759
+   }
+  ],
+  "patch_selection": "spatial cross-validation on common fit-fold probe seeds only",
+  "passes": [
+   {
+    "prewarp": "coarse model",
+    "tiles_with_points": 7
+   },
+   {
+    "prewarp": "affine from 561 fit-fold points",
+    "retried": 4,
+    "tiles_with_points": 7
+   }
+  ],
+  "refinement_counts": {
+   "intensity": 2943,
+   "inverted_intensity": 0,
+   "gradient": 43,
+   "boundary": 28,
+   "texture": 961,
+   "peak": 4964,
+   "ecc": 8,
+   "forward_backward": 257,
+   "reduced_patch": 261
+  },
+  "dem": "ldem_875s_5m.lbl",
+  "model_fit": {
+   "points": 1287,
+   "tight_threshold_px": 0.75,
+   "loose_threshold_px": 3.75,
+   "loose_inliers": 1259,
+   "consistent": 1253,
+   "height_cv": {
+    "global": {
+     "cv_median": 1.4487034826081413,
+     "cv_p90": 2.6340984621769294
+    },
+    "global+height": {
+     "cv_median": 0.25736556302217406,
+     "cv_p90": 0.5016343238347329
+    }
+   },
+   "parallax": {
+    "coefficient_px_per_m": [
+     -0.003317252076155115,
+     -0.08259966139985028
+    ],
+    "height_origin_m": 1635.3818874158287,
+    "height_std_m": 108.3985557581845
+   },
+   "field_cv": [
+    {
+     "spacing": null,
+     "smoothness": null,
+     "cv_median": 0.14614160864775066,
+     "cv_p90": 0.34421982732444417
+    },
+    {
+     "spacing": 340.6329766424891,
+     "smoothness": 0.01,
+     "cv_median": 0.1804607349415918,
+     "cv_p90": 0.41859168511829803
+    },
+    {
+     "spacing": 340.6329766424891,
+     "smoothness": 0.1,
+     "cv_median": 0.20962656461284035,
+     "cv_p90": 0.5651662979216723
+    },
+    {
+     "spacing": 340.6329766424891,
+     "smoothness": 1.0,
+     "cv_median": 0.2108539270980546,
+     "cv_p90": 0.5993490305734492
+    },
+    {
+     "spacing": 170.31648832124455,
+     "smoothness": 0.01,
+     "cv_median": 0.2058721804958493,
+     "cv_p90": 0.47784223698499073
+    },
+    {
+     "spacing": 170.31648832124455,
+     "smoothness": 0.1,
+     "cv_median": 0.19493965867082855,
+     "cv_p90": 0.4521902752036083
+    },
+    {
+     "spacing": 170.31648832124455,
+     "smoothness": 1.0,
+     "cv_median": 0.2105967936611923,
+     "cv_p90": 0.5470396548069867
+    },
+    {
+     "spacing": 85.15824416062227,
+     "smoothness": 0.01,
+     "cv_median": 0.373756478529566,
+     "cv_p90": 1.1355560479594313
+    },
+    {
+     "spacing": 85.15824416062227,
+     "smoothness": 0.1,
+     "cv_median": 0.21941084911377035,
+     "cv_p90": 0.5037766561114817
+    },
+    {
+     "spacing": 85.15824416062227,
+     "smoothness": 1.0,
+     "cv_median": 0.2037035916448602,
+     "cv_p90": 0.4700811734442412
+    },
+    {
+     "spacing": 42.57912208031114,
+     "smoothness": 0.01,
+     "cv_median": 0.4855973419135252,
+     "cv_p90": 1.577427281616842
+    },
+    {
+     "spacing": 42.57912208031114,
+     "smoothness": 0.1,
+     "cv_median": 0.48514125044929834,
+     "cv_p90": 1.3713242041665796
+    },
+    {
+     "spacing": 42.57912208031114,
+     "smoothness": 1.0,
+     "cv_median": 0.2275683763710008,
+     "cv_p90": 0.5292675233586728
+    },
+    {
+     "spacing": 21.28956104015557,
+     "smoothness": 0.01,
+     "cv_median": 0.41301430569944514,
+     "cv_p90": 1.2173998238110773
+    },
+    {
+     "spacing": 21.28956104015557,
+     "smoothness": 0.1,
+     "cv_median": 0.472016952611797,
+     "cv_p90": 1.5121168992992533
+    },
+    {
+     "spacing": 21.28956104015557,
+     "smoothness": 1.0,
+     "cv_median": 0.5024435396760025,
+     "cv_p90": 1.4076683854110033
+    }
+   ]
+  },
+  "adopted": true,
+  "inliers": 1259,
+  "segments_note": "segments not fitted: the local field and terrain term model along-track change"
+ },
+ "matches": {
+  "candidates": 1287,
+  "inliers": 1259,
+  "inlier_ratio": 0.9782
+ },
+ "distribution": {
+  "grid": [
+   12,
+   12
+  ],
+  "coverage_fraction": 0.6765,
+  "dispersion": 0.2097,
+  "extrapolation_fraction": 0.5294,
+  "eligible_cells": 34,
+  "total_cells": 144,
+  "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated",
+  "delivered": {
+   "file": "matches.csv",
+   "all_candidates_file": "matches_all.csv",
+   "points": 90,
+   "per_cell_limit": 4,
+   "grid": [
+    12,
+    12
+   ],
+   "quota_enforced": true,
+   "occupied_cells": 23,
+   "basis": "verified fit points; uniform cell quota, no relaxation"
+  }
+ },
+ "illumination": {
+  "delta_sun_azimuth_deg": null,
+  "source_sun_azimuth_deg": null,
+  "reference_sun_azimuth_deg": null,
+  "source_sun_incidence_deg": null,
+  "reference_sun_incidence_deg": null
+ },
+ "pair": {
+  "cross_correlation": -0.6174,
+  "anti_correlated": true,
+  "same_sensor": false,
+  "sensor_pair": "ohrc-nac",
+  "scale_ratio": 0.24,
+  "overlap_fraction": 0.3648,
+  "registered_overlap_fraction": 0.20393497252849271
+ },
+ "frame": {
+  "target_shape": [
+   1574,
+   1574
+  ],
+  "reference_decimation": 4,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "reference_sample_offset": [
+   1.5,
+   1.5
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "source geometry lattice -> reference projected plane",
+  "notes": [
+   "source reduced 16.1x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+  ],
+  "source_oversample": 16.052,
+  "source_taps": 1,
+  "source_coverage": 0.5145
+ },
+ "decomposition": {
+  "est_scale_x": 0.9919,
+  "est_scale_y": 0.9926,
+  "est_rotation_deg": -0.642,
+  "est_shear_det": 0.9844,
+  "est_translation_px": [
+   -625.35,
+   968.97
+  ],
+  "est_perspective": [
+   0.0,
+   0.0
+  ]
+ },
+ "attempts": [
+  {
+   "method": "dense-ncc",
+   "seconds": 1.75,
+   "candidates": 6,
+   "note": "",
+   "model": "similarity",
+   "inliers": 3,
+   "inlier_ratio": 0.5,
+   "verified": true,
+   "log10_nfa": 1.04,
+   "rejected": "consensus is not significant: 3 of 6 agree, NFA 10^1.0"
+  },
+  {
+   "method": "disk_lightglue",
+   "seconds": 9.01,
+   "candidates": 298,
+   "note": "",
+   "model": "affine",
+   "inliers": 196,
+   "inlier_ratio": 0.6577,
+   "verified": true,
+   "log10_nfa": -778.99,
+   "coverage": 0.1765,
+   "dispersion": 0.1927,
+   "score": 91.85
+  },
+  {
+   "method": "sift",
+   "seconds": 1.46,
+   "candidates": 260,
+   "note": "",
+   "model": "affine",
+   "inliers": 165,
+   "inlier_ratio": 0.6346,
+   "verified": true,
+   "log10_nfa": -648.64,
+   "coverage": 0.1324,
+   "dispersion": 0.2053,
+   "score": 73.59
+  },
+  {
+   "method": "sift-gradient",
+   "seconds": 1.57,
+   "candidates": 205,
+   "note": "",
+   "model": "affine",
+   "inliers": 130,
+   "inlier_ratio": 0.6341,
+   "verified": true,
+   "log10_nfa": -507.0,
+   "coverage": 0.2059,
+   "dispersion": 0.2245,
+   "score": 66.48
+  },
+  {
+   "method": "sift-phase",
+   "seconds": 9.77,
+   "candidates": 26,
+   "note": "",
+   "model": "similarity",
+   "inliers": 3,
+   "inlier_ratio": 0.1154,
+   "verified": true,
+   "log10_nfa": 0.77,
+   "rejected": "consensus is not significant: 3 of 26 agree, NFA 10^0.8"
+  },
+  {
+   "method": "akaze",
+   "seconds": 0.67,
+   "candidates": 308,
+   "note": "",
+   "model": "affine",
+   "inliers": 215,
+   "inlier_ratio": 0.6981,
+   "verified": true,
+   "log10_nfa": -865.66,
+   "coverage": 0.1912,
+   "dispersion": 0.1921,
+   "score": 102.84
+  },
+  {
+   "method": "orb",
+   "seconds": 0.44,
+   "candidates": 243,
+   "note": "",
+   "model": "affine",
+   "inliers": 163,
+   "inlier_ratio": 0.6708,
+   "verified": true,
+   "log10_nfa": -646.91,
+   "coverage": 0.1029,
+   "dispersion": 0.2076,
+   "score": 69.54
+  }
+ ],
+ "source": {
+  "path": "ch2_ohr_ncp_20241115T1326321339_d_img_d18.img",
+  "reader": "pds4",
+  "profile": "ohrc",
+  "instrument": "OHRC",
+  "shape": [
+   101074,
+   12000
+  ],
+  "gsd_m": 0.24,
+  "bands": 1,
+  "bit_depth": 8,
+  "georeferenced": false,
+  "crs": null,
+  "has_lonlat_lattice": true,
+  "acquired_utc": "2024-11-15T13:26:32.133900+00:00",
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 0.9995,
+  "degraded": [
+   "label Sun angles are confounded by 14.6 deg of roll; treated as untrusted",
+   "reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error"
+  ]
+ },
+ "reference": {
+  "path": "NAC_CM355_P892S2250_pole_6km.tif",
+  "reader": "gdal",
+  "profile": "nac",
+  "instrument": "NAC",
+  "shape": [
+   6296,
+   6296
+  ],
+  "gsd_m": 1.0,
+  "bands": 1,
+  "bit_depth": 8,
+  "georeferenced": true,
+  "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+  "has_lonlat_lattice": false,
+  "acquired_utc": null,
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 0.8136,
+  "degraded": []
+ },
+ "degraded": [
+  "source: label Sun angles are confounded by 14.6 deg of roll; treated as untrusted",
+  "source: reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error",
+  "source reduced 16.1x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth",
+  "working grid capped at 1722 px a side (asked for 2048): 5.3 GB available, budgeting 50% of it"
+ ],
+ "export": {
+  "raster": "registered.tif",
+  "shape": [
+   2583,
+   3743
+  ],
+  "bands": 1,
+  "reference_decimation": 1,
+  "reference_origin": [
+   3713,
+   0
+  ],
+  "resolution": "native reference",
+  "dtype": "float32",
+  "supersampling": [
+   1,
+   4
+  ],
+  "sampling": "bilinear original bands, averaged over k x k samples per output pixel where the source is finer; complete inverse registration field",
+  "radiometry": "stored values with original per-band scale and offset"
+ }
+}

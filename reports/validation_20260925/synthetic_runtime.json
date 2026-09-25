@@ -1,0 +1,12 @@
+{
+  "threads": {
+    "OPENBLAS_NUM_THREADS": "2",
+    "OMP_NUM_THREADS": "2"
+  },
+  "tmpdir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260925/tmp",
+  "process_peak_rss_mb": 1093.2,
+  "memory.max": "5767168000",
+  "memory.swap.max": "0",
+  "memory.peak": "1210658816",
+  "memory.events": "low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\noom_group_kill 0\nsock_throttled 0"
+}

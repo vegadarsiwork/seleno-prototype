@@ -1,0 +1,878 @@
+{
+  "real": [
+    {
+      "name": "ohrc_nac",
+      "role": "primary",
+      "status": "warning",
+      "accepted": false,
+      "seconds": 138.53,
+      "source": {
+        "n": 412,
+        "invalid_n": 0,
+        "rmse": 3.839696132329282,
+        "median": 3.0856663604520707,
+        "p90": 5.843804672842859,
+        "within_1": 0.08009708737864078
+      },
+      "reference": {
+        "n": 412,
+        "invalid_n": 0,
+        "rmse": 1.057308526014156,
+        "median": 0.8466828182211825,
+        "p90": 1.6421107095780956,
+        "within_1": 0.6237864077669902
+      },
+      "metres": {
+        "n": 412,
+        "invalid_n": 0,
+        "rmse": 1.057308526014156,
+        "median": 0.8466828182211825,
+        "p90": 1.6421107095780956,
+        "within_1": 0.6237864077669902
+      },
+      "all_source": {
+        "n": 415,
+        "invalid_n": 0,
+        "rmse": 7.279941820568841,
+        "median": 3.0861456332256147,
+        "p90": 5.8989753218882495,
+        "within_1": 0.07951807228915662
+      },
+      "check_fraction": 0.9927710843373494,
+      "check_n": 412,
+      "held_n": 415,
+      "coverage": 0.6765,
+      "extrapolation": 0.5294,
+      "models": "affine + terrain",
+      "patch": 41,
+      "patch_selection": "spatial cross-validation on common fit-fold probe seeds only",
+      "patch_cv": [
+        {
+          "patch_px": 41,
+          "fit_n": 639,
+          "common_n": 622,
+          "fit_cells": 7,
+          "cv_median": 5.380807276517123,
+          "cv_p90": 9.309704270150474,
+          "measurement_fraction": 1.0
+        },
+        {
+          "patch_px": 61,
+          "fit_n": 656,
+          "common_n": 622,
+          "fit_cells": 7,
+          "cv_median": 5.42951832568596,
+          "cv_p90": 9.269385840935138,
+          "measurement_fraction": 1.02660406885759
+        }
+      ],
+      "points": 1986,
+      "inliers": 1259,
+      "inlier_ratio": 0.9782,
+      "fit": {
+        "points": 1287,
+        "tight_threshold_px": 0.75,
+        "loose_threshold_px": 3.75,
+        "loose_inliers": 1259,
+        "consistent": 1253,
+        "height_cv": {
+          "global": {
+            "cv_median": 1.4487034826081413,
+            "cv_p90": 2.6340984621769294
+          },
+          "global+height": {
+            "cv_median": 0.25736556302217406,
+            "cv_p90": 0.5016343238347329
+          }
+        },
+        "parallax": {
+          "coefficient_px_per_m": [
+            -0.003317252076155115,
+            -0.08259966139985028
+          ],
+          "height_origin_m": 1635.3818874158287,
+          "height_std_m": 108.3985557581845
+        },
+        "field_cv": [
+          {
+            "spacing": null,
+            "smoothness": null,
+            "cv_median": 0.14614160864775066,
+            "cv_p90": 0.34421982732444417
+          },
+          {
+            "spacing": 340.6329766424891,
+            "smoothness": 0.01,
+            "cv_median": 0.1804607349415918,
+            "cv_p90": 0.41859168511829803
+          },
+          {
+            "spacing": 340.6329766424891,
+            "smoothness": 0.1,
+            "cv_median": 0.20962656461284035,
+            "cv_p90": 0.5651662979216723
+          },
+          {
+            "spacing": 340.6329766424891,
+            "smoothness": 1.0,
+            "cv_median": 0.2108539270980546,
+            "cv_p90": 0.5993490305734492
+          },
+          {
+            "spacing": 170.31648832124455,
+            "smoothness": 0.01,
+            "cv_median": 0.2058721804958493,
+            "cv_p90": 0.47784223698499073
+          },
+          {
+            "spacing": 170.31648832124455,
+            "smoothness": 0.1,
+            "cv_median": 0.19493965867082855,
+            "cv_p90": 0.4521902752036083
+          },
+          {
+            "spacing": 170.31648832124455,
+            "smoothness": 1.0,
+            "cv_median": 0.2105967936611923,
+            "cv_p90": 0.5470396548069867
+          },
+          {
+            "spacing": 85.15824416062227,
+            "smoothness": 0.01,
+            "cv_median": 0.373756478529566,
+            "cv_p90": 1.1355560479594313
+          },
+          {
+            "spacing": 85.15824416062227,
+            "smoothness": 0.1,
+            "cv_median": 0.21941084911377035,
+            "cv_p90": 0.5037766561114817
+          },
+          {
+            "spacing": 85.15824416062227,
+            "smoothness": 1.0,
+            "cv_median": 0.2037035916448602,
+            "cv_p90": 0.4700811734442412
+          },
+          {
+            "spacing": 42.57912208031114,
+            "smoothness": 0.01,
+            "cv_median": 0.4855973419135252,
+            "cv_p90": 1.577427281616842
+          },
+          {
+            "spacing": 42.57912208031114,
+            "smoothness": 0.1,
+            "cv_median": 0.48514125044929834,
+            "cv_p90": 1.3713242041665796
+          },
+          {
+            "spacing": 42.57912208031114,
+            "smoothness": 1.0,
+            "cv_median": 0.2275683763710008,
+            "cv_p90": 0.5292675233586728
+          },
+          {
+            "spacing": 21.28956104015557,
+            "smoothness": 0.01,
+            "cv_median": 0.41301430569944514,
+            "cv_p90": 1.2173998238110773
+          },
+          {
+            "spacing": 21.28956104015557,
+            "smoothness": 0.1,
+            "cv_median": 0.472016952611797,
+            "cv_p90": 1.5121168992992533
+          },
+          {
+            "spacing": 21.28956104015557,
+            "smoothness": 1.0,
+            "cv_median": 0.5024435396760025,
+            "cv_p90": 1.4076683854110033
+          }
+        ]
+      },
+      "export": {
+        "shape": [
+          2583,
+          3743
+        ],
+        "bands": 1,
+        "transform": [
+          1.0,
+          0.0,
+          -10067.0,
+          0.0,
+          -1.0,
+          -9503.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]"
+      },
+      "reasons": [
+        "check-point source rmse_px 3.84 fails < 1",
+        "check-point source p90_px 5.844 fails < 1",
+        "check-point source within_1_px 0.0801 fails >= 0.95",
+        "more than 25% of eligible area is outside fit-point support"
+      ],
+      "out_dir": "outputs/validation_20260925/ohrc_nac/999e0fc08a02"
+    },
+    {
+      "name": "tmc2_selene",
+      "role": "primary",
+      "status": "warning",
+      "accepted": false,
+      "seconds": 303.26,
+      "source": {
+        "n": 792,
+        "invalid_n": 0,
+        "rmse": 2.335911144778734,
+        "median": 1.392521818908194,
+        "p90": 3.4432209482720086,
+        "within_1": 0.33585858585858586
+      },
+      "reference": {
+        "n": 792,
+        "invalid_n": 0,
+        "rmse": 1.7455756749222513,
+        "median": 1.014876979227379,
+        "p90": 2.540315720153989,
+        "within_1": 0.49242424242424243
+      },
+      "metres": {
+        "n": 792,
+        "invalid_n": 0,
+        "rmse": 12.922779024099237,
+        "median": 7.513298407864742,
+        "p90": 18.806368108021264,
+        "within_1": 0.021464646464646464
+      },
+      "all_source": {
+        "n": 797,
+        "invalid_n": 0,
+        "rmse": 2.5936555090335847,
+        "median": 1.4027610414393616,
+        "p90": 3.5367300515166518,
+        "within_1": 0.3337515683814304
+      },
+      "check_fraction": 0.9937264742785445,
+      "check_n": 792,
+      "held_n": 797,
+      "coverage": 0.7833,
+      "extrapolation": 0.3167,
+      "models": "affine + field",
+      "patch": 41,
+      "patch_selection": "spatial cross-validation on common fit-fold probe seeds only",
+      "patch_cv": [
+        {
+          "patch_px": 41,
+          "fit_n": 211,
+          "common_n": 171,
+          "fit_cells": 13,
+          "cv_median": 2.2334995958911277,
+          "cv_p90": 5.149224606406887,
+          "measurement_fraction": 1.0
+        },
+        {
+          "patch_px": 61,
+          "fit_n": 264,
+          "common_n": 171,
+          "fit_cells": 13,
+          "cv_median": 2.1437427293373066,
+          "cv_p90": 4.655063221401868,
+          "measurement_fraction": 1.2511848341232228
+        }
+      ],
+      "points": 2302,
+      "inliers": 1249,
+      "inlier_ratio": 0.9645,
+      "fit": {
+        "points": 1295,
+        "tight_threshold_px": 0.4286,
+        "loose_threshold_px": 3.4286,
+        "loose_inliers": 1222,
+        "consistent": 1208,
+        "field_cv": [
+          {
+            "spacing": null,
+            "smoothness": null,
+            "cv_median": 0.6533033143572291,
+            "cv_p90": 1.714547640269264
+          },
+          {
+            "spacing": 221.2026621160414,
+            "smoothness": 0.01,
+            "cv_median": 0.2940327583626917,
+            "cv_p90": 0.861581473266022
+          },
+          {
+            "spacing": 221.2026621160414,
+            "smoothness": 0.1,
+            "cv_median": 0.5051500059804532,
+            "cv_p90": 1.2837244794332954
+          },
+          {
+            "spacing": 221.2026621160414,
+            "smoothness": 1.0,
+            "cv_median": 0.6706556160458792,
+            "cv_p90": 1.7031959390630533
+          },
+          {
+            "spacing": 110.6013310580207,
+            "smoothness": 0.01,
+            "cv_median": 0.1743818021194533,
+            "cv_p90": 0.5355952770973015
+          },
+          {
+            "spacing": 110.6013310580207,
+            "smoothness": 0.1,
+            "cv_median": 0.24427275339817403,
+            "cv_p90": 0.7889044672560664
+          },
+          {
+            "spacing": 110.6013310580207,
+            "smoothness": 1.0,
+            "cv_median": 0.46038079251148367,
+            "cv_p90": 1.1425826762749243
+          },
+          {
+            "spacing": 55.30066552901035,
+            "smoothness": 0.01,
+            "cv_median": 0.14962427162495284,
+            "cv_p90": 0.3890936265776538
+          },
+          {
+            "spacing": 55.30066552901035,
+            "smoothness": 0.1,
+            "cv_median": 0.15437158438553467,
+            "cv_p90": 0.48500377936819145
+          },
+          {
+            "spacing": 55.30066552901035,
+            "smoothness": 1.0,
+            "cv_median": 0.21972876164381167,
+            "cv_p90": 0.7151231947906743
+          },
+          {
+            "spacing": 27.650332764505176,
+            "smoothness": 0.01,
+            "cv_median": 0.21821994790715502,
+            "cv_p90": 0.6473235354671835
+          },
+          {
+            "spacing": 27.650332764505176,
+            "smoothness": 0.1,
+            "cv_median": 0.1551689433742588,
+            "cv_p90": 0.41145977296497815
+          },
+          {
+            "spacing": 27.650332764505176,
+            "smoothness": 1.0,
+            "cv_median": 0.15256205876698395,
+            "cv_p90": 0.473056273531807
+          }
+        ],
+        "field": {
+          "spacing_px": 55.301,
+          "smoothness": 0.01
+        }
+      },
+      "export": {
+        "shape": [
+          12287,
+          3571
+        ],
+        "bands": 1,
+        "transform": [
+          0.000244140625,
+          0.0,
+          141.41015625,
+          0.0,
+          -0.000244140625,
+          -15.000244140625,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "crs": "GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST]]"
+      },
+      "reasons": [
+        "check-point source rmse_px 2.336 fails < 1",
+        "check-point source p90_px 3.443 fails < 1",
+        "check-point source within_1_px 0.3359 fails >= 0.95",
+        "more than 25% of eligible area is outside fit-point support"
+      ],
+      "out_dir": "outputs/validation_20260925/tmc2_selene/5bf375cb167f"
+    },
+    {
+      "name": "iirs_20250729_wac",
+      "role": "primary",
+      "status": "warning",
+      "accepted": false,
+      "seconds": 163.91,
+      "source": {
+        "n": 292,
+        "invalid_n": 0,
+        "rmse": 1.8699030623363957,
+        "median": 1.2360698683733693,
+        "p90": 2.5955078800309757,
+        "within_1": 0.363013698630137
+      },
+      "reference": {
+        "n": 292,
+        "invalid_n": 0,
+        "rmse": 1.6157194623902225,
+        "median": 1.0621368762702743,
+        "p90": 2.1331257808072244,
+        "within_1": 0.4657534246575342
+      },
+      "metres": {
+        "n": 292,
+        "invalid_n": 0,
+        "rmse": 161.57194623902225,
+        "median": 106.21368762702741,
+        "p90": 213.31257808072243,
+        "within_1": 0.0
+      },
+      "all_source": {
+        "n": 298,
+        "invalid_n": 0,
+        "rmse": 2.037676898959202,
+        "median": 1.2568119529854163,
+        "p90": 2.6684593238317964,
+        "within_1": 0.35570469798657717
+      },
+      "check_fraction": 0.9798657718120806,
+      "check_n": 292,
+      "held_n": 298,
+      "coverage": 0.6897,
+      "extrapolation": 0.569,
+      "models": "affine + field",
+      "patch": 41,
+      "patch_selection": "spatial cross-validation on common fit-fold probe seeds only",
+      "patch_cv": [
+        {
+          "patch_px": 41,
+          "fit_n": 171,
+          "common_n": 94,
+          "fit_cells": 13,
+          "cv_median": 1.0454558693766367,
+          "cv_p90": 3.0271996259893963,
+          "measurement_fraction": 1.0
+        },
+        {
+          "patch_px": 61,
+          "fit_n": 187,
+          "common_n": 94,
+          "fit_cells": 13,
+          "cv_median": 1.055509006249141,
+          "cv_p90": 2.657203167531855,
+          "measurement_fraction": 1.0935672514619883
+        }
+      ],
+      "points": 858,
+      "inliers": 474,
+      "inlier_ratio": 0.9386,
+      "fit": {
+        "points": 505,
+        "tight_threshold_px": 1.5,
+        "loose_threshold_px": 6.0,
+        "loose_inliers": 505,
+        "consistent": 487,
+        "field_cv": [
+          {
+            "spacing": null,
+            "smoothness": null,
+            "cv_median": 0.6649555324326555,
+            "cv_p90": 1.2512505859132872
+          },
+          {
+            "spacing": 203.13927331707978,
+            "smoothness": 0.01,
+            "cv_median": 0.5051834318627834,
+            "cv_p90": 1.2192311958571553
+          },
+          {
+            "spacing": 203.13927331707978,
+            "smoothness": 0.1,
+            "cv_median": 0.5022034760978408,
+            "cv_p90": 1.1235080792808039
+          },
+          {
+            "spacing": 203.13927331707978,
+            "smoothness": 1.0,
+            "cv_median": 0.5073075777096779,
+            "cv_p90": 1.1501237531910697
+          },
+          {
+            "spacing": 101.56963665853989,
+            "smoothness": 0.01,
+            "cv_median": 0.6294554164439076,
+            "cv_p90": 1.770766173984353
+          },
+          {
+            "spacing": 101.56963665853989,
+            "smoothness": 0.1,
+            "cv_median": 0.5215425169565084,
+            "cv_p90": 1.2262121451620955
+          },
+          {
+            "spacing": 101.56963665853989,
+            "smoothness": 1.0,
+            "cv_median": 0.4813851414226589,
+            "cv_p90": 1.1586473919713836
+          },
+          {
+            "spacing": 50.784818329269946,
+            "smoothness": 0.01,
+            "cv_median": 0.9646652716311415,
+            "cv_p90": 2.9874267054190073
+          },
+          {
+            "spacing": 50.784818329269946,
+            "smoothness": 0.1,
+            "cv_median": 0.6594732655432659,
+            "cv_p90": 1.8980700538695867
+          },
+          {
+            "spacing": 50.784818329269946,
+            "smoothness": 1.0,
+            "cv_median": 0.5320048796298603,
+            "cv_p90": 1.2576826982333769
+          }
+        ],
+        "field": {
+          "spacing_px": 203.139,
+          "smoothness": 0.01
+        }
+      },
+      "export": {
+        "shape": [
+          10591,
+          389
+        ],
+        "bands": 256,
+        "transform": [
+          100.0,
+          0.0,
+          3034496.9236530997,
+          0.0,
+          -100.0,
+          943701.5381734502,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "crs": "PROJCS[\"SimpleCylindrical MOON\",GEOGCS[\"GCS_MOON\",DATUM[\"D_MOON\",SPHEROID[\"MOON\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",0],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+      },
+      "reasons": [
+        "check-point source rmse_px 1.87 fails < 1",
+        "check-point source p90_px 2.596 fails < 1",
+        "check-point source within_1_px 0.363 fails >= 0.95",
+        "more than 25% of eligible area is outside fit-point support"
+      ],
+      "out_dir": "outputs/validation_20260925/iirs_20250729_wac/b38636650c6a"
+    },
+    {
+      "name": "iirs_20240120_wac",
+      "role": "primary",
+      "status": "warning",
+      "accepted": false,
+      "seconds": 273.74,
+      "source": {
+        "n": 648,
+        "invalid_n": 0,
+        "rmse": 1.3124983068150882,
+        "median": 0.7428495032656026,
+        "p90": 2.468089416536346,
+        "within_1": 0.6743827160493827
+      },
+      "reference": {
+        "n": 648,
+        "invalid_n": 0,
+        "rmse": 1.191410903683879,
+        "median": 0.6981817432927988,
+        "p90": 2.2032668279027465,
+        "within_1": 0.691358024691358
+      },
+      "metres": {
+        "n": 648,
+        "invalid_n": 0,
+        "rmse": 119.14109036838788,
+        "median": 69.81817432927988,
+        "p90": 220.32668279027465,
+        "within_1": 0.0
+      },
+      "all_source": {
+        "n": 655,
+        "invalid_n": 0,
+        "rmse": 1.4870678235921226,
+        "median": 0.7467192130754589,
+        "p90": 2.531229317681037,
+        "within_1": 0.667175572519084
+      },
+      "check_fraction": 0.9893129770992366,
+      "check_n": 648,
+      "held_n": 655,
+      "coverage": 0.7534,
+      "extrapolation": 0.4795,
+      "models": "affine + field",
+      "patch": 61,
+      "patch_selection": "spatial cross-validation on common fit-fold probe seeds only",
+      "patch_cv": [
+        {
+          "patch_px": 41,
+          "fit_n": 192,
+          "common_n": 129,
+          "fit_cells": 8,
+          "cv_median": 1.0631970995617475,
+          "cv_p90": 2.7112117306763523,
+          "measurement_fraction": 1.0
+        },
+        {
+          "patch_px": 61,
+          "fit_n": 278,
+          "common_n": 129,
+          "fit_cells": 8,
+          "cv_median": 0.8696354950113377,
+          "cv_p90": 1.8421823231622751,
+          "measurement_fraction": 1.4479166666666667
+        }
+      ],
+      "points": 2052,
+      "inliers": 1256,
+      "inlier_ratio": 0.9929,
+      "fit": {
+        "points": 1265,
+        "tight_threshold_px": 1.5,
+        "loose_threshold_px": 6.0,
+        "loose_inliers": 1265,
+        "consistent": 1257,
+        "field_cv": [
+          {
+            "spacing": null,
+            "smoothness": null,
+            "cv_median": 1.2057628992166127,
+            "cv_p90": 2.8780964349457703
+          },
+          {
+            "spacing": 305.56613813026814,
+            "smoothness": 0.01,
+            "cv_median": 0.4864602052764439,
+            "cv_p90": 0.9870587834347411
+          },
+          {
+            "spacing": 305.56613813026814,
+            "smoothness": 0.1,
+            "cv_median": 0.5096725234881472,
+            "cv_p90": 1.0768214033546881
+          },
+          {
+            "spacing": 305.56613813026814,
+            "smoothness": 1.0,
+            "cv_median": 0.5380975076260259,
+            "cv_p90": 1.1797627318184223
+          },
+          {
+            "spacing": 152.78306906513407,
+            "smoothness": 0.01,
+            "cv_median": 0.4984842987555805,
+            "cv_p90": 1.0035798697404559
+          },
+          {
+            "spacing": 152.78306906513407,
+            "smoothness": 0.1,
+            "cv_median": 0.42712462385496686,
+            "cv_p90": 0.9279943592288938
+          },
+          {
+            "spacing": 152.78306906513407,
+            "smoothness": 1.0,
+            "cv_median": 0.4940590644786547,
+            "cv_p90": 1.030363729818686
+          },
+          {
+            "spacing": 76.39153453256704,
+            "smoothness": 0.01,
+            "cv_median": 0.4501818589641123,
+            "cv_p90": 1.1352119937071543
+          },
+          {
+            "spacing": 76.39153453256704,
+            "smoothness": 0.1,
+            "cv_median": 0.4432450076564753,
+            "cv_p90": 0.9687282452498659
+          },
+          {
+            "spacing": 76.39153453256704,
+            "smoothness": 1.0,
+            "cv_median": 0.417367106192373,
+            "cv_p90": 0.930570141019987
+          },
+          {
+            "spacing": 38.19576726628352,
+            "smoothness": 0.01,
+            "cv_median": 0.7219331943902351,
+            "cv_p90": 1.7322232578618413
+          },
+          {
+            "spacing": 38.19576726628352,
+            "smoothness": 0.1,
+            "cv_median": 0.45398431037456083,
+            "cv_p90": 1.153347814524774
+          },
+          {
+            "spacing": 38.19576726628352,
+            "smoothness": 1.0,
+            "cv_median": 0.4191513397264556,
+            "cv_p90": 0.9590853312137099
+          }
+        ],
+        "field": {
+          "spacing_px": 152.783,
+          "smoothness": 0.1
+        }
+      },
+      "export": {
+        "shape": [
+          10864,
+          854
+        ],
+        "bands": 256,
+        "transform": [
+          100.0,
+          0.0,
+          1130096.9236530997,
+          0.0,
+          -100.0,
+          -1111098.4618265498,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "crs": "PROJCS[\"SimpleCylindrical MOON\",GEOGCS[\"GCS_MOON\",DATUM[\"D_MOON\",SPHEROID[\"MOON\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",0],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+      },
+      "reasons": [
+        "check-point source rmse_px 1.312 fails < 1",
+        "check-point source p90_px 2.468 fails < 1",
+        "check-point source within_1_px 0.6744 fails >= 0.95",
+        "more than 25% of eligible area is outside fit-point support"
+      ],
+      "out_dir": "outputs/validation_20260925/iirs_20240120_wac/7a3e5116b37b"
+    },
+    {
+      "name": "tmc2_selene_morning",
+      "role": "secondary cross-illumination",
+      "status": "failed",
+      "accepted": false,
+      "seconds": 37.97,
+      "source": {
+        "n": 0,
+        "invalid_n": 0,
+        "rmse": null,
+        "median": null,
+        "p90": null,
+        "within_1": null
+      },
+      "reference": {
+        "n": 0,
+        "invalid_n": 0,
+        "rmse": null,
+        "median": null,
+        "p90": null,
+        "within_1": null
+      },
+      "metres": null,
+      "all_source": {
+        "n": 0,
+        "invalid_n": 0,
+        "rmse": null,
+        "median": null,
+        "p90": null,
+        "within_1": null
+      },
+      "check_fraction": null,
+      "check_n": 0,
+      "held_n": 0,
+      "coverage": null,
+      "extrapolation": null,
+      "models": "none (refused)",
+      "patch": null,
+      "patch_selection": null,
+      "patch_cv": null,
+      "points": null,
+      "inliers": null,
+      "inlier_ratio": null,
+      "fit": null,
+      "export": null,
+      "reasons": [
+        "no candidate method produced a geometrically verified transform; best attempt had 25 correspondences"
+      ],
+      "out_dir": "outputs/validation_20260925/tmc2_selene_morning/41646029c90d"
+    }
+  ],
+  "illumination_bins": [
+    {
+      "sun_range": "0\u201360",
+      "positive_n": 4,
+      "negative_n": 1,
+      "exported_n": 4,
+      "accepted_n": 0,
+      "corner_median": 0.3763802103927135,
+      "corner_worst": 0.6228690094062805,
+      "negative_rejected_n": 1
+    },
+    {
+      "sun_range": "60\u201390",
+      "positive_n": 5,
+      "negative_n": 0,
+      "exported_n": 5,
+      "accepted_n": 0,
+      "corner_median": 0.5820072607293924,
+      "corner_worst": 1.1863050306210894,
+      "negative_rejected_n": 0
+    },
+    {
+      "sun_range": "90\u2013135",
+      "positive_n": 0,
+      "negative_n": 1,
+      "exported_n": 0,
+      "accepted_n": 0,
+      "corner_median": null,
+      "corner_worst": null,
+      "negative_rejected_n": 1
+    },
+    {
+      "sun_range": "135\u2013180",
+      "positive_n": 3,
+      "negative_n": 0,
+      "exported_n": 0,
+      "accepted_n": 0,
+      "corner_median": null,
+      "corner_worst": null,
+      "negative_rejected_n": 0
+    }
+  ],
+  "suites": {
+    "real": {
+      "n": 5,
+      "exported": 4,
+      "accepted": 0,
+      "crashed": 0
+    },
+    "synthetic": {
+      "n": 9,
+      "exported": 9,
+      "accepted": 7,
+      "crashed": 0
+    },
+    "illumination": {
+      "n": 14,
+      "exported": 9,
+      "accepted": 2,
+      "crashed": 0
+    }
+  }
+}

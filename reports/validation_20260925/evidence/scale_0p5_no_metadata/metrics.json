@@ -1,0 +1,1315 @@
+{
+ "status": "warning",
+ "reason": "30% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it; check-point source within_1_px 0.8981 fails >= 0.95; more than 25% of eligible area is outside fit-point support; fitted scale (2.010, 2.009) departs from the 1.000 implied by the products' ground sampling distances",
+ "notes": [
+  "One reference pixel spans 1.00 source pixels. This is a sampling scale, not an independently measured error bound."
+ ],
+ "status_meaning": "pass requires source-pixel consistency and spatial support; not an accuracy guarantee",
+ "acceptance": {
+  "passed": false,
+  "independently_verified": false,
+  "status": "failed",
+  "reasons": [
+   "check-point source within_1_px 0.8981 fails >= 0.95",
+   "more than 25% of eligible area is outside fit-point support"
+  ],
+  "independent_reasons": [
+   "independent controls do not cover enough of the native source image"
+  ],
+  "basis": "held-out check points (model-independent neighbour screen)",
+  "thresholds": {
+   "minimum_check_points": 12,
+   "check_point_fraction_at_least": 0.8,
+   "source_rmse_px_below": 1.0,
+   "source_p90_px_below": 1.0,
+   "within_1_source_px_at_least": 0.95,
+   "source_bias_px_below": 0.5,
+   "coverage_at_least": 0.5,
+   "extrapolation_at_most": 0.25
+  },
+  "meaning": "internal consistency and spatial support; independent check points required for verified accuracy"
+ },
+ "accuracy_statement": "0.67 source px RMSE over 373 held-out check points (1 of 374 held-out correspondences set aside as isolated mismatches); reference sampling scale 1.00 source px",
+ "job_id": "7f2e858fd8a7",
+ "generated_utc": "2026-09-25T09:56:53Z",
+ "runtime_s": 6.57,
+ "method_used": "disk_lightglue",
+ "model": "homography",
+ "accuracy": {
+  "held_out_n": 374,
+  "held_out_rmse_px": 1.0094619919496628,
+  "held_out_median_px": 0.8503012875371695,
+  "held_out_p90_px": 1.5066197693536412,
+  "held_out_exactly_on_model_n": 0,
+  "evaluation_file": "evaluation.json",
+  "matrix_sha256": "125768b946bae4842104e5f7174c87883ae117c334bc2d0e6d3c10b9fd9bbaab",
+  "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
+  "transform_sha256": "5aec18632f05c8413a0c902f177636fd4229cb8ba622ecf8b89ee8fbecf1fe31",
+  "applied_model": {
+   "kind": "global",
+   "sampling": "inverse matrix",
+   "segment_fallback": "global matrix",
+   "raster": "registered.tif"
+  },
+  "held_out_invalid_n": 0,
+  "held_out_reference_n": 374,
+  "held_out_reference_valid_n": 374,
+  "held_out_reference_invalid_n": 0,
+  "held_out_reference_rmse_px": 1.3460498147892577,
+  "held_out_reference_median_px": 1.1338982504910322,
+  "held_out_reference_p90_px": 2.0083841654504555,
+  "held_out_reference_max_px": 3.925486946782954,
+  "held_out_reference_within_1_px": 0.446524064171123,
+  "held_out_reference_bias_xy_px": [
+   -0.060000806815792534,
+   -0.0994064833688503
+  ],
+  "held_out_reference_bias_px": 0.1161109200476319,
+  "held_out_source_n": 374,
+  "held_out_source_valid_n": 374,
+  "held_out_source_invalid_n": 0,
+  "held_out_source_rmse_px": 0.6728746147173684,
+  "held_out_source_median_px": 0.566704324583307,
+  "held_out_source_p90_px": 1.0048553732568268,
+  "held_out_source_max_px": 1.963075431904208,
+  "held_out_source_within_1_px": 0.8957219251336899,
+  "held_out_source_bias_xy_px": [
+   0.03006161185933326,
+   0.04961814348491751
+  ],
+  "held_out_source_bias_px": 0.058014314358363905,
+  "source_error_definition": "backward transfer in native source pixel centres",
+  "check_point_n": 373,
+  "check_point_rejected_n": 1,
+  "check_point_fraction": 0.9973262032085561,
+  "check_point_rule": "held-out correspondence within max(3 reference px, 3 robust sigma) of the median displacement of its 10 nearest held-out neighbours, displacements taken against the coarse model; the exported model is not consulted",
+  "check_point_rmse_px": 0.9992582845174652,
+  "check_point_median_px": 0.8502851752202092,
+  "check_point_p90_px": 1.495519258609389,
+  "check_point_invalid_n": 0,
+  "check_point_reference_n": 373,
+  "check_point_reference_valid_n": 373,
+  "check_point_reference_invalid_n": 0,
+  "check_point_reference_rmse_px": 1.3324396490888368,
+  "check_point_reference_median_px": 1.1338875938296822,
+  "check_point_reference_p90_px": 1.9936901754784768,
+  "check_point_reference_max_px": 3.9229646331271795,
+  "check_point_reference_within_1_px": 0.4477211796246649,
+  "check_point_reference_bias_xy_px": [
+   -0.06270303218427446,
+   -0.10988562842567717
+  ],
+  "check_point_reference_bias_px": 0.126516882587298,
+  "check_point_source_n": 373,
+  "check_point_source_valid_n": 373,
+  "check_point_source_invalid_n": 0,
+  "check_point_source_rmse_px": 0.6660773704313276,
+  "check_point_source_median_px": 0.5666614432880364,
+  "check_point_source_p90_px": 0.9973483417403013,
+  "check_point_source_max_px": 1.963075431904208,
+  "check_point_source_within_1_px": 0.8981233243967829,
+  "check_point_source_bias_xy_px": [
+   0.03141733670124559,
+   0.0548529564978358
+  ],
+  "check_point_source_bias_px": 0.06321309897444438,
+  "independent_ground_truth": {
+   "passed": false,
+   "reasons": [
+    "independent controls do not cover enough of the native source image"
+   ],
+   "kind": "synthetic_transform",
+   "independence": "asserted by reference author; not inferred from residuals",
+   "provenance": {
+    "kind": "synthetic_transform",
+    "reference": "scripts/validate_registration.py deterministic image construction, seed 147",
+    "independent_of_registration": true,
+    "uncertainty_source_px": 0.0
+   },
+   "manifest_sha256": "ad4ce4182d7b44563766618b2ec94d86175e2a73d47c0a47a2eee98c7d2b0a96",
+   "transform_sha256": "5aec18632f05c8413a0c902f177636fd4229cb8ba622ecf8b89ee8fbecf1fe31",
+   "statistics": {
+    "n": 64,
+    "valid_n": 64,
+    "invalid_n": 0,
+    "rmse_px": 0.399040914198712,
+    "median_px": 0.37580061341068777,
+    "p90_px": 0.508135023326527,
+    "max_px": 0.6404724347874905,
+    "within_1_px": 1.0,
+    "bias_xy_px": [
+     0.27375609084445207,
+     0.2663697282304822
+    ],
+    "bias_px": 0.38196234027979364
+   },
+   "distribution": {
+    "grid": [
+     4,
+     4
+    ],
+    "coverage_fraction": 0.25,
+    "extrapolation_fraction": 0.75
+   },
+   "point_ids": [
+    "grid_000",
+    "grid_001",
+    "grid_002",
+    "grid_003",
+    "grid_004",
+    "grid_005",
+    "grid_006",
+    "grid_007",
+    "grid_008",
+    "grid_009",
+    "grid_010",
+    "grid_011",
+    "grid_012",
+    "grid_013",
+    "grid_014",
+    "grid_015",
+    "grid_016",
+    "grid_017",
+    "grid_018",
+    "grid_019",
+    "grid_020",
+    "grid_021",
+    "grid_022",
+    "grid_023",
+    "grid_024",
+    "grid_025",
+    "grid_026",
+    "grid_027",
+    "grid_028",
+    "grid_029",
+    "grid_030",
+    "grid_031",
+    "grid_032",
+    "grid_033",
+    "grid_034",
+    "grid_035",
+    "grid_036",
+    "grid_037",
+    "grid_038",
+    "grid_039",
+    "grid_040",
+    "grid_041",
+    "grid_042",
+    "grid_043",
+    "grid_044",
+    "grid_045",
+    "grid_046",
+    "grid_047",
+    "grid_048",
+    "grid_049",
+    "grid_050",
+    "grid_051",
+    "grid_052",
+    "grid_053",
+    "grid_054",
+    "grid_055",
+    "grid_056",
+    "grid_057",
+    "grid_058",
+    "grid_059",
+    "grid_060",
+    "grid_061",
+    "grid_062",
+    "grid_063"
+   ],
+   "source": [
+    [
+     162.6875,
+     131.75
+    ],
+    [
+     193.625,
+     131.75
+    ],
+    [
+     224.5625,
+     131.75
+    ],
+    [
+     255.5,
+     131.75
+    ],
+    [
+     286.4375,
+     131.75
+    ],
+    [
+     317.375,
+     131.75
+    ],
+    [
+     348.3125,
+     131.75
+    ],
+    [
+     379.25,
+     131.75
+    ],
+    [
+     162.6875,
+     162.6875
+    ],
+    [
+     193.625,
+     162.6875
+    ],
+    [
+     224.5625,
+     162.6875
+    ],
+    [
+     255.5,
+     162.6875
+    ],
+    [
+     286.4375,
+     162.6875
+    ],
+    [
+     317.375,
+     162.6875
+    ],
+    [
+     348.3125,
+     162.6875
+    ],
+    [
+     379.25,
+     162.6875
+    ],
+    [
+     162.6875,
+     193.625
+    ],
+    [
+     193.625,
+     193.625
+    ],
+    [
+     224.5625,
+     193.625
+    ],
+    [
+     255.5,
+     193.625
+    ],
+    [
+     286.4375,
+     193.625
+    ],
+    [
+     317.375,
+     193.625
+    ],
+    [
+     348.3125,
+     193.625
+    ],
+    [
+     379.25,
+     193.625
+    ],
+    [
+     162.6875,
+     224.5625
+    ],
+    [
+     193.625,
+     224.5625
+    ],
+    [
+     224.5625,
+     224.5625
+    ],
+    [
+     255.5,
+     224.5625
+    ],
+    [
+     286.4375,
+     224.5625
+    ],
+    [
+     317.375,
+     224.5625
+    ],
+    [
+     348.3125,
+     224.5625
+    ],
+    [
+     379.25,
+     224.5625
+    ],
+    [
+     162.6875,
+     255.5
+    ],
+    [
+     193.625,
+     255.5
+    ],
+    [
+     224.5625,
+     255.5
+    ],
+    [
+     255.5,
+     255.5
+    ],
+    [
+     286.4375,
+     255.5
+    ],
+    [
+     317.375,
+     255.5
+    ],
+    [
+     348.3125,
+     255.5
+    ],
+    [
+     379.25,
+     255.5
+    ],
+    [
+     162.6875,
+     286.4375
+    ],
+    [
+     193.625,
+     286.4375
+    ],
+    [
+     224.5625,
+     286.4375
+    ],
+    [
+     255.5,
+     286.4375
+    ],
+    [
+     286.4375,
+     286.4375
+    ],
+    [
+     317.375,
+     286.4375
+    ],
+    [
+     348.3125,
+     286.4375
+    ],
+    [
+     379.25,
+     286.4375
+    ],
+    [
+     162.6875,
+     317.375
+    ],
+    [
+     193.625,
+     317.375
+    ],
+    [
+     224.5625,
+     317.375
+    ],
+    [
+     255.5,
+     317.375
+    ],
+    [
+     286.4375,
+     317.375
+    ],
+    [
+     317.375,
+     317.375
+    ],
+    [
+     348.3125,
+     317.375
+    ],
+    [
+     379.25,
+     317.375
+    ],
+    [
+     162.6875,
+     348.3125
+    ],
+    [
+     193.625,
+     348.3125
+    ],
+    [
+     224.5625,
+     348.3125
+    ],
+    [
+     255.5,
+     348.3125
+    ],
+    [
+     286.4375,
+     348.3125
+    ],
+    [
+     317.375,
+     348.3125
+    ],
+    [
+     348.3125,
+     348.3125
+    ],
+    [
+     379.25,
+     348.3125
+    ]
+   ],
+   "reference": [
+    [
+     54.67500000000001,
+     16.80000000000001
+    ],
+    [
+     116.55000000000001,
+     16.80000000000001
+    ],
+    [
+     178.425,
+     16.80000000000001
+    ],
+    [
+     240.3,
+     16.80000000000001
+    ],
+    [
+     302.175,
+     16.80000000000001
+    ],
+    [
+     364.05,
+     16.80000000000001
+    ],
+    [
+     425.925,
+     16.80000000000001
+    ],
+    [
+     487.8,
+     16.80000000000001
+    ],
+    [
+     54.67500000000001,
+     78.67500000000001
+    ],
+    [
+     116.55000000000001,
+     78.67500000000001
+    ],
+    [
+     178.425,
+     78.67500000000001
+    ],
+    [
+     240.3,
+     78.67500000000001
+    ],
+    [
+     302.175,
+     78.67500000000001
+    ],
+    [
+     364.05,
+     78.67500000000001
+    ],
+    [
+     425.925,
+     78.67500000000001
+    ],
+    [
+     487.8,
+     78.67500000000001
+    ],
+    [
+     54.67500000000001,
+     140.55
+    ],
+    [
+     116.55000000000001,
+     140.55
+    ],
+    [
+     178.425,
+     140.55
+    ],
+    [
+     240.3,
+     140.55
+    ],
+    [
+     302.175,
+     140.55
+    ],
+    [
+     364.05,
+     140.55
+    ],
+    [
+     425.925,
+     140.55
+    ],
+    [
+     487.8,
+     140.55
+    ],
+    [
+     54.67500000000001,
+     202.425
+    ],
+    [
+     116.55000000000001,
+     202.425
+    ],
+    [
+     178.425,
+     202.425
+    ],
+    [
+     240.3,
+     202.425
+    ],
+    [
+     302.175,
+     202.425
+    ],
+    [
+     364.05,
+     202.425
+    ],
+    [
+     425.925,
+     202.425
+    ],
+    [
+     487.8,
+     202.425
+    ],
+    [
+     54.67500000000001,
+     264.3
+    ],
+    [
+     116.55000000000001,
+     264.3
+    ],
+    [
+     178.425,
+     264.3
+    ],
+    [
+     240.3,
+     264.3
+    ],
+    [
+     302.175,
+     264.3
+    ],
+    [
+     364.05,
+     264.3
+    ],
+    [
+     425.925,
+     264.3
+    ],
+    [
+     487.8,
+     264.3
+    ],
+    [
+     54.67500000000001,
+     326.175
+    ],
+    [
+     116.55000000000001,
+     326.175
+    ],
+    [
+     178.425,
+     326.175
+    ],
+    [
+     240.3,
+     326.175
+    ],
+    [
+     302.175,
+     326.175
+    ],
+    [
+     364.05,
+     326.175
+    ],
+    [
+     425.925,
+     326.175
+    ],
+    [
+     487.8,
+     326.175
+    ],
+    [
+     54.67500000000001,
+     388.05
+    ],
+    [
+     116.55000000000001,
+     388.05
+    ],
+    [
+     178.425,
+     388.05
+    ],
+    [
+     240.3,
+     388.05
+    ],
+    [
+     302.175,
+     388.05
+    ],
+    [
+     364.05,
+     388.05
+    ],
+    [
+     425.925,
+     388.05
+    ],
+    [
+     487.8,
+     388.05
+    ],
+    [
+     54.67500000000001,
+     449.925
+    ],
+    [
+     116.55000000000001,
+     449.925
+    ],
+    [
+     178.425,
+     449.925
+    ],
+    [
+     240.3,
+     449.925
+    ],
+    [
+     302.175,
+     449.925
+    ],
+    [
+     364.05,
+     449.925
+    ],
+    [
+     425.925,
+     449.925
+    ],
+    [
+     487.8,
+     449.925
+    ]
+   ],
+   "predicted_source": [
+    [
+     163.01371556200485,
+     132.30116997997757
+    ],
+    [
+     193.866691581708,
+     132.23796065218377
+    ],
+    [
+     224.74337794940507,
+     132.17470274835776
+    ],
+    [
+     255.6438020075168,
+     132.1113962124823
+    ],
+    [
+     286.5679911405212,
+     132.0480409884541
+    ],
+    [
+     317.5159727750347,
+     131.98463702008348
+    ],
+    [
+     348.48777437989287,
+     131.92118425109436
+    ],
+    [
+     379.4834234662319,
+     131.85768262512389
+    ],
+    [
+     163.02024168253718,
+     163.1613645950135
+    ],
+    [
+     193.87763485668455,
+     163.11000131196192
+    ],
+    [
+     224.75874516780829,
+     163.05859855085035
+    ],
+    [
+     255.66359997007453,
+     163.0071562661467
+    ],
+    [
+     286.59222665973084,
+     162.9556744122489
+    ],
+    [
+     317.54465267518725,
+     162.90415294348475
+    ],
+    [
+     348.52090549709726,
+     162.8525918141116
+    ],
+    [
+     379.5210126484393,
+     162.80099097831655
+    ],
+    [
+     163.02676967022018,
+     194.03038844218014
+    ],
+    [
+     193.88858126378125,
+     193.9908779866529
+    ],
+    [
+     224.77411678621738,
+     193.95133715885692
+    ],
+    [
+     255.68340360344683,
+     193.9117659237572
+    ],
+    [
+     286.6164691234935,
+     193.87216424626507
+    ],
+    [
+     317.5733407965678,
+     193.8325320912377
+    ],
+    [
+     348.5540461151479,
+     193.79286942347818
+    ],
+    [
+     379.55861261406096,
+     193.75317620773538
+    ],
+    [
+     163.03329952585528,
+     224.90824531114055
+    ],
+    [
+     193.899530804343,
+     224.88059447028843
+    ],
+    [
+     224.78949280652236,
+     224.8529223707845
+    ],
+    [
+     255.70321291007053,
+     224.82522898810302
+    ],
+    [
+     286.64071853479453,
+     224.79751429768064
+    ],
+    [
+     317.6020371427118,
+     224.76977827491598
+    ],
+    [
+     348.587196238132,
+     224.74202089516996
+    ],
+    [
+     379.59622336773816,
+     224.71424213376554
+    ],
+    [
+     163.03983125024433,
+     255.79493899372687
+    ],
+    [
+     193.9104834797154,
+     255.7791545590727
+    ],
+    [
+     224.80487323061436,
+     255.763357987216
+    ],
+    [
+     255.72302789238398,
+     255.74754926415244
+    ],
+    [
+     286.664974896621,
+     255.731728375856
+    ],
+    [
+     317.6307417171568,
+     255.71589530827896
+    ],
+    [
+     348.62035587013935,
+     255.7000500473522
+    ],
+    [
+     379.63384491411415,
+     255.6841925789846
+    ],
+    [
+     163.04636484418967,
+     286.690473283942
+    ],
+    [
+     193.92143929124495,
+     286.68656205138376
+    ],
+    [
+     224.82025806038553,
+     286.68264781091165
+    ],
+    [
+     255.74284855282667,
+     286.6787305590545
+    ],
+    [
+     286.6892382119615,
+     286.67481029233574
+    ],
+    [
+     317.6594545234423,
+     286.67088700727356
+    ],
+    [
+     348.65352501526195,
+     286.6669607003806
+    ],
+    [
+     379.67147725783536,
+     286.6630313681645
+    ],
+    [
+     163.05290030849412,
+     317.5948519779609
+    ],
+    [
+     193.93239824027876,
+     317.60282074777535
+    ],
+    [
+     224.83564729772917,
+     317.6107956468104
+    ],
+    [
+     255.76267489383963,
+     317.61877668214026
+    ],
+    [
+     286.71350848380666,
+     317.62676386084996
+    ],
+    [
+     317.6881755651099,
+     317.6347571900355
+    ],
+    [
+     348.6867036775942,
+     317.64275667680374
+    ],
+    [
+     379.70912040355057,
+     317.6507623282727
+    ],
+    [
+     163.05943764396088,
+     348.5080788741323
+    ],
+    [
+     193.94336032816483,
+     348.5279344509783
+    ],
+    [
+     224.8510409445396,
+     348.5478053020319
+    ],
+    [
+     255.7825069178653,
+     348.5676914449249
+    ],
+    [
+     286.73778571514845,
+     348.5875928973159
+    ],
+    [
+     317.71690484570325,
+     348.60750967689114
+    ],
+    [
+     348.71989186123284,
+     348.62744180136366
+    ],
+    [
+     379.74677435591144,
+     348.64738928847413
+    ]
+   ],
+   "residual_definition": "backward transfer in native source pixel centres; all supplied points"
+  },
+  "subpixel_method": "matcher",
+  "ecc": {
+   "attempted": true,
+   "converged": true,
+   "adopted": false,
+   "correlation": 0.859755,
+   "max_corner_shift_px": 2.812,
+   "note": "ECC did not improve the validation fold; fit model retained",
+   "max_corner_shift_allowed_px": 3.62,
+   "validation_n": 112,
+   "validation_rmse_px_before": 1.0255637820592962,
+   "validation_rmse_px_after": 1.108628691729419,
+   "adoption_basis": "validation fold, never test"
+  },
+  "rmse_px": 0.9992582845174652,
+  "rmse_reference_px": 0.9993,
+  "rmse_working_px": 0.9993,
+  "rmse_source_px": 0.6660773704313276,
+  "rmse_m": null,
+  "metres_per_pixel": null,
+  "units": {
+   "reference_decimation": 1,
+   "metres_per_reference_px": null,
+   "source_px_per_reference_px": 1.0,
+   "metres_per_working_px": null
+  },
+  "subpixel": true,
+  "independently_verified_subpixel": false,
+  "subpixel_basis": "source pixels",
+  "subpixel_working_grid": true,
+  "reference_sampling_source_px": 1.0,
+  "sampling_floor_basis": "nominal one-reference-pixel sampling; not an error lower bound",
+  "subpixel_floor_source_px": 1.0,
+  "subpixel_attainable": false
+ },
+ "fine_stage": {
+  "attempted": true,
+  "windows": 4,
+  "windows_used": 4,
+  "points": 500,
+  "native": true,
+  "note": "native points fail checks the coarse set passed (matches cover 46% of the reference grid; the transform is extrapolated over the rest); the coarse solution was kept",
+  "method": "grid-refined",
+  "probe": [
+   {
+    "method": "grid-refined",
+    "candidates": 266,
+    "inliers": 266
+   }
+  ],
+  "seeds": 625,
+  "seed_spacing_px": 20.5,
+  "search_px": 8,
+  "patch_px": 61,
+  "placement": "4 tiles over 625 lattice seeds at 20.5 px spacing",
+  "patch_cv": [
+   {
+    "patch_px": 41,
+    "fit_n": 268,
+    "common_n": 253,
+    "fit_cells": 35,
+    "cv_median": 0.016583394066168523,
+    "cv_p90": 0.0549688917612629,
+    "measurement_fraction": 1.0
+   },
+   {
+    "patch_px": 61,
+    "fit_n": 266,
+    "common_n": 253,
+    "fit_cells": 35,
+    "cv_median": 0.015523623073792625,
+    "cv_p90": 0.0369449792309798,
+    "measurement_fraction": 0.9925373134328358
+   }
+  ],
+  "patch_selection": "spatial cross-validation on common fit-fold probe seeds only",
+  "passes": [
+   {
+    "prewarp": "coarse model",
+    "tiles_with_points": 4
+   }
+  ],
+  "refinement_counts": {
+   "intensity": 988,
+   "inverted_intensity": 0,
+   "gradient": 0,
+   "boundary": 185,
+   "texture": 0,
+   "peak": 0,
+   "ecc": 0,
+   "forward_backward": 61,
+   "reduced_patch": 88
+  },
+  "model_fit": {
+   "points": 275,
+   "tight_threshold_px": 3.0,
+   "loose_threshold_px": 12.0,
+   "loose_inliers": 275,
+   "consistent": 275,
+   "field_cv": [
+    {
+     "spacing": null,
+     "smoothness": null,
+     "cv_median": 0.015034528384473141,
+     "cv_p90": 0.03907534336011511
+    },
+    {
+     "spacing": 64.25,
+     "smoothness": 0.01,
+     "cv_median": 0.0215546704798554,
+     "cv_p90": 0.04645015516705446
+    },
+    {
+     "spacing": 64.25,
+     "smoothness": 0.1,
+     "cv_median": 0.01777431658108737,
+     "cv_p90": 0.039013144617086784
+    },
+    {
+     "spacing": 64.25,
+     "smoothness": 1.0,
+     "cv_median": 0.016748461119623567,
+     "cv_p90": 0.039373788147574744
+    },
+    {
+     "spacing": 32.125,
+     "smoothness": 0.01,
+     "cv_median": 0.026206345844029727,
+     "cv_p90": 0.056605996912536524
+    },
+    {
+     "spacing": 32.125,
+     "smoothness": 0.1,
+     "cv_median": 0.02204918695253831,
+     "cv_p90": 0.04694492659868731
+    },
+    {
+     "spacing": 32.125,
+     "smoothness": 1.0,
+     "cv_median": 0.01784626042438967,
+     "cv_p90": 0.04089379729988642
+    }
+   ]
+  },
+  "adopted": false,
+  "spatially_balanced_refit": true
+ },
+ "matches": {
+  "candidates": 477,
+  "inliers": 466,
+  "inlier_ratio": 0.9769
+ },
+ "distribution": {
+  "grid": [
+   8,
+   8
+  ],
+  "coverage_fraction": 0.5312,
+  "dispersion": 0.4452,
+  "extrapolation_fraction": 0.2969,
+  "eligible_cells": 64,
+  "total_cells": 64,
+  "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated",
+  "delivered": {
+   "file": "matches.csv",
+   "all_candidates_file": "matches_all.csv",
+   "points": 116,
+   "per_cell_limit": 4,
+   "grid": [
+    8,
+    8
+   ],
+   "quota_enforced": true,
+   "occupied_cells": 34,
+   "basis": "verified fit points; uniform cell quota, no relaxation"
+  }
+ },
+ "illumination": {
+  "delta_sun_azimuth_deg": null,
+  "source_sun_azimuth_deg": null,
+  "reference_sun_azimuth_deg": null,
+  "source_sun_incidence_deg": null,
+  "reference_sun_incidence_deg": null
+ },
+ "pair": {
+  "cross_correlation": 0.0129,
+  "anti_correlated": false,
+  "same_sensor": true,
+  "sensor_pair": "unknown-unknown",
+  "scale_ratio": null,
+  "overlap_fraction": 0.252,
+  "registered_overlap_fraction": 1.0
+ },
+ "frame": {
+  "target_shape": [
+   512,
+   512
+  ],
+  "reference_decimation": 1,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "reference_sample_offset": [
+   0.0,
+   0.0
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+  "notes": [
+   "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+  ],
+  "source_oversample": 1.0,
+  "source_taps": 1,
+  "source_coverage": 0.252
+ },
+ "decomposition": {
+  "est_scale_x": 2.0123,
+  "est_scale_y": 2.0107,
+  "est_rotation_deg": 0.123,
+  "est_shear_det": 4.046,
+  "est_translation_px": [
+   -273.18,
+   -249.88
+  ],
+  "est_perspective": [
+   1.2491874463492367e-05,
+   4.644471024328377e-06
+  ]
+ },
+ "attempts": [
+  {
+   "method": "disk_lightglue",
+   "seconds": 4.37,
+   "candidates": 477,
+   "note": "",
+   "model": "homography",
+   "inliers": 466,
+   "inlier_ratio": 0.9769,
+   "verified": true,
+   "log10_nfa": -1522.46,
+   "coverage": 0.5417,
+   "dispersion": 0.4452,
+   "score": 458.82
+  }
+ ],
+ "source": {
+  "path": "scale_0p5_no_metadata.png",
+  "reader": "gdal",
+  "profile": "unknown",
+  "instrument": "unknown",
+  "shape": [
+   512,
+   512
+  ],
+  "gsd_m": null,
+  "bands": 1,
+  "bit_depth": 8,
+  "georeferenced": false,
+  "crs": null,
+  "has_lonlat_lattice": false,
+  "acquired_utc": null,
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 0.252,
+  "degraded": [
+   "GeoTIFF carries no CRS; pixel-space registration only"
+  ]
+ },
+ "reference": {
+  "path": "reference.png",
+  "reader": "gdal",
+  "profile": "unknown",
+  "instrument": "unknown",
+  "shape": [
+   512,
+   512
+  ],
+  "gsd_m": null,
+  "bands": 1,
+  "bit_depth": 8,
+  "georeferenced": false,
+  "crs": null,
+  "has_lonlat_lattice": false,
+  "acquired_utc": null,
+  "sun_azimuth_deg": null,
+  "sun_incidence_deg": null,
+  "sub_solar_lon_deg": null,
+  "valid_fraction": 1.0,
+  "degraded": [
+   "GeoTIFF carries no CRS; pixel-space registration only"
+  ]
+ },
+ "degraded": [
+  "source: GeoTIFF carries no CRS; pixel-space registration only",
+  "reference: GeoTIFF carries no CRS; pixel-space registration only",
+  "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+ ],
+ "export": {
+  "raster": "registered.tif",
+  "shape": [
+   512,
+   512
+  ],
+  "bands": 1,
+  "reference_decimation": 1,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "resolution": "native reference",
+  "dtype": "float32",
+  "supersampling": [
+   1
+  ],
+  "sampling": "bilinear original bands, averaged over k x k samples per output pixel where the source is finer; complete inverse registration field",
+  "radiometry": "stored values with original per-band scale and offset"
+ }
+}

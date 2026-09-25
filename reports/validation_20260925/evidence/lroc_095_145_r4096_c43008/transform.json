@@ -1,0 +1,92 @@
+{
+ "model": "homography",
+ "matrix": [
+  [
+   0.96024619677933,
+   0.08284038374518839,
+   6.126123841766724
+  ],
+  [
+   -0.08539231581571893,
+   0.9670942463022785,
+   46.3225953930636
+  ],
+  [
+   -9.637413214843657e-06,
+   3.961098062327314e-06,
+   1.0
+  ]
+ ],
+ "matrix_reference_px": [
+  [
+   0.96024619677933,
+   0.08284038374518839,
+   6.126123841766724
+  ],
+  [
+   -0.08539231581571893,
+   0.9670942463022785,
+   46.3225953930636
+  ],
+  [
+   -9.637413214843657e-06,
+   3.961098062327314e-06,
+   1.0
+  ]
+ ],
+ "units": {
+  "reference_decimation": 1,
+  "metres_per_reference_px": null,
+  "source_px_per_reference_px": 1.0,
+  "metres_per_working_px": null
+ },
+ "decomposition": {
+  "est_scale_x": 0.964,
+  "est_scale_y": 0.9706,
+  "est_rotation_deg": -5.082,
+  "est_shear_det": 0.9357,
+  "est_translation_px": [
+   6.13,
+   46.32
+  ],
+  "est_perspective": [
+   -9.637413214843657e-06,
+   3.961098062327314e-06
+  ]
+ },
+ "frame": {
+  "target_shape": [
+   1024,
+   1024
+  ],
+  "reference_decimation": 1,
+  "reference_origin": [
+   0,
+   0
+  ],
+  "reference_sample_offset": [
+   0.0,
+   0.0
+  ],
+  "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
+  "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+  "notes": [
+   "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+  ],
+  "source_oversample": 1.0,
+  "source_taps": 1,
+  "source_coverage": 0.9802
+ },
+ "method": "disk_lightglue",
+ "pixel_convention": "zero-based pixel centres; world = GDAL affine * (x+0.5, y+0.5)",
+ "coordinates": "`matrix` is in working-grid centre coordinates; `matrix_reference_px` is the same transform in full-resolution reference pixels. Both are residual corrections after metadata prealignment. For segmented exports use the complete blended inverse field, not the global matrix alone.",
+ "segments": null,
+ "local_field": null,
+ "parallax": null,
+ "application": {
+  "kind": "global",
+  "sampling": "inverse matrix",
+  "segment_fallback": "global matrix",
+  "raster": "registered.tif"
+ }
+}
