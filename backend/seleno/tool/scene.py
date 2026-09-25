@@ -35,6 +35,24 @@ import numpy as np
 # --------------------------------------------------------------------------- #
 
 @dataclass
+class NativeBand:
+    """A lazy original band, kept separate from the 2D matching image.
+
+    Values remain in their stored units; scale/offset are written as raster
+    metadata on export. A spectrometer's pseudo-pan must never replace these.
+    """
+
+    array: object
+    nodata: float | None = None
+    valid: object | None = None
+    scale: float = 1.0
+    offset: float = 0.0
+    description: str | None = None
+    unit: str | None = None
+    tags: dict = field(default_factory=dict)
+
+
+@dataclass
 class Scene:
     """One image plus whatever was known about it."""
 
@@ -58,6 +76,13 @@ class Scene:
     meta_offset: float = 0.0
     degraded: list = field(default_factory=list)
     meta: dict = field(default_factory=dict)
+    native_bands: tuple[NativeBand, ...] | None = None
+
+    @property
+    def bands(self):
+        """Original bands without materialising a cube or copying any pixels."""
+        return self.native_bands or (NativeBand(self.array, self.nodata, self.valid,
+                                                self.meta_scale, self.meta_offset),)
 
     @property
     def shape(self):
@@ -85,6 +110,7 @@ class Scene:
         return {"path": os.path.basename(self.path), "reader": self.reader,
                 "profile": self.profile, "instrument": self.instrument,
                 "shape": list(self.array.shape), "gsd_m": self.gsd_m,
+                "bands": len(self.bands),
                 "bit_depth": self.bit_depth,
                 "georeferenced": self.georeferenced,
                 "crs": str(self.crs) if self.crs is not None else None,
@@ -206,6 +232,7 @@ def _try_pds4(path: str, profiles) -> Scene | None:
     # is touched.
     valid = None
     degraded = []
+    native_bands = None
     if getattr(L, "bands", 0) and L.bands > 1:
         # A spectrometer cube. Collapse it to one reflected-light raster before
         # anything else looks at it; every matcher here takes a 2D image.
@@ -219,7 +246,15 @@ def _try_pds4(path: str, profiles) -> Scene | None:
         shape = {"bip": (L.lines, L.samples, L.bands),
                  "bil": (L.lines, L.bands, L.samples)}.get(
                      order, (L.bands, L.lines, L.samples))
-        cube = np.memmap(img, dtype=np.dtype(L.numpy_dtype), mode="r", shape=shape)
+        cube = np.memmap(img, dtype=np.dtype(L.numpy_dtype), mode="r", shape=shape,
+                         offset=L.offset)
+        centres = getattr(L, "band_centres_um", None) or []
+        native_bands = tuple(
+            NativeBand(spectral._band(cube, i, order), prof.get("nodata", 0),
+                       description="Band %d" % (i + 1),
+                       tags=({"wavelength_um": str(centres[i])}
+                             if i < len(centres) else {}))
+            for i in range(L.bands))
         spc = prof.get("spectral") or {}
         a, rep = spectral.pseudo_pan(
             cube, getattr(L, "band_centres_um", None), order=order,
@@ -239,7 +274,7 @@ def _try_pds4(path: str, profiles) -> Scene | None:
         # needed. The memmap supports the fancy indexing `_sample` does, and
         # pages in only what is touched.
         a = np.memmap(img, dtype=np.dtype(L.numpy_dtype), mode="r",
-                      shape=(L.lines, L.samples))
+                      shape=(L.lines, L.samples), offset=L.offset)
 
     lonlat = None
     csv = _find_geometry_csv(img, L)
@@ -281,6 +316,7 @@ def _try_pds4(path: str, profiles) -> Scene | None:
                  sun_azimuth_deg=L.sun_azimuth_deg if trusted_sun else None,
                  sun_incidence_deg=L.solar_incidence_deg if trusted_sun else None,
                  bit_depth=8 * L.item_bytes, degraded=degraded,
+                 native_bands=native_bands,
                  meta={"logical_id": L.logical_id, "lines": L.lines,
                        "samples": L.samples, "data_type": L.data_type,
                        "reference_data_used": L.reference_data_used,
@@ -467,6 +503,8 @@ def _pds3_projection(L, lines, samples):
 # about 128 megapixels, comfortably above any single Chandrayaan-2 frame and far
 # below a global mosaic.
 _EAGER_BYTES = 512 << 20
+# One windowed read of a lazy raster is kept to this size, whatever the call.
+_READ_BYTES = 64 << 20
 
 
 class LazyRaster:
@@ -483,11 +521,16 @@ class LazyRaster:
     per-sample lift). Both are served by windowed reads.
     """
 
-    def __init__(self, path: str, band: int = 1, dtype=np.float32):
+    def __init__(self, path: str, band: int = 1, dtype=np.float32, mask=False,
+                 shape=None, shared=None):
         import rasterio
         self._path, self._band, self.dtype = path, band, np.dtype(dtype)
-        with rasterio.open(path) as ds:
-            self.shape = (ds.height, ds.width)
+        self._mask = mask
+        self._shared = shared
+        if shape is None:
+            with rasterio.open(path) as ds:
+                shape = (ds.height, ds.width)
+        self.shape = shape
         self._ds = None
 
     @property
@@ -499,14 +542,22 @@ class LazyRaster:
         return int(self.shape[0]) * int(self.shape[1])
 
     def _open(self):
+        if self._shared is not None and self._shared.get("dataset") is not None:
+            return self._shared["dataset"]
         if self._ds is None:
             import rasterio
             self._ds = rasterio.open(self._path)
+            if self._shared is not None:
+                self._shared["dataset"] = self._ds
         return self._ds
 
     def _norm(self, sl, n):
         start, stop, step = sl.indices(n)
         return start, max(start, stop), max(1, step)
+
+    def _read(self, ds, window):
+        reader = ds.read_masks if self._mask else ds.read
+        return reader(self._band, window=window)
 
     def __getitem__(self, key):
         from rasterio.windows import Window
@@ -530,16 +581,21 @@ class LazyRaster:
             # identical - which would quietly turn the boxcar averaging in
             # `_boxcar_decimate` into a no-op and lose the half-block alignment
             # it exists to fix.
-            per = max(1, int(_EAGER_BYTES // max(1, (c1 - c0) * 4 * rs)))
+            # Each read spans `per` kept rows plus the rows skipped between
+            # them, so it is bounded to _READ_BYTES; only the kept rows are
+            # copied out. Keeping the strided VIEW instead held every block
+            # alive until the end, and one decimated look at the 6 GB WAC
+            # mosaic grew past 5 GB.
+            per = max(1, int(_READ_BYTES // max(1, (c1 - c0) * 4 * rs)))
             parts = []
             i = 0
             while i < oh:
                 n = min(per, oh - i)
                 rs0 = r0 + i * rs
                 rs1 = min(r1, rs0 + (n - 1) * rs + 1)
-                blk = ds.read(self._band,
-                              window=Window(c0, rs0, c1 - c0, rs1 - rs0))
-                parts.append(blk[::rs, ::cs][:n])
+                blk = self._read(ds, Window(c0, rs0, c1 - c0, rs1 - rs0))
+                parts.append(np.array(blk[::rs, ::cs][:n], copy=True))
+                del blk
                 i += n
             a = np.vstack(parts) if len(parts) > 1 else parts[0]
             return a.astype(self.dtype, copy=False)
@@ -555,7 +611,7 @@ class LazyRaster:
         order = np.argsort(flat_r, kind="stable")
         # Walk in row bands so the window read stays bounded whatever the
         # points look like.
-        band_rows = max(1, int(_EAGER_BYTES // max(1, W * self.dtype.itemsize)))
+        band_rows = max(1, int(_READ_BYTES // max(1, W * self.dtype.itemsize)))
         res = np.zeros(flat_r.size, self.dtype)
         i = 0
         while i < order.size:
@@ -567,8 +623,7 @@ class LazyRaster:
             r_end = int(flat_r[idx].max()) + 1
             c_lo = int(flat_c[idx].min())
             c_hi = int(flat_c[idx].max()) + 1
-            blk = ds.read(self._band,
-                          window=Window(c_lo, r_start, c_hi - c_lo, r_end - r_start))
+            blk = self._read(ds, Window(c_lo, r_start, c_hi - c_lo, r_end - r_start))
             res[idx] = blk[flat_r[idx] - r_start, flat_c[idx] - c_lo]
             i = j
         return res.reshape(rr.shape)
@@ -592,6 +647,20 @@ def _try_gdal(path: str, profiles) -> Scene | None:
             gsd = abs(transform.a) if (transform is not None and crs is not None) else None
             bits = {"uint8": 8, "int8": 8, "uint16": 16, "int16": 16,
                     "float32": 32}.get(ds.dtypes[0])
+            raster_tags = ds.tags()
+            # Hundreds of spectral bands share one GDAL handle/cache. Opening
+            # a dataset per band and mask can exceed the file-descriptor limit.
+            shared = {}
+            native_bands = tuple(
+                NativeBand(LazyRaster(path, i, dtype=ds.dtypes[i - 1],
+                                      shape=(ds.height, ds.width), shared=shared),
+                           nodata=ds.nodatavals[i - 1],
+                           valid=LazyRaster(path, i, dtype=np.uint8, mask=True,
+                                            shape=(ds.height, ds.width), shared=shared),
+                           scale=ds.scales[i - 1], offset=ds.offsets[i - 1],
+                           description=ds.descriptions[i - 1],
+                           unit=ds.units[i - 1], tags=ds.tags(i))
+                for i in ds.indexes)
     except Exception:
         return None
     prof = profiles.match(instrument="", path=path)
@@ -619,7 +688,8 @@ def _try_gdal(path: str, profiles) -> Scene | None:
                  nodata=nodata if nodata is not None else prof.get("nodata", 0),
                  profile=prof["name"], instrument=prof["instrument"],
                  gsd_m=gsd, crs=crs, transform=transform,
-                 bit_depth=bits, degraded=degraded)
+                 bit_depth=bits, degraded=degraded, native_bands=native_bands,
+                 meta={"raster_tags": raster_tags})
 
 
 def _try_plain(path: str, profiles) -> Scene | None:

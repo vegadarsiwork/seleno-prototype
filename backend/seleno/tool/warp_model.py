@@ -2,6 +2,9 @@
 
 Segment inverse maps are blended with a C1 smoothstep between band centres.
 Blending coordinates before sampling avoids brightness seams/double exposure.
+An optional `local_field` (see `local_model`) adds a smooth correction to that
+inverse map; everything here goes through `inverse_points`, so the raster, the
+preview and the held-out score all apply the same complete model.
 """
 import copy
 import hashlib
@@ -11,6 +14,8 @@ import cv2
 import numpy as np
 
 from .coordinates import project
+from . import local_model
+from . import terrain
 from ..verify import transfer_error
 
 
@@ -19,6 +24,23 @@ def digest(model):
 
 
 def inverse_points(model, points):
+    """Reference -> source through the complete model (base plus local field)."""
+    out = _base_inverse(model, points)
+    parallax = model.get("parallax")
+    if parallax is not None:
+        out = out + terrain.term(parallax, points)
+    field = model.get("local_field")
+    if field is not None:
+        out = out + local_model.evaluate(field, points)
+    return out
+
+
+def _nonlinear(model):
+    return bool(model.get("segments") or model.get("local_field") is not None
+                or model.get("parallax") is not None)
+
+
+def _base_inverse(model, points):
     points = np.asarray(points, np.float64)
     segments = model.get("segments") or []
     global_h = np.asarray(model["matrix"], np.float64)
@@ -44,7 +66,7 @@ def forward_points(model, points):
     """Invert the actual blended sampling field using a numerical 2D Jacobian."""
     points = np.asarray(points, np.float64)
     q = project(np.asarray(model["matrix"], np.float64), points)
-    if not model.get("segments"):
+    if not _nonlinear(model):
         return q
     eps = 0.01
     for _ in range(30):
@@ -64,7 +86,7 @@ def forward_points(model, points):
 
 
 def residuals(model, source, reference):
-    if not model.get("segments"):
+    if not _nonlinear(model):
         return transfer_error(np.asarray(model["matrix"], np.float64), source, reference)
     forward = forward_points(model, source) - reference
     backward = inverse_points(model, reference) - source
@@ -96,4 +118,11 @@ def conjugate(model, matrix):
             s[bound] = s[bound] * matrix[axis, axis] + matrix[axis, 2]
         if "matrix" in s:
             s["matrix"] = (matrix @ np.asarray(s["matrix"]) @ inv).tolist()
+    for key in ("local_field", "parallax"):
+        term = result.get(key)
+        if term is not None:
+            # The term stays on the grid it was fitted on; record how this grid
+            # relates to that one (composing with any earlier carriage).
+            prior = np.asarray(term.get("frame", np.eye(3)), np.float64)
+            term["frame"] = (matrix @ prior).tolist()
     return result

@@ -30,7 +30,7 @@ def main(argv=None):
                         "reported accuracy is then floored by the working grid)")
     r.add_argument("--fine-tiles", type=int, default=0,
                    help="cap on native-resolution windows; 0 means as many as "
-                        "needed to tile the overlap (max 24)")
+                        "needed to tile the overlap (max 400)")
     r.add_argument("--no-subpixel", action="store_true",
                    help="skip the ECC sub-pixel polish (faster; the discrete "
                         "stages' own accuracy is then what is reported)")

@@ -46,6 +46,9 @@ from . import locate as LOC
 from . import methods as M
 from . import evaluation as E
 from . import warp_model as WM
+from . import terrain
+from .fitting import balanced_refit
+from .export import write_registered_native, reference_to_source
 from .coordinates import grid_to_reference, project, sample_backmap
 from .profiles import Profiles
 from .scene import Scene, UnreadableInput, load, normalised
@@ -92,17 +95,59 @@ _BYTES_PER_TARGET_PX = 900
 _PREVIEW_PX = 4_000_000
 _COMPOSITE_PANEL_PX = 1_000_000
 
+# Search half-width of the coarse dense tie points (`methods.grid_tiepoints`),
+# which bounds where a wrong dense match can land.
+_DENSE_SEARCH = 12
+
+
+def _cgroup_headroom() -> int | None:
+    """Bytes left under this process's cgroup v2 memory limit, if it has one.
+
+    MemAvailable describes the whole machine. Inside a container or a
+    memory-capped scope the limit that matters is the cgroup's, and budgeting
+    against the machine figure is how a capped run gets OOM-killed.
+    """
+    try:
+        with open("/proc/self/cgroup") as fh:
+            rel = next(line.split("::", 1)[1].strip() for line in fh if line.startswith("0::"))
+        base = "/sys/fs/cgroup" + rel
+        headroom = None
+        # A limit can be set on any ancestor; the tightest one binds.
+        while base.startswith("/sys/fs/cgroup"):
+            try:
+                limit = open(os.path.join(base, "memory.max")).read().strip()
+                if limit != "max":
+                    used = int(open(os.path.join(base, "memory.current")).read())
+                    # Page cache is charged to the cgroup but reclaimed before
+                    # anything is killed; a long run that has read a 3 GB cube
+                    # would otherwise see no headroom left at all.
+                    stat = dict(line.split() for line in open(os.path.join(base, "memory.stat")))
+                    used -= int(stat.get("file", 0)) - int(stat.get("file_dirty", 0))
+                    left = max(0, int(limit) - max(used, 0))
+                    headroom = left if headroom is None else min(headroom, left)
+            except OSError:
+                pass
+            if base == "/sys/fs/cgroup":
+                break
+            base = os.path.dirname(base)
+        return headroom
+    except Exception:                                                 # noqa: BLE001
+        return None
+
 
 def _available_bytes() -> int:
     """Physical memory we may use, read from the OS rather than assumed."""
+    avail = 4 << 30
     try:
         with open("/proc/meminfo") as fh:
             for line in fh:
                 if line.startswith("MemAvailable:"):
-                    return int(line.split()[1]) * 1024
+                    avail = int(line.split()[1]) * 1024
+                    break
     except Exception:
         pass
-    return 4 << 30
+    headroom = _cgroup_headroom()
+    return min(avail, headroom) if headroom is not None else avail
 
 
 def _cap_max_side(max_side: int, budget_fraction: float = 0.5, shape=None) -> tuple[int, str | None]:
@@ -226,9 +271,11 @@ def _source_window(src: Scene, ref: Scene, pad_frac: float = 0.35,
         lon = lat = None
         if src.lonlat is not None:
             g = src.lonlat
-            st = max(1, g.lon.shape[0] // 64)
-            lon = np.asarray(g.lon[::st, ::st], float).ravel()
-            lat = np.asarray(g.lat[::st, ::st], float).ravel()
+            ny, nx = g.lon.shape
+            ry = np.unique(np.r_[np.arange(0, ny, max(1, ny // 64)), ny - 1])
+            rx = np.unique(np.r_[np.arange(0, nx, max(1, nx // 16)), nx - 1])
+            lon = np.asarray(g.lon, float)[np.ix_(ry, rx)].ravel()
+            lat = np.asarray(g.lat, float)[np.ix_(ry, rx)].ravel()
             ok = np.isfinite(lon) & np.isfinite(lat)
             lon, lat = lon[ok], lat[ok]
             if lon.size < 4:
@@ -454,21 +501,34 @@ def _lattice_interpolators(grid, crs=None, cache=None):
     key = ("lattice", id(grid), str(crs))
     if cache is not None and key in cache:
         return cache[key]
-    step = max(1, grid.lon.shape[0] // 200)      # the lattice is far finer than needed
-    lon = grid.lon[::step, ::step].ravel()
-    lat = grid.lat[::step, ::step].ravel()
-    SS, LL = np.meshgrid(grid.pixels[::step], grid.scans[::step])
+    # The lattice is far finer along track than the triangulation needs, but
+    # it is thin across track (41 nodes on TMC-2). One stride for both axes -
+    # the earlier `[::step, ::step]` - kept TMC-2 nodes 700 px apart and ended
+    # at column 3500 of 4000, so the last eighth of the strip fell outside the
+    # triangulation. Stride each axis separately and always keep the last
+    # row and column.
+    ny, nx = grid.lon.shape
+    ry = np.unique(np.r_[np.arange(0, ny, max(1, ny // 400)), ny - 1])
+    rx = np.unique(np.r_[np.arange(0, nx, max(1, nx // 64)), nx - 1])
+    lon = np.asarray(grid.lon, float)[np.ix_(ry, rx)].ravel()
+    lat = np.asarray(grid.lat, float)[np.ix_(ry, rx)].ravel()
+    SS, LL = np.meshgrid(np.asarray(grid.pixels)[rx], np.asarray(grid.scans)[ry])
 
+    full_lon = np.asarray(grid.lon, float)
+    full_lat = np.asarray(grid.lat, float)
     if crs is not None and not crs.is_geographic:
-        from rasterio.warp import transform as warp_transform
-        x, y = warp_transform("+proj=longlat +R=1737400 +no_defs", crs,
-                              lon.tolist(), lat.tolist())
+        from pyproj import Transformer
+        tr = Transformer.from_crs("+proj=longlat +R=1737400 +no_defs", crs, always_xy=True)
+        x, y = tr.transform(lon, lat)
         pts = np.column_stack([np.asarray(x, float), np.asarray(y, float)])
+        FX, FY = (np.asarray(v, float).reshape(full_lon.shape)
+                  for v in tr.transform(full_lon.ravel(), full_lat.ravel()))
 
         def prep(a, b):
             return a, b                           # already the reference plane
     else:
         pts = np.column_stack([lon, lat])
+        FX, FY = full_lon, full_lat
         # Geographic reference: match the lattice's own longitude convention
         # rather than assume one. Lattices in this archive run 0-360; rasterio
         # hands back -180..180.
@@ -477,11 +537,126 @@ def _lattice_interpolators(grid, crs=None, cache=None):
         def prep(a, b):
             return ((a % 360.0) if wrap360 else ((a + 180.0) % 360.0 - 180.0)), b
 
-    out = (LinearNDInterpolator(pts, SS.ravel()),
-           LinearNDInterpolator(pts, LL.ravel()), prep)
+    inverse = _LatticeInverse(FX, FY, np.asarray(grid.pixels, float), np.asarray(grid.scans, float),
+                              _Extrapolating(pts, SS.ravel()), _Extrapolating(pts, LL.ravel()))
+    out = (inverse.sample, inverse.line, prep)
     if cache is not None:
         cache[key] = out
     return out
+
+
+class _LatticeInverse:
+    """Ground position -> (sample, line), exact on the geometry lattice.
+
+    The lattice is a regular grid in (pixel, scan) carrying a ground position
+    per node, so its natural interpolant is bilinear FORWARD: pixel -> ground.
+    Delaunay-interpolating the inverse instead fills the convex hull of the
+    nodes, and a 740 km strip's edge is not straight: along the TMC-2 edge a
+    700 m band of sliver triangles, every vertex on column 3999, mapped all of
+    that ground to column 3999 and the source came out as horizontal streaks.
+    So the triangulation only seeds the answer; Newton iterations on the
+    bilinear forward map then solve it exactly, and a solution outside the
+    image (or one that does not converge) is NaN, not an edge column.
+    """
+
+    def __init__(self, FX, FY, pixels, scans, guess_s, guess_l):
+        self.FX, self.FY = FX, FY
+        self.px, self.sc = pixels, scans
+        self.gs, self.gl = guess_s, guess_l
+        self._query = None
+        self._val = None
+        steps = np.hypot(np.diff(FX, axis=1), np.diff(FY, axis=1))
+        self.tol = 1e-3 * float(np.nanmedian(steps)) if steps.size else 1e-6
+
+    def forward(self, s, l):
+        px, sc = self.px, self.sc
+        j = np.clip(np.searchsorted(px, s) - 1, 0, len(px) - 2)
+        i = np.clip(np.searchsorted(sc, l) - 1, 0, len(sc) - 2)
+        dpx, dsc = px[j + 1] - px[j], sc[i + 1] - sc[i]
+        u, v = (s - px[j]) / dpx, (l - sc[i]) / dsc
+        out, jac = [], []
+        for F in (self.FX, self.FY):
+            f00, f01, f10, f11 = F[i, j], F[i, j + 1], F[i + 1, j], F[i + 1, j + 1]
+            out.append((1 - u) * (1 - v) * f00 + u * (1 - v) * f01 + (1 - u) * v * f10 + u * v * f11)
+            jac.append((((1 - v) * (f01 - f00) + v * (f11 - f10)) / dpx,
+                        ((1 - u) * (f10 - f00) + u * (f11 - f01)) / dsc))
+        return out, jac
+
+    def solve(self, a, b):
+        a, b = np.broadcast_arrays(np.asarray(a, float), np.asarray(b, float))
+        # Cache both coordinate components for sample()/line(), retaining the
+        # values rather than raw pointers which can be reused or mutated.
+        if (self._query is not None
+                and np.array_equal(a, self._query[0], equal_nan=True)
+                and np.array_equal(b, self._query[1], equal_nan=True)):
+            return self._val
+        s = np.asarray(self.gs(a, b), float).ravel()
+        l = np.asarray(self.gl(a, b), float).ravel()
+        x, y = a.ravel(), b.ravel()
+        live = np.isfinite(s) & np.isfinite(l) & np.isfinite(x) & np.isfinite(y)
+        for _ in range(6):
+            if not live.any():
+                break
+            (fx, fy), ((xs, xl), (ys, yl)) = self.forward(s[live], l[live])
+            rx, ry = fx - x[live], fy - y[live]
+            det = xs * yl - xl * ys
+            ok = np.abs(det) > 1e-18
+            ds = np.where(ok, (yl * rx - xl * ry) / np.where(ok, det, 1), 0.0)
+            dl = np.where(ok, (-ys * rx + xs * ry) / np.where(ok, det, 1), 0.0)
+            s[live] -= ds
+            l[live] -= dl
+        (fx, fy), _ = self.forward(np.nan_to_num(s), np.nan_to_num(l))
+        resid = np.hypot(fx - x, fy - y)
+        good = (live & (resid <= self.tol)
+                & (s >= self.px[0] - 0.5) & (s <= self.px[-1] + 0.5)
+                & (l >= self.sc[0] - 0.5) & (l <= self.sc[-1] + 0.5))
+        s = np.where(good, s, np.nan).reshape(a.shape)
+        l = np.where(good, l, np.nan).reshape(a.shape)
+        self._query, self._val = (a.copy(), b.copy()), (s, l)
+        return s, l
+
+    def sample(self, a, b):
+        return self.solve(a, b)[0]
+
+    def line(self, a, b):
+        return self.solve(a, b)[1]
+
+
+class _Extrapolating:
+    """Linear interpolation over the lattice, continued a little beyond it.
+
+    The triangulation ends at the outermost lattice nodes, which are pixel
+    CENTRES; the image itself reaches half a pixel further, and a held-out
+    point there, or a warp sample at the strip's edge, came back NaN. Queries
+    outside the hull but within two node spacings of it are extended by a
+    local plane through the nearest nodes; anything further stays NaN.
+    """
+
+    def __init__(self, pts, values):
+        from scipy.interpolate import LinearNDInterpolator
+        from scipy.spatial import cKDTree
+        self.lin = LinearNDInterpolator(pts, values)
+        self.pts, self.values = pts, np.asarray(values, float)
+        self.tree = cKDTree(pts)
+        d, _ = self.tree.query(pts[:: max(1, len(pts) // 2000)], k=2)
+        self.reach = 2.0 * float(np.median(d[:, 1]))
+
+    def __call__(self, a, b):
+        a, b = np.broadcast_arrays(np.asarray(a, float), np.asarray(b, float))
+        out = np.asarray(self.lin(a, b), float)
+        miss = ~np.isfinite(out) & np.isfinite(a) & np.isfinite(b)
+        if miss.any():
+            q = np.column_stack([a[miss], b[miss]])
+            dist, idx = self.tree.query(q, k=min(6, len(self.pts)))
+            val = np.full(len(q), np.nan)
+            near = dist[:, 0] <= self.reach
+            for i in np.flatnonzero(near):
+                P = self.pts[idx[i]]
+                X = np.column_stack([P - P.mean(axis=0), np.ones(len(P))])
+                coef, *_ = np.linalg.lstsq(X, self.values[idx[i]], rcond=None)
+                val[i] = np.r_[q[i] - P.mean(axis=0), 1.0] @ coef
+            out[miss] = val
+        return out
 
 
 def _area_reduced(src: Scene, f: float, cache):
@@ -542,22 +717,20 @@ def _sample(src: Scene, S, L, R, Rv, info, cache=None):
     out = np.zeros(R.shape, np.float32)
     ov = np.zeros(R.shape, bool)
     if ok.any():
-        si = np.clip(np.nan_to_num(S).astype(np.int64), 0, w - 1)
-        li = np.clip(np.nan_to_num(L).astype(np.int64), 0, h - 1)
-
-        # Source pixels per target pixel, measured from the map itself on a
-        # cheap subsample. The subsample stride has to be divided back out:
-        # diffing every 16th row measures the step over 16 target pixels, not
-        # one, and leaving it in inflated the factor 16x - which quietly kept
-        # the filter below switched off everywhere.
-        _st = 16
-        Ss, Ls = S[::_st, ::_st], L[::_st, ::_st]
-        with np.errstate(invalid="ignore"):
-            fx = (np.nanmedian(np.abs(np.diff(Ss, axis=1))) / _st
-                  if Ss.shape[1] > 1 else 1.0)
-            fy = (np.nanmedian(np.abs(np.diff(Ls, axis=0))) / _st
-                  if Ls.shape[0] > 1 else 1.0)
-        f = float(np.nanmax([fx, fy, 1.0]))
+        from .sampling import bilinear
+        # The full Jacobian is essential for rotated strips. Using only dS/dx
+        # and dL/dy underestimates reduction by cos(rotation), reaching zero
+        # at a right angle even when the input spans many pixels per sample.
+        stride = 16
+        Ss, Ls = S[::stride, ::stride], L[::stride, ::stride]
+        factors = [1.0]
+        for axis in (0, 1):
+            if Ss.shape[axis] > 1:
+                distance = np.hypot(np.diff(Ss, axis=axis), np.diff(Ls, axis=axis)) / stride
+                finite = distance[np.isfinite(distance)]
+                if finite.size:
+                    factors.append(float(np.median(finite)))
+        f = max(factors)
         # Average only when the taps we can afford actually COVER the footprint,
         # i.e. when they land about a source pixel apart. Spreading four taps
         # across a seventeen-pixel footprint is a sparse comb, not a box filter:
@@ -572,9 +745,7 @@ def _sample(src: Scene, S, L, R, Rv, info, cache=None):
         red = _area_reduced(src, f, cache) if (not aa and f >= _AREA_MIN_FACTOR) else None
         if red is not None:
             arr, ry, rx = red
-            ri = np.clip((L[ok] / ry).astype(np.int64), 0, arr.shape[0] - 1)
-            ci = np.clip((S[ok] / rx).astype(np.int64), 0, arr.shape[1] - 1)
-            vals = arr[ri, ci]
+            vals = bilinear(arr, S[ok] / rx - .5, L[ok] / ry - .5)
             out[ok] = np.nan_to_num(vals)
             ov[ok] = np.isfinite(vals)
             info["source_taps"] = "area"
@@ -590,21 +761,16 @@ def _sample(src: Scene, S, L, R, Rv, info, cache=None):
                 "anti-aliasing; a filter wide enough to band-limit it costs more "
                 "reads than the stage is worth" % f)
 
-        acc = np.zeros(int(ok.sum()), np.float32)
-        cnt = np.zeros(int(ok.sum()), np.float32)
+        acc = np.zeros(int(ok.sum()), np.float64)
+        cnt = np.zeros(int(ok.sum()), np.float64)
         offs = ((np.arange(k) - (k - 1) / 2.0) * (f / max(k, 1))) if aa else np.zeros(1)
         for dy in offs:
-            lj = np.clip(li[ok] + int(round(dy)), 0, h - 1)
             for dx in offs:
-                ii = np.clip(si[ok] + int(round(dx)), 0, w - 1)
-                v = np.asarray(src.array[lj, ii], np.float32)
-                v = v * src.meta_scale + src.meta_offset
-                g = np.isfinite(v) & (v > -1e30)
-                if src.nodata is not None and src.meta_scale == 1.0 \
-                        and src.meta_offset == 0.0:
-                    g &= v != src.nodata
-                acc += np.where(g, v, 0.0)
-                cnt += g
+                v = bilinear(src.array, S[ok] - .5 + dx, L[ok] - .5 + dy,
+                             nodata=src.nodata, scale=src.meta_scale, offset=src.meta_offset)
+                good = np.isfinite(v)
+                acc += np.where(good, v, 0.)
+                cnt += good
         vals = np.where(cnt > 0, acc / np.maximum(cnt, 1.0), np.nan)
         out[ok] = np.nan_to_num(vals)
         ov[ok] = cnt > 0
@@ -641,8 +807,8 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
              model: str = "auto", max_side: int | None = None, grid=None,
              holdout: float = 0.35, seed: int = 0, profiles: Profiles | None = None,
              segments: int = 0, subpixel: bool = True,
-             fine: bool = True, fine_tiles: int = 0, locate: str = "auto",
-             progress=None, verbose: bool = True) -> Result:
+             fine: bool = True, fine_tiles: int = 0, fine_patch: int | None = None, locate: str = "auto",
+             progress=None, verbose: bool = True, ground_truth: str | None = None) -> Result:
     """Register `source` onto `reference`. Always writes an artifact set.
 
     `progress`, if given, is called with each log line as it happens, so a
@@ -761,7 +927,18 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     A = normalised(Scene(path=S.path, array=A_raw, valid=Am, reader=S.reader), sp)
     B = normalised(Scene(path=R.path, array=B_raw, valid=Bm, reader=R.reader), rp)
 
-    split = E.SpatialSplit(B.shape, holdout, seed)
+    # Cells are laid out square whatever the frame's shape: an 8 x 8 grid over a
+    # 250 x 17 strip is cells two pixels wide, which neither measures coverage
+    # nor keeps held-out points away from fit points.
+    grid = _square_cells(grid, B.shape)
+    # Held-out cells follow the overlap - its principal axes and extent - and
+    # are fixed here, from the placement alone, before any matching.
+    split_frame = _overlap_frame(both)
+    split_extent = (B.shape if split_frame is None else
+                    (split_frame["extent"][3] - split_frame["extent"][1],
+                     split_frame["extent"][2] - split_frame["extent"][0]))
+    split = E.SpatialSplit(B.shape, holdout, seed, frame=split_frame,
+                           grid=_square_cells((8, 8), split_extent))
     fit_pixels = split.fit_mask()
 
     # ---- 3. pair character and candidate plan ------------------------------
@@ -781,6 +958,15 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     # registration for the wrong reason.
     eligible = spatial.eligible_cells(both, B.shape, grid)
     max_shift = _search_radius_px(S, R, sp, frame)
+    # A shared map frame (or a located placement) leaves only a residual
+    # correction, which cannot be a large rotation or scale change. Without
+    # one, any rotation is allowed, but the model must still be a physically
+    # possible mapping between two images of the same ground.
+    constrained = (((S.georeferenced or S.lonlat is not None) and R.georeferenced)
+                   or frame.get("placement") is not None)
+    # The source region every candidate model will be applied to.
+    _sy, _sx = np.nonzero(both)
+    src_extent = (_sx.min(), _sy.min(), _sx.max(), _sy.max())
     attempts, best = [], None
     for name in plan:
         t0 = time.time()
@@ -792,10 +978,31 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
         if corr is not None and len(corr) >= 4:
             mt = model if model != "auto" else _auto_model(len(corr), character)
             vr = V.verify(corr.src, corr.ref, model_type=mt, threshold=3.0)
+            # Where a wrong match can land: anywhere in the overlap for a global
+            # matcher, inside the local search box for the dense tie points.
+            area = (float((2 * _DENSE_SEARCH + 1) ** 2) if name == "dense-ncc"
+                    else float(both.sum()))
+            nfa = V.log10_nfa(len(corr), int(vr.n_inliers), mt, 3.0, area)
             rec.update({"model": mt, "inliers": int(vr.n_inliers),
                         "inlier_ratio": round(vr.inlier_ratio, 4),
-                        "verified": bool(vr.ok)})
-            if vr.ok and vr.n_inliers >= 6:
+                        "verified": bool(vr.ok),
+                        "log10_nfa": round(nfa, 2) if np.isfinite(nfa) else None})
+            why = None
+            if vr.ok:
+                why = V.degenerate(vr.model, corr.src[vr.inlier_mask], extent=src_extent)
+                dd = V.decompose(vr.model) if vr.model is not None else {}
+                if why is None and constrained and (
+                        abs(dd.get("est_scale_x", 1.0) - 1.0) > 0.25
+                        or abs(dd.get("est_rotation_deg", 0.0)) > 30.0):
+                    why = ("scale %.3f, rotation %.1f deg is not a residual correction "
+                           "of a shared map frame" % (dd.get("est_scale_x", float("nan")),
+                                                       dd.get("est_rotation_deg", float("nan"))))
+                if why is None and not nfa < 0.0:
+                    why = ("consensus is not significant: %d of %d agree, NFA 10^%.1f"
+                           % (vr.n_inliers, len(corr), nfa))
+                if why:
+                    rec["rejected"] = why
+            if vr.ok and vr.n_inliers >= 6 and why is None:
                 cov = spatial.cell_coverage(corr.ref[vr.inlier_mask], B.shape, grid,
                                             eligible=eligible)
                 disp = spatial.dispersion(corr.ref[vr.inlier_mask], B.shape)
@@ -816,6 +1023,11 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     if best is None:
         any_cand = max((a["candidates"] for a in attempts), default=0)
         code = "insufficient_matches" if any_cand < 8 else "verification_failed"
+        # Consensus was found but only for models no two images of the same
+        # ground can have: that is a degenerate transform, not a lack of matches.
+        if any(a.get("inliers", 0) >= 6 and a.get("rejected")
+               and not a["rejected"].startswith("consensus") for a in attempts):
+            code = "degenerate_transform"
         return _fail(out_dir, job_id, code,
                      "no candidate method produced a geometrically verified "
                      "transform; best attempt had %d correspondences" % any_cand,
@@ -830,11 +1042,17 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
         return _fail(out_dir, job_id, "degenerate_transform",
                      "the estimator returned no usable model",
                      {"attempts": attempts, "degraded": degraded})
-    if abs(d.get("est_scale_x", 1.0) - 1.0) > 0.25 or abs(d.get("est_rotation_deg", 0.0)) > 30.0:
+    # Every candidate was screened in the loop above; this is the same test on
+    # the model actually carried forward, kept as a rail.
+    why = V.degenerate(Hm, best["corr"].src[best["vr"].inlier_mask], extent=src_extent)
+    if why is None and constrained and (abs(d.get("est_scale_x", 1.) - 1.) > .25
+                                        or abs(d.get("est_rotation_deg", 0.)) > 30.):
+        why = "not a residual correction of a shared map frame"
+    if why:
         return _fail(out_dir, job_id, "degenerate_transform",
-                     "the fitted transform is implausible on a shared frame: "
-                     "scale %.3f, rotation %.2f deg"
-                     % (d.get("est_scale_x", float("nan")),
+                     "the fitted transform violates the available geometry constraints "
+                     "(%s): scale %.3f, rotation %.2f deg"
+                     % (why, d.get("est_scale_x", float("nan")),
                         d.get("est_rotation_deg", float("nan"))),
                      {"attempts": attempts, "decomposition": d, "degraded": degraded})
 
@@ -846,27 +1064,43 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     corr, vr = best["corr"], best["vr"]
     validation, sealed_test = best["validation"], best["test"]
     step0 = int(frame.get("reference_decimation", 1) or 1)
-    ocol0, orow0 = grid_to_reference(frame)[:2, 2]
+    H_coarse = np.asarray(Hm, float).copy()
+    Cw0 = grid_to_reference(frame)
     fine_info = {"attempted": False}
     per_point_back = None
+    field = None
+    parallax = None
+    tiepoints = None
     if fine:
         fine_plan = [best["name"]] + [p for p in plan if p != best["name"]]
+        support = cv2.warpPerspective(Am.astype(np.uint8), Hm, (B.shape[1], B.shape[0]),
+                                      flags=cv2.INTER_NEAREST).astype(bool) & Bm
         fcorr, fine_info = _fine_stage(S, R, corr, vr, frame, fine_plan, max_side,
                                        grid, log, cache, Hcoarse=Hm,
-                                       tiles=fine_tiles, split=split)
+                                       tiles=fine_tiles, split=split, support=support,
+                                       patch=fine_patch if fine_patch is not None else defaults.get("fine_patch"))
         if fcorr is not None:
             # Back onto the working grid, where every downstream stage already
             # lives. The positions are now measured at native resolution, so
             # these are sub-working-pixel by construction.
-            w_src = np.column_stack([(fcorr.src[:, 0] - ocol0) / step0,
-                                     (fcorr.src[:, 1] - orow0) / step0]).astype(np.float64)
-            w_ref = np.column_stack([(fcorr.ref[:, 0] - ocol0) / step0,
-                                     (fcorr.ref[:, 1] - orow0) / step0]).astype(np.float64)
-            whole_fine = M.Correspondences(w_src, w_ref, fcorr.confidence,
-                                          fcorr.method, fcorr.kind, dict(fcorr.detail))
+            Ci0 = np.linalg.inv(Cw0)
+            whole_fine = M.Correspondences(project(Ci0, fcorr.src), project(Ci0, fcorr.ref),
+                                          fcorr.confidence, fcorr.method, fcorr.kind,
+                                          dict(fcorr.detail))
             fit_fine, val_fine, test_fine = E.partition(whole_fine, split)
-            w_src, w_ref = fit_fine.src, fit_fine.ref
-            fvr = V.verify(w_src, w_ref, model_type=best["model"], threshold=3.0 / step0)
+            tiepoints = whole_fine
+            heights = None
+            tspec = None
+            try:
+                tspec = terrain.spec_for(R, frame)
+            except Exception as exc:                                  # noqa: BLE001
+                log("terrain   : DEM unavailable (%s)" % exc)
+            if tspec is not None:
+                heights = (tspec, terrain.sampler(tspec))
+                fine_info["dem"] = os.path.basename(tspec["dem"])
+            fvr, ffield, dense_info = _fit_dense(fit_fine, best["model"], B.shape, grid, split,
+                                                 tight=3.0 / step0, log=log, heights=heights)
+            fine_info["model_fit"] = dense_info
 
             # Verifying is not enough to be adopted: the fine set must also not
             # fail a quality check the coarse set passed. Counting inliers alone
@@ -878,21 +1112,24 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                     v.n_inliers, v.inlier_ratio,
                     spatial.cell_coverage(inl, B.shape, grid, eligible=eligible),
                     spatial.extrapolation_fraction(inl, B.shape, grid, eligible=eligible))
-            verified = (fvr.model is not None
+            verified = (fvr.model is not None and fvr.ok
                         and fvr.n_inliers >= max(8, V._min_points(best["model"])))
-            fine_gates = _gates(fvr, w_ref) if verified else {}
+            fine_gates = _gates(fvr, fit_fine.ref) if verified else {}
             regressed = [k for k in fine_gates if k not in _gates(vr, corr.ref)]
             if verified and not regressed:
                 corr = fit_fine
                 validation, sealed_test = val_fine, test_fine
                 vr = fvr
                 Hm = fvr.model
+                field = ffield
+                parallax = getattr(fvr, "parallax", None)
                 d = V.decompose(Hm)
                 per_point_back = (corr.detail["back_x"], corr.detail["back_y"])
                 fine_info["adopted"] = True
                 fine_info["inliers"] = int(fvr.n_inliers)
-                log("fine      : %d points from %d native windows, %d verified inliers"
-                    % (fine_info["points"], fine_info["windows_used"], fvr.n_inliers))
+                log("fine      : %d points from %d native tiles, %d fit points, %d inliers"
+                    % (fine_info["points"], fine_info["windows_used"], len(fit_fine),
+                       fvr.n_inliers))
             elif verified:
                 fine_info["adopted"] = False
                 fine_info["note"] = ("native points fail checks the coarse set passed "
@@ -908,10 +1145,29 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             log("fine      : not used (%s)" % fine_info.get("note"))
     fine_info.setdefault("adopted", False)
 
+    # The native model above is already a cell-balanced fit; a coarse one is
+    # not. Equalize spatial influence without discarding verified evidence: a
+    # fit from thousands of points on one crater must not overwhelm a quiet cell.
+    if not fine_info["adopted"] and vr.n_inliers >= 12:
+        Hb = balanced_refit(corr.src[vr.inlier_mask], corr.ref[vr.inlier_mask],
+                            best["model"], B.shape, grid, Hm)
+        if Hb is not None and len(validation) >= 3:
+            old = np.mean(V.transfer_error(Hm, validation.src, validation.ref) ** 2)
+            new = np.mean(V.transfer_error(Hb, validation.src, validation.ref) ** 2)
+            if new <= old:
+                Hm = Hb
+                vr.model = Hm
+                fine_info["spatially_balanced_refit"] = True
+                d = V.decompose(Hm)
+
     # ---- 6. ECC: optimize only fit pixels, adopt only on validation ---------
     # The test fold remains sealed; no metric from it is used for any decision.
+    # ECC works on the decimated working grid, so it can refine a coarse model
+    # but not one measured at native resolution.
     ecc = {"attempted": False, "adopted": False}
-    if subpixel and len(validation) >= 3:
+    if fine_info["adopted"]:
+        ecc["note"] = "not run: the model was measured at native resolution"
+    elif subpixel and len(validation) >= 3:
         # Erode the source mask to exclude gradient/filter support across folds.
         fit_mask = cv2.erode((Am & fit_pixels).astype(np.uint8), np.ones((9, 9), np.uint8)).astype(bool)
         ref_mask = cv2.warpPerspective(fit_mask.astype(np.uint8), Hm,
@@ -926,6 +1182,7 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
             if new < old:
                 Hm = Hp
                 ecc["adopted"] = True
+                vr.model = Hm
                 d = V.decompose(Hm)
                 log("subpixel : ECC adopted on validation %.4f -> %.4f px" % (old, new))
             else:
@@ -936,22 +1193,80 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     # ---- 7. write artifacts ------------------------------------------------
     os.makedirs(job_dir, exist_ok=True)
     m_per_px = _metres_per_pixel(R, frame)
-    seg = _segment_fit(corr, vr, best["model"], B.shape, segments)
+    # A cross-validated field already follows along-track change; stacking
+    # per-segment matrices under it would fit the same variation twice.
+    nonlinear = field is not None or parallax is not None
+    seg = None if nonlinear else _segment_fit(corr, vr, best["model"], B.shape, segments)
+    if nonlinear and segments and segments >= 2:
+        fine_info["segments_note"] = ("segments not fitted: the local field and terrain term "
+                                      "model along-track change")
 
     conv = _unit_conversions(S, R, frame)
-    _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back)
-    tj = _write_transform(job_dir, Hm, best["model"], d, seg, frame, best["name"], conv)
+    delivered = _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back,
+                               shape=B.shape, grid=grid)
+    if tiepoints is not None and fine_info.get("adopted"):
+        # Every native measurement with its fold, for audit: the working-grid
+        # positions the model was fitted and scored on, and the source pixels.
+        np.savez_compressed(os.path.join(job_dir, "tiepoints.npz"),
+                            src_working=tiepoints.src, ref_working=tiepoints.ref,
+                            fold=split.labels(tiepoints.src),
+                            source_px=np.column_stack([tiepoints.detail["back_x"],
+                                                       tiepoints.detail["back_y"]]),
+                            confidence=tiepoints.confidence)
+    tj = _write_transform(job_dir, Hm, best["model"], d, seg, frame, best["name"], conv,
+                          field=field, parallax=parallax)
     # JSON round-trip is the single model used by both raster export and scoring.
     with open(os.path.join(job_dir, "transform.json")) as fh:
         tj = json.load(fh)
     Hm = np.asarray(tj["matrix"], np.float64)
-    warped, wvalid = (WM.warp(A_raw, Am, tj, B_raw.shape) if seg else
+    warped, wvalid = (WM.warp(A_raw, Am, tj, B_raw.shape) if (seg or nonlinear) else
                        _warp(A_raw, Am, Hm, B_raw.shape, best["model"]))
-    _write_registered(job_dir, warped, wvalid, R, frame)
-    acc = E.score_export(job_dir, sealed_test, split)
+    # Only where the registered source lies, not the whole search window: an
+    # IIRS strip written over its padded WAC window was 256 bands of mostly
+    # empty 10653 x 471 pixels.
+    footprint = None
+    if wvalid.any():
+        fy, fx = np.nonzero(wvalid)
+        corners = project(grid_to_reference(frame),
+                          [[fx.min() - 1.0, fy.min() - 1.0], [fx.max() + 1.0, fy.max() + 1.0]])
+        footprint = (int(np.floor(corners[0, 1])), int(np.floor(corners[0, 0])),
+                     int(np.ceil(corners[1, 1])) + 1, int(np.ceil(corners[1, 0])) + 1)
+    export_info = write_registered_native(job_dir, S, R, frame, tj,
+                         lattice_interpolators=_lattice_interpolators, cache=cache,
+                         window=footprint)
+    def working_to_source(points):
+        return reference_to_source(S, R, frame, project(grid_to_reference(frame), points),
+                                   lattice_interpolators=_lattice_interpolators, cache=cache)
+    # Check points: held-out correspondences that move with their held-out
+    # neighbours relative to the COARSE model. Neither the exported model nor
+    # any fit point takes part, so a model error (which moves a neighbourhood)
+    # is kept and only an isolated mismatch is set aside - and counted.
+    tight = 3.0 / step0
+    if len(sealed_test):
+        check = _consistent(np.asarray(sealed_test.src, np.float64),
+                            np.asarray(sealed_test.ref, np.float64)
+                            - project(H_coarse, sealed_test.src), floor=tight)
+    else:
+        check = np.zeros(0, bool)
+    rule = ("held-out correspondence within max(3 reference px, 3 robust sigma) of the "
+            "median displacement of its 10 nearest held-out neighbours, displacements "
+            "taken against the coarse model; the exported model is not consulted")
+    acc = E.score_export(job_dir, sealed_test, split, working_to_source=working_to_source,
+                         check_points=check, check_point_rule=rule)
+    independent = None
+    if ground_truth is not None:
+        try:
+            independent = E.score_ground_truth(job_dir, ground_truth,
+                working_to_source=working_to_source, source_path=source, reference_path=reference,
+                source_shape=S.shape, reference_shape=R.shape)
+        except (ValueError, TypeError, KeyError, OSError) as exc:
+            independent = {"passed": False, "reasons": ["ground truth rejected: " + str(exc)]}
+        acc["independent_ground_truth"] = independent
     acc.update(subpixel_method="parabolic+ecc" if ecc.get("adopted") else "matcher", ecc=ecc)
     if acc["held_out_rmse_px"] is None:
         degraded.append("fewer than three held-out matches; accuracy is unknown, no fit-set fallback")
+    eligible = spatial.eligible_cells(wvalid & Bm, B.shape, grid)
+    character["registered_overlap_fraction"] = float((wvalid & Bm).mean())
     ov_cov = spatial.cell_coverage(corr.ref[vr.inlier_mask], B.shape, grid,
                                    eligible=eligible)
     ov_disp = spatial.dispersion(corr.ref[vr.inlier_mask], B.shape)
@@ -961,6 +1276,10 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                              vr, acc, ov_cov, ov_disp, m_per_px, degraded, warn, d,
                              time.time() - t_start, grid, eligible, ov_extrap,
                              conv, fine_info)
+    metrics["distribution"]["delivered"] = delivered
+    metrics["export"] = export_info
+    with open(os.path.join(job_dir, "metrics.json"), "w") as fh:
+        json.dump(metrics, fh, indent=1)
     layers = _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm,
                              best["model"], corr, cache, log, export_model=tj)
     _write_overlay(job_dir, *layers, vr)
@@ -997,7 +1316,7 @@ def _unit_conversions(S: Scene, R: Scene, frame: dict) -> dict:
         # Registered in pixel space: the source was resampled onto the reference
         # grid by the frame's own scale factor, so that factor IS the ratio.
         try:
-            src_per_ref = 1.0 / float(str(frame["route"]).split("scale ")[1].rstrip(")"))
+            src_per_ref = 1.0 / float(str(frame["route"]).split("GSD ratio ")[1].split(",")[0])
         except Exception:                                             # noqa: BLE001
             src_per_ref = None
     return {"reference_decimation": step, "metres_per_reference_px": m_per_ref,
@@ -1019,9 +1338,116 @@ def _rmse_units(rmse_ref_px, conv: dict) -> dict:
             "rmse_m": (round(r * m, 3) if m else None)}
 
 
+# Native-resolution tie points. Seeds sit on a lattice over the whole overlap,
+# not wherever a detector fired, so the delivered points are uniform by
+# construction; each is measured by local NCC + ECC with a forward-backward
+# check (`methods.refine_correspondences`).
+_FINE_SEEDS = 6000          # lattice seeds aimed for over the overlap
+_FINE_PATCH = 41            # correlation patch, native reference px
+_FINE_TILE = 1024           # native reference px placed per window
+_FINE_MAX_WINDOWS = 400
+
+
+def _prewarp_from(model, frame):
+    """Native reference px -> prealigned source position, from a working-grid model."""
+    C = grid_to_reference(frame)
+    Hw = np.asarray(model, float)
+    if Hw.shape != (3, 3):
+        Hw = np.vstack([Hw[:2], [0.0, 0.0, 1.0]])
+    return np.linalg.inv(C @ Hw @ np.linalg.inv(C))
+
+
+def _seed_lattice(support, frame, target):
+    """Evenly spaced native reference seeds over the working-grid `support` mask.
+
+    The spacing follows the overlap's area, so a small overlap is sampled as
+    densely as a large one is thinly - but never closer than half a patch,
+    where neighbouring measurements would share most of their pixels.
+    """
+    C = grid_to_reference(frame)
+    step = float(C[0, 0])
+    area = float(support.sum()) * step * step
+    spacing = max(_FINE_PATCH / 2.0, math.sqrt(area / max(int(target), 1)))
+    ys, xs = np.nonzero(support)
+    lo = project(C, [[xs.min() - 0.5, ys.min() - 0.5]])[0]
+    hi = project(C, [[xs.max() + 0.5, ys.max() + 0.5]])[0]
+    gx = np.arange(lo[0] + spacing / 2.0, hi[0], spacing)
+    gy = np.arange(lo[1] + spacing / 2.0, hi[1], spacing)
+    X, Y = np.meshgrid(gx, gy)
+    lattice = np.column_stack([X.ravel(), Y.ravel()])
+    if not len(lattice):
+        return lattice, spacing
+    wk = np.rint(project(np.linalg.inv(C), lattice)).astype(np.int64)
+    h, w = support.shape
+    inside = (wk[:, 0] >= 0) & (wk[:, 0] < w) & (wk[:, 1] >= 0) & (wk[:, 1] < h)
+    keep = np.zeros(len(lattice), bool)
+    keep[inside] = support[wk[inside, 1], wk[inside, 0]]
+    return lattice[keep], spacing
+
+
+def _measure_seeds(A, Am, B, Bm, seeds, search, patch=None):
+    """Measure window-local seeds on a prewarped pair; source seeds never move."""
+    seeds = np.asarray(seeds, np.float64).reshape(-1, 2)
+    if not len(seeds):
+        return None
+    corr = M.Correspondences(seeds, seeds.copy(), np.ones(len(seeds), np.float32),
+                             "grid-refined", "dense")
+    return M.refine_correspondences(corr, A, Am, B, Bm,
+                                     patch=_FINE_PATCH if patch is None else patch, search=search)
+
+
+def _select_fine_patch(candidates, split, frame, default=41):
+    """Compare patches on common probe seeds, cross-validating whole FIT cells.
+
+    Validation/test coordinates and their measurement success never enter the
+    score. An alternative needs a 5% median improvement without a worse tail
+    or a loss of more than 20% of the default's fit measurements.
+    """
+    table = []
+    if split is None or default not in candidates:
+        return default, [{"note": "no fit partition or default measurements"}]
+    ci = np.linalg.inv(grid_to_reference(frame))
+    fit = {}
+    for size, corr in candidates.items():
+        keep = split.labels(project(ci, corr.src)) == split.FIT
+        fit[size] = {tuple(p): q for p, q in zip(corr.src[keep], corr.ref[keep])}
+    common = set(fit[default])
+    for points in fit.values():
+        common.intersection_update(points)
+    if len(common) < 30:
+        return default, [{"note": "fewer than 30 common fit measurements", "common_n": len(common)}]
+    src = np.asarray(sorted(common), np.float64)
+    cells = split.cells(project(ci, src))
+    unique, counts = np.unique(cells, return_counts=True)
+    if len(unique) < 4:
+        return default, [{"note": "fewer than four common fit cells", "cells": len(unique)}]
+    weights = 1. / counts[np.searchsorted(unique, cells)]
+    order = np.random.default_rng(0).permutation(unique)
+    folds = [order[i::min(5, len(unique))] for i in range(min(5, len(unique)))]
+    for size, points in fit.items():
+        ref = np.asarray([points[tuple(p)] for p in src])
+        errors = []
+        for group in folds:
+            held = np.isin(cells, group)
+            B, _ = _inverse_fit(ref[~held], src[~held], None, weights[~held])
+            pred = np.column_stack([ref[held], np.ones(held.sum())]) @ B.T
+            errors.extend(np.linalg.norm(pred - src[held], axis=1))
+        table.append({"patch_px": size, "fit_n": len(points), "common_n": len(src),
+                      "fit_cells": len(unique), "cv_median": float(np.median(errors)),
+                      "cv_p90": float(np.percentile(errors, 90)),
+                      "measurement_fraction": len(points) / max(1, len(fit[default]))})
+    best = next(row for row in table if row["patch_px"] == default)
+    for row in table:
+        if (row["measurement_fraction"] >= .8 and row["cv_median"] < .95 * best["cv_median"]
+                and row["cv_p90"] <= 1.05 * best["cv_p90"]):
+            best = row
+    return best["patch_px"], table
+
+
 def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
-                grid, log, cache, Hcoarse=None, tiles: int = 0, split=None):
-    """Re-measure the surviving tie points at NATIVE reference resolution.
+                grid, log, cache, Hcoarse=None, tiles: int = 0, split=None, support=None,
+                seeds: int = _FINE_SEEDS, patch=None):
+    """Measure tie points at NATIVE reference resolution over the whole overlap.
 
     The coarse solve runs on a decimated working grid, so the residual it can
     report is floored by that decimation, not by the method. A TMC-2 strip
@@ -1029,205 +1455,468 @@ def _fine_stage(S: Scene, R: Scene, corr, vr, frame, plan, max_side: int,
     wide, and "1.3 px" is 59 m and 10.8 SOURCE pixels. No sub-pixel claim
     survives that, whatever the internal flag says.
 
-    Whole-frame native placement is not affordable - that is why the grid was
-    decimated in the first place - so this re-places the source over a handful
-    of native-resolution WINDOWS positioned on the tie points the coarse stage
-    already found, and re-correlates inside each. Peak memory is one window, the
-    same as one coarse pass; the windows are walked in sequence.
+    Seeds are laid on a lattice over the overlap the coarse model predicts
+    (`support`), so the result covers it uniformly by construction instead of
+    clustering where a detector finds texture. The lattice is walked in tiles:
+    each tile is placed at native resolution, prewarped by the coarse model so
+    only its residual is left to find, and padded by the patch and search
+    radius so seeds at a tile's edge are measured like any other. Peak memory
+    is one tile. A tile that cannot be placed at native resolution is counted,
+    and the result is then not called native.
+
+    The measurement is local NCC refined by ECC, with a forward-backward check
+    (`methods.refine_correspondences`). When that yields too little on the
+    first tiles - it needs correlated texture - the sparse matchers of `plan`
+    are probed there instead, and the first that verifies is used throughout.
 
     Returns ``(Correspondences in FULL-RESOLUTION reference pixels, info)``, with
-    `back` carrying the original source pixel for each point. Both sides live on
-    the reference's own native grid, so residuals come out in reference pixels
-    and convert cleanly into metres and source pixels.
+    `back_x`/`back_y` carrying the original source pixel of each point. The
+    source side is the prealigned position (the prewarp undone), so a fit on
+    these gives the full transform, not the residual to the coarse one.
     """
     info = {"attempted": True, "windows": 0, "windows_used": 0, "points": 0,
             "native": False, "note": None, "method": None, "probe": []}
+    patches = [int(patch)] if patch is not None else sorted({_FINE_PATCH, 61})
+    if any(p < 9 or p % 2 != 1 for p in patches):
+        raise ValueError("fine_patch must be an odd integer of at least 9")
+    selected_patch = patches[0]
     step = int(frame.get("reference_decimation", 1) or 1)
-    if step <= 1:
-        info.update(attempted=False, native=True,
-                    note="the coarse grid was already at native reference resolution")
-        return None, info
-
-    ocol, orow = grid_to_reference(frame)[:2, 2]
-
-    # The coarse model, expressed in full-resolution reference pixels, inverted:
-    # this is what tells each native window which source ground belongs in it.
     prewarp = None
     if Hcoarse is not None:
         try:
-            Hw = np.eye(3)
-            Hw[:2, :] = np.asarray(Hcoarse, float)[:2, :]
-            if np.asarray(Hcoarse).shape == (3, 3):
-                Hw = np.asarray(Hcoarse, float)
-            T = np.array([[1.0 / step, 0, -ocol / float(step)],
-                          [0, 1.0 / step, -orow / float(step)],
-                          [0, 0, 1.0]])
-            prewarp = np.linalg.inv(np.linalg.inv(T) @ Hw @ T)
+            prewarp = _prewarp_from(Hcoarse, frame)
         except np.linalg.LinAlgError:
             prewarp = None
-
-    idx = np.nonzero(vr.inlier_mask)[0]
-    if len(idx) < 4:
-        info.update(attempted=False, note="too few coarse inliers to place windows on")
+    if support is None or not support.any():
+        idx = np.nonzero(vr.inlier_mask)[0]
+        if len(idx) < 4:
+            info.update(attempted=False, note="too few coarse inliers to place windows on")
+            return None, info
+        h, w = frame["target_shape"]
+        support = np.zeros((h, w), bool)
+        x0, y0 = np.floor(corr.ref[idx].min(axis=0)).astype(int)
+        x1, y1 = np.ceil(corr.ref[idx].max(axis=0)).astype(int)
+        support[max(0, y0):y1 + 1, max(0, x0):x1 + 1] = True
+    lattice, spacing = _seed_lattice(support, frame, seeds)
+    if len(lattice) < 8:
+        info.update(attempted=False, note="the overlap holds only %d seed positions" % len(lattice))
         return None, info
 
-    # Full-resolution reference position of every surviving tie point.
-    pts = np.column_stack([ocol + corr.ref[idx, 0] * step,
-                           orow + corr.ref[idx, 1] * step])
-
-    # Spread the windows over the tie points rather than over the frame - an
-    # empty window costs a placement and returns nothing - and spread them
-    # EVENLY over the whole extent of those points. Walking greedily from one
-    # end instead packs the windows into that end and the distribution the
-    # coarse stage achieved is thrown away: the first version of this scored
-    # 0.36 coverage against the coarse stage's 0.87 on the same pair, which is a
-    # real loss of constraint, not a reporting artefact.
-    x0, y0 = pts.min(axis=0)
-    x1, y1 = pts.max(axis=0)
-    # Size the window so the overlap gets tiled a few times across rather than
-    # swallowed by one or two boxes; coverage is a deliverable, and two windows
-    # spanning a 3400 px overlap scored 0.15 where the coarse stage managed
-    # 0.21 on the same pair.
-    side = int(np.clip(max(x1 - x0, y1 - y0) / 3.0, 512, max_side))
-    half = max(256, side // 2)
-    win = 2.0 * half
-    # Tile the overlap in BOTH axes. Laying windows out along the long axis only
-    # leaves the cross-axis uncovered whenever the overlap is wider than one
-    # window, and the coverage the coarse stage achieved is lost: on this
-    # TMC-2 strip, bands-only placement scored 0.62 against the coarse 0.87,
-    # because a square window spans about 60% of the strip's width.
-    nx = max(1, int(math.ceil((x1 - x0) / win)))
-    ny = max(1, int(math.ceil((y1 - y0) / win)))
-    cand = []
-    for jy in range(ny):
-        for ix in range(nx):
-            cx = x0 + (ix + 0.5) * (x1 - x0) / nx
-            cy = y0 + (jy + 0.5) * (y1 - y0) / ny
-            near = int(np.count_nonzero((np.abs(pts[:, 0] - cx) < half)
-                                        & (np.abs(pts[:, 1] - cy) < half)))
-            if near:
-                cand.append((cx, cy, near))
-    if not cand:
-        info.update(attempted=False, note="no window contained a coarse tie point")
-        return None, info
-    budget = tiles if tiles and tiles > 0 else min(24, len(cand))
-    if len(cand) > budget:
-        # Thin evenly rather than by point count, so the survivors still span
-        # the overlap instead of crowding where the texture happens to be.
-        keep = np.linspace(0, len(cand) - 1, budget).round().astype(int)
-        cand = [cand[i] for i in sorted(set(keep.tolist()))]
-    centres = [(c[0], c[1]) for c in cand]
-    info["windows"] = len(centres)
-    info["placement"] = ("%d windows tiling %.0f x %.0f reference px (%d x %d grid)"
-                         % (len(centres), x1 - x0, y1 - y0, nx, ny))
+    # With the coarse solve applied, what is left is its residual: a working
+    # pixel or two, more where the coarse model extrapolates.
+    search = int(np.clip(3 * step, 8, 32)) if prewarp is not None else int(np.clip(4 * step, 16, 48))
+    pad = max(patches) // 2 + search + 3
+    core = float(max(64, min(_FINE_TILE, max_side) - 2 * pad))
+    origin = lattice.min(axis=0)
+    key = np.floor((lattice - origin) / core).astype(np.int64)
+    uniq = sorted({(int(a), int(b)) for a, b in key}, key=lambda t: (t[1], t[0]))
+    groups = []
+    for kx, ky in uniq:
+        members = np.flatnonzero((key[:, 0] == kx) & (key[:, 1] == ky))
+        lo = origin + np.array([kx, ky], float) * core
+        groups.append((members, lo, lo + core))
+    cap = int(tiles) if tiles and tiles > 0 else _FINE_MAX_WINDOWS
+    if len(groups) > cap:
+        keep = np.unique(np.linspace(0, len(groups) - 1, cap).round().astype(int))
+        info["note"] = ("%d of %d tiles measured (window budget); the rest of the overlap "
+                        "is interpolated" % (len(keep), len(groups)))
+        groups = [groups[i] for i in keep]
+    info.update(windows=len(groups), seeds=int(len(lattice)), seed_spacing_px=round(spacing, 2),
+                search_px=search, patch_px=selected_patch,
+                placement="%d tiles over %d lattice seeds at %.1f px spacing"
+                          % (len(groups), len(lattice), spacing))
 
     H, W = R.array.shape
-    # With the coarse solve applied, what is left is its residual - a few
-    # working pixels at most - so the search does not need to be wide.
-    max_shift = max(16, 4 * step) if prewarp is None else max(12, 2 * step)
-    plan = [plan] if isinstance(plan, str) else list(plan)
-    method = None                 # chosen by probing the first usable window
-    src_all, ref_all, conf_all, bx_all, by_all = [], [], [], [], []
-    for cx, cy in centres:
-        r0 = int(np.clip(cy - half, 0, max(0, H - 2 * half)))
-        c0 = int(np.clip(cx - half, 0, max(0, W - 2 * half)))
-        win = (r0, c0, min(H, r0 + 2 * half), min(W, c0 + 2 * half))
+
+    def place(g, pw):
+        members, _, _ = g
+        pts = lattice[members]
+        r0 = int(max(0, np.floor(pts[:, 1].min()) - pad))
+        c0 = int(max(0, np.floor(pts[:, 0].min()) - pad))
+        r1 = int(min(H, np.ceil(pts[:, 1].max()) + pad + 1))
+        c1 = int(min(W, np.ceil(pts[:, 0].max()) + pad + 1))
         try:
-            A, Am, B, Bm, bx, by, fr = prealign(S, R, max_side=max_side,
-                                                window=win, cache=cache,
-                                                prewarp=prewarp,
-                                                placement=frame.get("placement"))
+            return prealign(S, R, max_side=max(max_side, r1 - r0, c1 - c0),
+                            window=(r0, c0, r1, c1), cache=cache, prewarp=pw,
+                            placement=frame.get("placement"))
         except Exception as exc:                                      # noqa: BLE001
-            log("fine      : window at (%d, %d) could not be placed: %s" % (c0, r0, exc))
-            continue
-        if fr["reference_decimation"] != 1:
-            info["note"] = ("windows still decimated %dx; raise --max-side or lower "
-                            "--fine-tiles" % fr["reference_decimation"])
-        both_w = Am & Bm
-        if both_w.sum() < 4096:
-            continue
-        if method is None:
-            # Do NOT assume the coarse winner still wins. The whole point of
-            # this stage is that it runs at a different resolution, and the
-            # ranking moves with resolution: on the OHRC/NAC pair AKAZE won at
-            # 4 m/px and then produced 4 usable points at 1 m/px, because
-            # downsampling had been suppressing the fine shadow structure that
-            # breaks descriptors. Probe the plan once, on the first usable
-            # window, and carry the winner across the rest.
-            for name in plan:
-                try:
-                    ci, _ = _run_one(name, A, Am, B, Bm, max_shift, grid)
-                except Exception:                                     # noqa: BLE001
-                    ci = None
-                probe = ci
-                if ci is not None and split is not None:
-                    fr_r, fr_c = fr["reference_origin"]
-                    full = project(grid_to_reference(fr), ci.src)
-                    if prewarp is not None:
-                        ph = np.column_stack([full, np.ones(len(full))]) @ prewarp.T
-                        full = ph[:, :2] / ph[:, 2:]
-                    working = (full - [ocol, orow]) / step
-                    probe = E.subset(ci, split.labels(working) == split.FIT)
-                n_i = 0 if probe is None else len(probe)
-                vi = None
-                if n_i >= 4:
-                    vi = V.verify(probe.src, probe.ref, model_type="affine", threshold=3.0)
-                info["probe"].append({"method": name, "candidates": n_i,
-                                      "inliers": (0 if vi is None else int(vi.n_inliers))})
-                if vi is not None and vi.n_inliers >= 8:
-                    method, c = name, ci
-                    break
-            else:
-                continue                  # this window suits nothing; try the next
-            info["method"] = method
-            log("fine      : native probe -> %s  (%s)" % (
-                method, ", ".join("%s %d/%d" % (x["method"], x["inliers"], x["candidates"])
-                                  for x in info["probe"])))
+            log("fine      : tile at (%d, %d) could not be placed: %s" % (c0, r0, exc))
+            return None
+
+    counts = {}
+
+    def measure(name, g, placed, pw, patch_size=None):
+        members, lo, hi = g
+        A, Am, B, Bm, bx, by, fr = placed
+        Cw = grid_to_reference(fr)
+        Ci = np.linalg.inv(Cw)
+        if name == "grid-refined":
+            c = _measure_seeds(A, Am, B, Bm, project(Ci, lattice[members]), search,
+                                patch=selected_patch if patch_size is None else patch_size)
         else:
-            c, why = _run_one(method, A, Am, B, Bm, max_shift, grid)
-        if c is None or len(c) == 0:
+            try:
+                c, _ = _run_one(name, A, Am, B, Bm, search, grid)
+            except Exception:                                         # noqa: BLE001
+                c = None
+            if c is None or not len(c):
+                return None
+            # Only keypoints inside this tile's own square, so overlapping
+            # windows never report the same ground twice.
+            nat = project(Cw, c.src)
+            c = E.subset(c, np.all((nat >= lo) & (nat < hi), axis=1))
+            if not len(c):
+                return None
+            sel = spatial.select(c.src, c.confidence, A.shape, grid=grid, per_cell=8,
+                                 min_keep=0, min_for_thinning=0, min_separation=3.).keep
+            c = M.refine_correspondences(E.subset(c, sel), A, Am, B, Bm,
+                                         search=min(12, search))
+        if c is None or not len(c):
+            return None
+        for k, v in (c.detail.get("refinement_counts") or {}).items():
+            counts[k] = counts.get(k, 0) + int(v)
+        src = project(Cw, c.src)
+        if pw is not None:
+            src = project(pw, src)
+        back = sample_backmap(bx, by, c.src)
+        return (src, project(Cw, c.ref), np.asarray(c.confidence, np.float32), back,
+                int(fr["reference_decimation"]))
+
+    def fit_fold(src_native):
+        if split is None:
+            return np.ones(len(src_native), bool)
+        working = project(np.linalg.inv(grid_to_reference(frame)), src_native)
+        return split.labels(working) == split.FIT
+
+    # Probe on the first few usable tiles: the lattice measurement when it
+    # verifies there, else the first sparse matcher that does.
+    names = ["grid-refined"] + [p for p in (plan if isinstance(plan, (list, tuple)) else [plan])
+                                if p not in ("grid-refined", "dense-ncc")]
+    # Probe where the fit fold is: a tile lying wholly in held-out cells can
+    # offer the probe nothing, whatever it measures. Rank tiles by the fit
+    # seeds they hold (their source side is roughly the prewarped seed).
+    seed_fit = fit_fold(project(prewarp, lattice) if prewarp is not None else lattice)
+    ranked = sorted(range(len(groups)), key=lambda i: -int(seed_fit[groups[i][0]].sum()))
+    probe_tiles = []
+    for i in ranked:
+        g = groups[i]
+        if not seed_fit[g[0]].any():
+            break
+        placed = place(g, prewarp)
+        if placed is None or (placed[1] & placed[3]).sum() < 1024:
             continue
-        wr0, wc0 = fr["reference_origin"]
-        st = fr["reference_decimation"]
-        # window-local -> full-resolution reference pixels
-        ref_all.append(project(grid_to_reference(fr), c.ref))
-        src_all.append(project(grid_to_reference(fr), c.src))
-        conf_all.append(np.asarray(c.confidence, np.float32))
-        # original source pixel behind each point, for matches.csv
-        original = sample_backmap(bx, by, c.src)
-        bx_all.append(original[:, 0])
-        by_all.append(original[:, 1])
-        info["windows_used"] += 1
-
-    if not ref_all:
-        info["note"] = info["note"] or "no native window produced a tie point"
+        probe_tiles.append((i, placed))
+        if len(probe_tiles) >= 3:
+            break
+    if not probe_tiles:
+        info["note"] = "no native tile overlapped usable data"
         return None, info
+    patch_results = {}
+    if len(patches) > 1:
+        candidates = {}
+        for size in patches:
+            got = {i: measure("grid-refined", groups[i], placed, prewarp, size)
+                   for i, placed in probe_tiles}
+            got = {i: r for i, r in got.items() if r is not None}
+            patch_results[size] = got
+            if got:
+                candidates[size] = M.Correspondences(
+                    np.vstack([r[0] for r in got.values()]), np.vstack([r[1] for r in got.values()]),
+                    np.concatenate([r[2] for r in got.values()]), "grid-refined", "dense")
+        selected_patch, table = _select_fine_patch(candidates, split, frame, patches[0])
+        info.update(patch_px=selected_patch, patch_cv=table,
+                    patch_selection="spatial cross-validation on common fit-fold probe seeds only")
+    else:
+        info["patch_selection"] = "explicit or sensor-profile setting"
+    method, results = None, {}
+    for name in names:
+        got = (patch_results[selected_patch] if name == "grid-refined" and patch_results else
+               {i: measure(name, groups[i], placed, prewarp) for i, placed in probe_tiles})
+        got = {i: r for i, r in got.items() if r is not None}
+        n_i = n_in = 0
+        if got:
+            src = np.vstack([r[0] for r in got.values()])
+            ref = np.vstack([r[1] for r in got.values()])
+            ff = fit_fold(src)
+            n_i = int(ff.sum())
+            if n_i >= 4:
+                n_in = int(V.verify(src[ff], ref[ff], model_type="affine", threshold=3.0).n_inliers)
+        info["probe"].append({"method": name, "candidates": n_i, "inliers": n_in})
+        if n_in >= 8:
+            method, results = name, got
+            break
+    if method is None:
+        info["note"] = "no method verified on the first native tiles"
+        return None, info
+    info["method"] = method
+    log("fine      : native probe -> %s  (%s)" % (method, ", ".join(
+        "%s %d/%d" % (x["method"], x["inliers"], x["candidates"]) for x in info["probe"])))
+    del probe_tiles, patch_results
 
-    src_pts = np.vstack(src_all)
-    if prewarp is not None:
-        # In a prewarped window the source arrives already carrying the coarse
-        # solution, so these positions measure only the residual. Map them back
-        # through the same prewarp to recover where the source geometry actually
-        # put each point; refitting on those gives the FULL transform rather
-        # than the leftover correction to it.
-        P = np.asarray(prewarp, float)
-        den = P[2, 0] * src_pts[:, 0] + P[2, 1] * src_pts[:, 1] + P[2, 2]
-        den = np.where(np.abs(den) < 1e-12, 1e-12, den)
-        src_pts = np.column_stack([
-            (P[0, 0] * src_pts[:, 0] + P[0, 1] * src_pts[:, 1] + P[0, 2]) / den,
-            (P[1, 0] * src_pts[:, 0] + P[1, 1] * src_pts[:, 1] + P[1, 2]) / den])
+    # Tiles far from the coarse tie points may lie beyond the search radius of
+    # the coarse prewarp: a model from one cluster of matches extrapolates
+    # badly down a long strip. So grow outwards - refit on the fit-fold points
+    # measured so far and retry the tiles that came back (nearly) empty with
+    # that better prewarp. Only fit-fold points steer the prewarp.
+    done = {i: r for i, r in results.items()}
+    for i, g in enumerate(groups):
+        if i in done:
+            continue
+        placed = place(g, prewarp)
+        done[i] = measure(method, g, placed, prewarp) if placed is not None else None
+    passes = [{"prewarp": "coarse model", "tiles_with_points": 0}]
 
+    def enough(i):
+        r = done.get(i)
+        return (r is not None and fit_fold(r[0]).sum()
+                >= max(3, 0.2 * seed_fit[groups[i][0]].sum()))
+
+    for attempt in range(2):
+        passes[-1]["tiles_with_points"] = int(sum(enough(i) for i in range(len(groups))))
+        weak = [i for i in range(len(groups)) if not enough(i)]
+        good = [done[i] for i in range(len(groups)) if enough(i)]
+        if not weak or not good or method != "grid-refined":
+            break
+        src = np.vstack([r[0] for r in good])
+        ref = np.vstack([r[1] for r in good])
+        ff = fit_fold(src)
+        if ff.sum() < 20:
+            break
+        fit = V.verify(src[ff], ref[ff], model_type="affine", threshold=3.0)
+        if fit.model is None or fit.n_inliers < 20:
+            break
+        try:
+            grown = np.linalg.inv(fit.model)
+        except np.linalg.LinAlgError:
+            break
+        before = passes[-1]["tiles_with_points"]
+        passes.append({"prewarp": "affine from %d fit-fold points" % fit.n_inliers,
+                       "retried": len(weak), "tiles_with_points": 0})
+        for i in weak:
+            placed = place(groups[i], grown)
+            r = measure(method, groups[i], placed, grown) if placed is not None else None
+            # Only fit-fold counts choose a retry. Tiles with no fit seeds
+            # follow the latest fit-derived prewarp without comparing tests.
+            if r is not None and (not seed_fit[groups[i][0]].any() or done.get(i) is None
+                                  or fit_fold(r[0]).sum() > fit_fold(done[i][0]).sum()):
+                done[i] = r
+        passes[-1]["tiles_with_points"] = int(sum(enough(i) for i in range(len(groups))))
+        if passes[-1]["tiles_with_points"] <= before:
+            break
+    info["passes"] = passes
+
+    decimated = 0
+    parts = []
+    for i in range(len(groups)):
+        r = done.get(i)
+        if r is None:
+            continue
+        parts.append(r)
+        decimated += int(r[4] != 1)
+        info["windows_used"] += 1
+    if not parts:
+        info["note"] = info["note"] or "no native tile produced a tie point"
+        return None, info
+    back = np.vstack([p[3] for p in parts])
     out = M.Correspondences(
-        src=src_pts.astype(np.float64),
-        ref=np.vstack(ref_all).astype(np.float64),
-        confidence=np.concatenate(conf_all),
-        method=(method or "?") + "@native", kind="dense",
-        detail={"stage": "fine", "windows": info["windows_used"]})
-    out.detail["back_x"] = np.concatenate(bx_all)
-    out.detail["back_y"] = np.concatenate(by_all)
+        src=np.vstack([p[0] for p in parts]).astype(np.float64),
+        ref=np.vstack([p[1] for p in parts]).astype(np.float64),
+        confidence=np.concatenate([p[2] for p in parts]),
+        method=method + "@native", kind="dense",
+        detail={"stage": "fine", "windows": info["windows_used"],
+                "back_x": back[:, 0], "back_y": back[:, 1]})
     info["points"] = len(out)
-    info["native"] = True
+    info["refinement_counts"] = counts
+    info["native"] = decimated == 0
+    if decimated:
+        info["note"] = ("%d of %d tiles could only be placed decimated; raise --max-side"
+                        % (decimated, len(parts)))
     return out, info
+
+
+def _consistent(src, v, floor, k=10):
+    """Model-free screen: a correspondence must move like its neighbours.
+
+    `v` is each point's displacement from a rough global model. An isolated
+    mismatch disagrees with the median of its k nearest neighbours; a smooth
+    distortion the global model misses does not. Judged within the set given,
+    so fit points are never screened by held-out ones.
+    """
+    n = len(src)
+    if n < 12:
+        return np.ones(n, bool)
+    from scipy.spatial import cKDTree
+    k = int(min(k, n - 1))
+    _, nb = cKDTree(src).query(src, k=k + 1)
+    nb = nb[:, 1:]
+    med = np.median(v[nb], axis=1)
+    dev = np.linalg.norm(v - med, axis=1)
+    spread = np.median(np.linalg.norm(v[nb] - med[:, None, :], axis=2), axis=1)
+    return dev <= np.maximum(floor, 3.0 * 1.4826 * spread)
+
+
+def _inverse_fit(q, p, h, weights=None, iterations=8):
+    """Robust inverse model  p = B [q, 1] (+ m h)  on reference points q.
+
+    `h` is None for the plain affine. Huber IRLS on top of `weights`.
+    Returns (B 2x3, m or None).
+    """
+    q = np.asarray(q, np.float64)
+    p = np.asarray(p, np.float64)
+    cols = [q[:, 0], q[:, 1], np.ones(len(q))] + ([h] if h is not None else [])
+    X = np.column_stack(cols)
+    base = np.ones(len(q)) if weights is None else np.asarray(weights, np.float64)
+    robust = np.ones(len(q))
+    coef = np.zeros((X.shape[1], 2))
+    for _ in range(iterations):
+        w = np.sqrt(base * robust)
+        coef = np.linalg.lstsq(X * w[:, None], p * w[:, None], rcond=None)[0]
+        e = np.linalg.norm(X @ coef - p, axis=1)
+        sigma = max(0.02, 1.4826 * float(np.median(np.abs(e - np.median(e)))))
+        robust = np.minimum(1.0, 1.345 * sigma / np.maximum(e, 1e-12))
+    B = coef[:3].T
+    return B, (coef[3] if h is not None else None)
+
+
+def _cv_height(q, p, h, cells, weights, folds=5, seed=0):
+    """Cross-validated median error of the inverse affine with and without height."""
+    unique = np.unique(cells)
+    if len(unique) < 4:
+        return None
+    order = np.random.default_rng(seed).permutation(unique)
+    groups = [order[i::min(folds, len(unique))] for i in range(min(folds, len(unique)))]
+    out = {}
+    for label, hh in (("global", None), ("global+height", h)):
+        errs = []
+        for g in groups:
+            held = np.isin(cells, g)
+            if held.all() or not held.any():
+                continue
+            B, m = _inverse_fit(q[~held], p[~held], None if hh is None else hh[~held],
+                                weights[~held])
+            pred = np.column_stack([q[held], np.ones(held.sum())]) @ B.T
+            if m is not None:
+                pred += hh[held][:, None] * m[None, :]
+            errs.append(np.linalg.norm(pred - p[held], axis=1))
+        e = np.concatenate(errs) if errs else np.array([np.inf])
+        out[label] = {"cv_median": float(np.median(e)), "cv_p90": float(np.percentile(e, 90))}
+    return out
+
+
+def _fit_dense(corr, model_type, shape, grid, split, tight, allow_field=True, log=None,
+               heights=None):
+    """Global model plus an optional smooth local field, from dense fit points.
+
+    1. A robust global model with a loose threshold removes gross mismatches.
+    2. `_consistent` removes points that do not move with their neighbours.
+    3. A cell-balanced least-squares global model is fitted to what is left.
+    4. A B-spline correction field is chosen by spatial cross-validation over
+       whole fit cells (`local_model.cross_validate`) - or none, when it does
+       not predict unseen cells better.
+    5. Inliers are the points within `tight` of the complete model.
+
+    Returns ``(VerifyResult, field or None, info)``. Only fit-fold points enter.
+    """
+    from . import local_model as LM
+    src = np.asarray(corr.src, np.float64)
+    ref = np.asarray(corr.ref, np.float64)
+    n = len(src)
+    info = {"points": n, "tight_threshold_px": round(float(tight), 4)}
+    need = max(8, V._min_points(model_type) + 2)
+    loose = max(4.0 * tight, tight + 3.0)
+    vr0 = V.verify(src, ref, model_type=model_type, threshold=loose)
+    if vr0.model is None or vr0.n_inliers < need:
+        info["note"] = "no global model at the loose threshold"
+        return vr0, None, info
+    v = ref - project(vr0.model, src)
+    ok = vr0.inlier_mask & _consistent(src, v, floor=tight)
+    info.update(loose_threshold_px=round(float(loose), 4), loose_inliers=int(vr0.n_inliers),
+                consistent=int(ok.sum()))
+    if ok.sum() < need:
+        ok = vr0.inlier_mask
+    H = balanced_refit(src[ok], ref[ok], model_type, shape, grid, vr0.model)
+    if H is None or not np.isfinite(H).all():
+        H = vr0.model
+    # Terrain parallax, when a DEM covers the overlap: one height coefficient,
+    # fitted jointly with the inverse affine and kept only when it predicts
+    # whole unseen fit cells better (see `terrain`).
+    parallax = None
+    if heights is not None and split is not None and model_type == "affine":
+        spec, sample = heights
+        hq = sample(ref)
+        use = ok & np.isfinite(hq)
+        if use.sum() >= 30 and np.nanstd(hq[use]) > 1.0:
+            origin = float(np.median(hq[use]))
+            hc = hq[use] - origin
+            from ..spatial import cell_index
+            cx, cy = cell_index(ref[use], shape, grid)
+            cellw = 1.0 / np.maximum(np.bincount(cy * grid[1] + cx,
+                                                 minlength=grid[0] * grid[1]), 4)[cy * grid[1] + cx]
+            cv = _cv_height(ref[use], src[use], hc, split.cells(src[use]), cellw)
+            info["height_cv"] = cv
+            if cv and cv["global+height"]["cv_median"] < 0.95 * cv["global"]["cv_median"]:
+                B, m = _inverse_fit(ref[use], src[use], hc, cellw)
+                Hi = np.vstack([B, [0.0, 0.0, 1.0]])
+                try:
+                    H = np.linalg.inv(Hi)
+                    parallax = {"kind": "dem_height", "sampler": spec,
+                                "height_origin_m": origin,
+                                "coefficient_px_per_m": [float(m[0]), float(m[1])],
+                                "definition": "source working px added per metre of DEM height "
+                                              "above height_origin_m at the reference position"}
+                    info["parallax"] = {"coefficient_px_per_m": parallax["coefficient_px_per_m"],
+                                        "height_origin_m": origin,
+                                        "height_std_m": float(np.std(hq[use]))}
+                    if log:
+                        log("model     : terrain parallax adopted (%.4f, %.4f) working px per m; "
+                            "cross-validated median %.3f -> %.3f px"
+                            % (m[0], m[1], cv["global"]["cv_median"],
+                               cv["global+height"]["cv_median"]))
+                except np.linalg.LinAlgError:
+                    parallax = None
+    field = None
+    if allow_field and ok.sum() >= 60 and split is not None:
+        base_model = {"matrix": np.asarray(H, float).tolist(), "parallax": parallax}
+        resid = src[ok] - WM.inverse_points(base_model, ref[ok])
+        ext = ((split.frame["extent"][3] - split.frame["extent"][1],
+                split.frame["extent"][2] - split.frame["extent"][0])
+               if split.frame is not None else shape)
+        cell = float(np.mean([ext[0] / split.grid_shape[0], ext[1] / split.grid_shape[1]]))
+        # From twice a held-out cell down to an eighth of one, but never finer
+        # than the typical spacing of the points themselves: below that a
+        # knot has no data of its own. Cross-validation over whole fit cells
+        # decides, and a finer field has to earn its place there.
+        try:
+            from scipy.spatial import ConvexHull
+            hull_area = float(ConvexHull(ref[ok]).volume)
+        except Exception:                                             # noqa: BLE001
+            hull_area = float(shape[0]) * shape[1]
+        spacing_pts = math.sqrt(hull_area / max(ok.sum(), 1))
+        cands = [(cell * f, lam) for f in (2.0, 1.0, 0.5, 0.25, 0.125)
+                 for lam in (0.01, 0.1, 1.0) if cell * f >= spacing_pts]
+        best_cv, table = LM.cross_validate(ref[ok], resid, split.cells(src[ok]), shape, cands)
+        info["field_cv"] = table
+        if best_cv is not None:
+            field = LM.fit(ref[ok], resid, shape, best_cv[0], best_cv[1])
+            info["field"] = {"spacing_px": round(best_cv[0], 3), "smoothness": best_cv[1]}
+            if log:
+                log("model     : local field adopted (spacing %.1f working px, smoothness %g); "
+                    "cross-validated median %.3f -> %.3f px"
+                    % (best_cv[0], best_cv[1], table[0]["cv_median"],
+                       min(r["cv_median"] for r in table[1:] if "cv_median" in r)))
+        elif log:
+            log("model     : no local field (cross-validation kept the global model)")
+    model = {"matrix": np.asarray(H, float).tolist(), "local_field": field, "parallax": parallax}
+    res = WM.residuals(model, src, ref)
+    inl = np.isfinite(res) & (res < tight)
+    vr = V.VerifyResult(np.asarray(H, float), inl, n, int(inl.sum()), res, model_type,
+                        ok=bool(inl.sum() >= need),
+                        reason="" if inl.sum() >= need else "too few inliers under the dense model",
+                        detail={"estimator": "loose RANSAC + neighbour consistency + "
+                                             "cell-balanced least squares"
+                                             + (" + cross-validated local field" if field else ""),
+                                "threshold_px": float(tight)})
+    vr.parallax = parallax
+    return vr, field, info
 
 
 def _search_radius_px(S: Scene, R: Scene, sp: dict, frame: dict) -> int:
@@ -1258,14 +1947,51 @@ def _run_one(name, A, Am, B, Bm, max_shift, grid):
         t = M.dense_translation(A, Am, B, Bm, max_shift_px=max_shift)
         if t is None:
             return None, "no correlation surface"
-        bbox = M.overlap_bbox(Am & Bm)
-        c = M.grid_tiepoints(A, Am, B, Bm, t["dx"], t["dy"], grid=grid, bbox=bbox)
+        # Tie points around the locked translation, seeded on a lattice INSIDE
+        # the overlap and measured like the fine stage's. A fixed grid over the
+        # overlap's bounding box put most seeds off a diagonal strip: 8 of 144
+        # survived on TMC-2 against the morning SELENE map.
+        c = _lattice_tiepoints(A, Am, B, Bm, t["dx"], t["dy"], grid)
+        if c is None or len(c) < 8:
+            bbox = M.overlap_bbox(Am & Bm)
+            c = M.grid_tiepoints(A, Am, B, Bm, t["dx"], t["dy"], grid=grid, bbox=bbox,
+                                 search=_DENSE_SEARCH)
         if c is None:
             return None, "locked at (%.2f, %.2f) but no tie point survived" % (t["dx"], t["dy"])
         c.detail.update({k: t[k] for k in ("peak", "margin", "subpixel_dx",
                                            "subpixel_dy", "at_search_edge")})
         return c, ""
     return M.sparse(A, Am, B, Bm, name), ""
+
+
+def _lattice_tiepoints(A, Am, B, Bm, dx, dy, grid, patch=31):
+    """Dense coarse tie points: lattice seeds in the overlap, NCC + ECC measured."""
+    h, w = A.shape
+    ys, xs = np.nonzero(Am)
+    if not len(xs):
+        return None
+    tx, ty = np.rint(xs + dx).astype(int), np.rint(ys + dy).astype(int)
+    inside = (tx >= 0) & (tx < w) & (ty >= 0) & (ty < h)
+    area = int((inside & Bm[np.clip(ty, 0, h - 1), np.clip(tx, 0, w - 1)]).sum())
+    if area < 64:
+        return None
+    spacing = max(8.0, math.sqrt(area / float(4 * grid[0] * grid[1])))
+    gx, gy = np.meshgrid(np.arange(spacing / 2, w, spacing), np.arange(spacing / 2, h, spacing))
+    seeds = np.column_stack([gx.ravel(), gy.ravel()])
+    si = np.rint(seeds).astype(int)
+    ri = np.rint(seeds + [dx, dy]).astype(int)
+    ok = ((ri[:, 0] >= 0) & (ri[:, 0] < w) & (ri[:, 1] >= 0) & (ri[:, 1] < h)
+          & (si[:, 0] < w) & (si[:, 1] < h))
+    ok[ok] = Am[si[ok, 1], si[ok, 0]] & Bm[ri[ok, 1], ri[ok, 0]]
+    seeds = seeds[ok]
+    if not len(seeds):
+        return None
+    c = M.Correspondences(seeds, seeds + [dx, dy], np.ones(len(seeds), np.float32),
+                          "dense-ncc", "dense")
+    c = M.refine_correspondences(c, A, Am, B, Bm, patch=patch, search=_DENSE_SEARCH)
+    if c is not None:
+        c.detail.update(seeds=int(len(seeds)), seed_spacing_px=round(spacing, 2))
+    return c
 
 
 def _warp(src, svalid, Hm, shape, model):
@@ -1430,8 +2156,8 @@ def _segment_fit(corr, vr, model, shape, segments):
         rec = {"segment": k, "axis": "row" if axis == 0 else "col",
                "from": float(edges[k]), "to": float(edges[k + 1]),
                "n_inliers": int(sel.sum())}
-        if sel.sum() >= V._min_points(model):
-            Hs = _rg.refit(pts_s[sel], pts_r[sel], model)
+        if sel.sum() >= max(12, V._min_points(model)):
+            Hs = balanced_refit(pts_s[sel], pts_r[sel], model, shape, initial=vr.model)
             if Hs is not None and np.isfinite(Hs).all() and abs(np.linalg.det(Hs)) > 1e-10:
                 res = V.transfer_error(Hs, pts_s[sel].astype(np.float64),
                                        pts_r[sel].astype(np.float64))
@@ -1444,7 +2170,8 @@ def _segment_fit(corr, vr, model, shape, segments):
     return out
 
 
-def _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back=None):
+def _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back=None,
+                   *, shape=None, grid=(8, 8), per_cell=4):
     """The match points, in the coordinates a consumer of the product needs.
 
     `per_point_back` carries the original source pixel measured for each point by
@@ -1459,12 +2186,26 @@ def _write_matches(job_dir, corr, vr, back_x, back_y, frame, per_point_back=None
         good = np.isfinite(measured).all(axis=1)
         original[good] = measured[good]
     reference = project(grid_to_reference(frame), corr.ref)
-    with open(os.path.join(job_dir, "matches.csv"), "w", newline="") as fh:
-        writer = csv.writer(fh)
-        writer.writerow(["src_x", "src_y", "ref_x", "ref_y", "confidence", "inlier"])
-        for k in range(len(corr)):
-            writer.writerow([*original[k], *reference[k], float(corr.confidence[k]),
-                             int(vr.inlier_mask[k])])
+    inliers = np.flatnonzero(vr.inlier_mask & np.isfinite(original).all(axis=1))
+    if shape is None:
+        shape = back_x.shape
+    selection = spatial.select(corr.ref[inliers], corr.confidence[inliers], shape,
+                               grid=grid, per_cell=per_cell, min_keep=0,
+                               min_for_thinning=0, min_separation=0.)
+    chosen = inliers[selection.keep]
+    for filename, indices in (("matches_all.csv", np.arange(len(corr))),
+                              ("matches.csv", chosen)):
+        with open(os.path.join(job_dir, filename), "w", newline="") as fh:
+            writer = csv.writer(fh)
+            writer.writerow(["src_x", "src_y", "ref_x", "ref_y", "confidence", "inlier"])
+            for k in indices:
+                writer.writerow([*original[k], *reference[k], float(corr.confidence[k]),
+                                 int(vr.inlier_mask[k])])
+    return {"file": "matches.csv", "all_candidates_file": "matches_all.csv",
+            "points": len(chosen), "per_cell_limit": per_cell,
+            "grid": list(grid), "quota_enforced": True,
+            "occupied_cells": selection.detail.get("cells_occupied", 0),
+            "basis": "verified fit points; uniform cell quota, no relaxation"}
 
 
 def _write_registered(job_dir, warped, wvalid, R: Scene, frame):
@@ -1492,7 +2233,8 @@ def _write_registered(job_dir, warped, wvalid, R: Scene, frame):
                     np.clip(np.nan_to_num(out) * 255, 0, 255).astype(np.uint8))
 
 
-def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None):
+def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None, field=None,
+                     parallax=None):
     # The working-grid matrix is what the warp uses, but it is expressed in a
     # grid that exists only inside this run. Conjugating it by the grid-to-
     # reference map gives the same transform in FULL-RESOLUTION reference
@@ -1526,13 +2268,60 @@ def _write_transform(job_dir, Hm, model, decomp, seg, frame, method, conv=None):
                          "metadata prealignment. For segmented exports use the complete "
                          "blended inverse field, not the global matrix alone.",
           "segments": seg,
-          "application": {"kind": "blended_segments" if seg else "global",
-                          "sampling": "inverse mapping; smoothstep between segment centres" if seg else "inverse matrix",
+          "local_field": field,
+          "parallax": parallax,
+          "application": {"kind": ("blended_segments" if seg else "global")
+                                  + ("+terrain_parallax" if parallax is not None else "")
+                                  + ("+local_field" if field is not None else ""),
+                          "sampling": ("inverse mapping; smoothstep between segment centres" if seg
+                                       else "inverse matrix")
+                                      + ("; plus the cubic B-spline correction in "
+                                         "`local_field`, evaluated at the working-grid "
+                                         "reference position" if field is not None else ""),
                           "segment_fallback": "global matrix",
                           "raster": "registered.tif"}}
     with open(os.path.join(job_dir, "transform.json"), "w") as fh:
         json.dump(tj, fh, indent=1)
     return tj
+
+
+def _overlap_frame(mask):
+    """Where to lay the held-out cells: None for the whole working grid, else
+    the overlap's extent - along its principal axes when it is elongated.
+
+    An overlap filling most of the frame keeps whole-frame cells. A compact one
+    gets axis-aligned cells over its bounding box; only a strip, whose axes
+    are well defined, gets rotated cells.
+    """
+    if mask.mean() >= 0.6:
+        return None
+    ys, xs = np.nonzero(mask)
+    pts = np.column_stack([xs, ys]).astype(np.float64)
+    if len(pts) > 200_000:
+        pts = pts[np.linspace(0, len(pts) - 1, 200_000).astype(int)]
+    o = pts.mean(axis=0)
+    _, sv, vt = np.linalg.svd(pts - o, full_matrices=False)
+    if sv[0] >= 1.5 * max(sv[1], 1e-9):
+        u, v = vt[0], np.array([-vt[0][1], vt[0][0]])
+    else:
+        u, v = np.array([1.0, 0.0]), np.array([0.0, 1.0])
+    du, dv = (pts - o) @ u, (pts - o) @ v
+    # Half a pixel beyond the outermost pixel centres on every side.
+    return {"origin": o.tolist(), "axes": [u.tolist(), v.tolist()],
+            "extent": [float(du.min() - .5), float(dv.min() - .5),
+                       float(du.max() + .5), float(dv.max() + .5)]}
+
+
+def _square_cells(grid, shape):
+    """The requested number of cells, laid out so each cell is roughly square."""
+    gy, gx = int(grid[0]), int(grid[1])
+    h, w = int(shape[0]), int(shape[1])
+    if h <= 0 or w <= 0:
+        return (gy, gx)
+    n = gy * gx
+    ny = max(1, int(round(math.sqrt(n * h / float(w)))))
+    nx = max(1, int(round(n / float(ny))))
+    return (ny, nx)
 
 
 def _quality_gates(n_inliers, ratio, cov, extrap) -> dict:
@@ -1547,10 +2336,10 @@ def _quality_gates(n_inliers, ratio, cov, extrap) -> dict:
         g["inliers"] = "only %d verified inliers" % n_inliers
     if ratio < 0.15:
         g["inlier_ratio"] = "inlier ratio %.1f%% is below 15%%" % (100 * ratio)
-    if cov < 0.25:
+    if cov < 0.5:
         g["coverage"] = ("matches cover %.0f%% of the reference grid; the transform is "
                          "extrapolated over the rest" % (100 * cov))
-    if extrap > 0.5:
+    if extrap > 0.25:
         # Coverage alone misses this: tie points crowded into one lit strip can
         # clear the coverage bar against a small eligible set while most of the
         # frame still sits outside their hull, where the fit is extrapolated and
@@ -1566,7 +2355,9 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
                    eligible, extrap, conv, fine_info):
     n = int(vr.inlier_mask.size)      # the correspondence set behind THIS result,
     ratio = vr.inlier_ratio           # which is the fine set once that stage runs
-    rmse_px = acc.get("held_out_rmse_px", acc.get("fit_rmse_px"))
+    # The headline error is over check points when they exist; every held-out
+    # correspondence is still scored and reported beside it (`held_out_*`).
+    rmse_px = acc.get("check_point_rmse_px", acc.get("held_out_rmse_px", acc.get("fit_rmse_px")))
     d_az = None
     if S.sun_azimuth_deg is not None and R.sun_azimuth_deg is not None:
         d = abs(S.sun_azimuth_deg - R.sun_azimuth_deg) % 360.0
@@ -1579,14 +2370,28 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
     if character.get("overlap_fraction", 1) < 0.15:
         reasons.append("the images share only %.0f%% of the frame"
                        % (100 * character["overlap_fraction"]))
-    # Status describes verified correspondences and geometric coverage. Accuracy
-    # stays separate: a coarse reference does not itself fail registration.
+    # An operational pass now requires measured native source precision as well
+    # as spatial support; independent accuracy certification remains separate.
     notes = []
     sampling = conv.get("source_px_per_reference_px")
     source_rmse = (None if rmse_px is None or not sampling else
                    rmse_px * conv["reference_decimation"] * sampling)
+    for key in ("check_point_source_rmse_px", "held_out_source_rmse_px"):
+        if key in acc:
+            source_rmse = acc[key]
+            units["rmse_source_px"] = source_rmse
+            break
+    assessment = E.acceptance_report(acc, {"coverage_fraction": cov,
+                                          "extrapolation_fraction": extrap},
+                                      acc.get("independent_ground_truth"))
+    reasons.extend(reason for reason in assessment["reasons"] if reason not in reasons)
     accuracy_statement = ("Accuracy unknown in source pixels" if source_rmse is None else
                           "%.2f source px" % source_rmse)
+    if source_rmse is not None and acc.get("check_point_n") is not None:
+        accuracy_statement += (" RMSE over %d held-out check points (%d of %d held-out "
+                               "correspondences set aside as isolated mismatches)"
+                               % (acc["check_point_n"], acc["check_point_rejected_n"],
+                                  acc["held_out_n"]))
     if sampling:
         accuracy_statement += "; reference sampling scale %.2f source px" % sampling
         notes.append("One reference pixel spans %.2f source pixels. This is a sampling "
@@ -1596,7 +2401,8 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
 
     m = {"status": status, "reason": "; ".join(reasons) if reasons else None,
          "notes": notes,
-         "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
+         "status_meaning": "pass requires source-pixel consistency and spatial support; not an accuracy guarantee",
+         "acceptance": assessment,
          "accuracy_statement": accuracy_statement,
          "job_id": job_id, "generated_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
          "runtime_s": round(secs, 2),
@@ -1614,6 +2420,7 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
              # when there is no scale to convert with - a bare PNG cannot answer
              # the question either way.
              subpixel=(None if source_rmse is None else bool(source_rmse < 1.0)),
+             independently_verified_subpixel=assessment["independently_verified"],
              subpixel_basis="source pixels",
              subpixel_working_grid=bool(rmse_px is not None and rmse_px < 1.0),
              # Legacy sampling fields are retained for clients. They describe
@@ -1692,7 +2499,9 @@ def _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm, model
         if np.asarray(Hm).shape == (3, 3):
             Hw = np.asarray(Hm, float)
         warped_d, wvalid_d = (WM.warp(A_raw, Am_d, WM.conjugate(export_model, D), B_raw.shape)
-                              if export_model and export_model.get("segments") else
+                              if export_model and (export_model.get("segments")
+                                                   or export_model.get("local_field")
+                                                   or export_model.get("parallax")) else
                               _warp(A_raw, Am_d, D @ Hw @ np.linalg.inv(D), B_raw.shape, model))
         A_d = normalised(Scene(path=S.path, array=A_raw, valid=Am_d, reader=S.reader), sp)
         B_d = normalised(Scene(path=R.path, array=B_raw, valid=Bm_d, reader=R.reader), rp)
