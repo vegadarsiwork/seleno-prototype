@@ -1,0 +1,4 @@
+START real_iirs_wac_large
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+DONE real_iirs_wac_large warning src_rmse 2.1085 truth_corner None seconds 43.19

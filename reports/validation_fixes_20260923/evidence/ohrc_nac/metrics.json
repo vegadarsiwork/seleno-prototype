@@ -6,9 +6,9 @@
  ],
  "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
  "accuracy_statement": "106.46 source px; reference sampling scale 4.17 source px",
- "job_id": "965a4de75c23",
- "generated_utc": "2026-09-23T12:44:05Z",
- "runtime_s": 34.21,
+ "job_id": "8ccdfe86d5e4",
+ "generated_utc": "2026-09-23T16:34:04Z",
+ "runtime_s": 30.16,
  "method_used": "akaze",
  "model": "affine",
  "accuracy": {
@@ -16,6 +16,7 @@
   "held_out_rmse_px": 6.387415805387857,
   "held_out_median_px": 1.6430079803875244,
   "held_out_p90_px": 3.3238769876916003,
+  "held_out_exactly_on_model_n": 0,
   "evaluation_file": "evaluation.json",
   "matrix_sha256": "841f605e42bf0430e67d3d5ecdc468ec47a916f9b83e3c90aff60eedb2e95a57",
   "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
@@ -72,6 +73,9 @@
    }
   ],
   "placement": "8 windows tiling 2955 x 1355 reference px (4 x 2 grid)",
+  "quantised": 0,
+  "refined": 0,
+  "dropped": 0,
   "adopted": true,
   "inliers": 6104
  },
@@ -147,13 +151,13 @@
  "attempts": [
   {
    "method": "dense-ncc",
-   "seconds": 1.17,
+   "seconds": 1.27,
    "candidates": 1,
    "note": ""
   },
   {
    "method": "disk_lightglue",
-   "seconds": 8.29,
+   "seconds": 11.31,
    "candidates": 339,
    "note": "",
    "model": "affine",
@@ -166,7 +170,7 @@
   },
   {
    "method": "sift",
-   "seconds": 1.34,
+   "seconds": 1.92,
    "candidates": 328,
    "note": "",
    "model": "affine",
@@ -179,7 +183,7 @@
   },
   {
    "method": "akaze",
-   "seconds": 0.64,
+   "seconds": 0.77,
    "candidates": 485,
    "note": "",
    "model": "affine",
@@ -192,7 +196,7 @@
   },
   {
    "method": "orb",
-   "seconds": 0.41,
+   "seconds": 0.49,
    "candidates": 348,
    "note": "",
    "model": "affine",
@@ -252,6 +256,7 @@
  "degraded": [
   "source: label Sun angles are confounded by 14.6 deg of roll; treated as untrusted",
   "source: reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error",
-  "source reduced 10.2x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+  "source reduced 10.2x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth",
+  "working grid capped at 1930 px a side (asked for 2048): 6.7 GB available, budgeting 50% of it"
  ]
 }

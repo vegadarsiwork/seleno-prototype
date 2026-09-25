@@ -1,16 +1,17 @@
 source    : {"path": "ch2_iir_ndi_20240120T1432235872_d_rfl_d18_srd.qub", "reader": "pds4", "profile": "iirs", "instrument": "IIRS", "shape": [12945, 250], "gsd_m": 56.73, "bit_depth": 32, "georeferenced": false, "crs": null, "has_lonlat_lattice": true, "acquired_utc": "2024-01-20T14:32:23.587200+00:00", "sun_azimuth_deg": 33.826438, "sun_incidence_deg": 57.719246, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": ["pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)", "geometry from the loc backplane"]}
 reference : {"path": "Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif", "reader": "gdal", "profile": "wac", "instrument": "WAC", "shape": [54582, 109164], "gsd_m": 100.0, "bit_depth": 8, "georeferenced": true, "crs": "PROJCS[\"SimpleCylindrical MOON\",GEOGCS[\"GCS_MOON\",DATUM[\"D_MOON\",SPHEROID[\"MOON\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",0],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": ["5958 megapixels: read lazily, in windows"]}
-settings  : max_side=6144, grid=(12, 12) (explicit options override sensor defaults)
-frame     : source geometry lattice -> reference projected plane, source covers 40.3% of the reference grid
-character : {"cross_correlation": -0.0532, "anti_correlated": true, "same_sensor": false, "sensor_pair": "iirs-wac", "scale_ratio": 0.5673, "overlap_fraction": 0.4031}
+memory   : working grid capped at 6053 px a side (asked for 6144): 5.6 GB available, budgeting 50% of it
+settings  : max_side=6053, grid=(12, 12) (explicit options override sensor defaults)
+frame     : source geometry lattice -> reference projected plane, source covers 39.7% of the reference grid
+character : {"cross_correlation": -0.0538, "anti_correlated": true, "same_sensor": false, "sensor_pair": "iirs-wac", "scale_ratio": 0.5673, "overlap_fraction": 0.3969}
 plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
-  dense-ncc        {"method": "dense-ncc", "seconds": 1.47, "candidates": 28, "model": "similarity", "inliers": 9, "inlier_ratio": 0.3214, "verified": true, "coverage": 0.1111, "dispersion": 0.4865, "score": 5.43}
-  disk_lightglue   {"method": "disk_lightglue", "seconds": 1.0, "candidates": 2}
-  sift             {"method": "sift", "seconds": 1.45, "candidates": 9, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2222, "verified": true}
-  akaze            {"method": "akaze", "seconds": 1.17, "candidates": 22, "model": "similarity", "inliers": 2, "inlier_ratio": 0.0909, "verified": true}
-  orb              {"method": "orb", "seconds": 0.48, "candidates": 7, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2857, "verified": true}
-fine      : native probe -> dense-ncc  (dense-ncc 8/19)
-fine      : 294 points from 4 native windows, 22 verified inliers
-subpixel : ECC adopted on validation 5.4813 -> 5.3540 px
-status    : warning  (matches cover 14% of the reference grid; the transform is extrapolated over the rest; 90% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
-wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/iirs_20240120_wac/f9dcf8fba91e
+  dense-ncc        {"method": "dense-ncc", "seconds": 1.7, "candidates": 27, "model": "similarity", "inliers": 9, "inlier_ratio": 0.3333, "verified": true, "coverage": 0.125, "dispersion": 0.4488, "score": 5.34}
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 1.51, "candidates": 6, "model": "similarity", "inliers": 2, "inlier_ratio": 0.3333, "verified": true}
+  sift             {"method": "sift", "seconds": 1.73, "candidates": 10, "model": "similarity", "inliers": 3, "inlier_ratio": 0.3, "verified": true}
+  akaze            {"method": "akaze", "seconds": 1.28, "candidates": 12, "model": "similarity", "inliers": 2, "inlier_ratio": 0.1667, "verified": true}
+  orb              {"method": "orb", "seconds": 0.53, "candidates": 9, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2222, "verified": true}
+fine      : native probe -> dense-ncc  (dense-ncc 10/13)
+fine      : 291 points from 4 native windows, 22 verified inliers
+subpixel : ECC adopted on validation 9.8470 -> 9.5092 px
+status    : warning  (matches cover 17% of the reference grid; the transform is extrapolated over the rest; 82% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/iirs_20240120_wac/2523f1138472

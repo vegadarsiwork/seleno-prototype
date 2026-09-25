@@ -1,0 +1,13 @@
+memory   : working grid capped at 1767 px a side (asked for 2048): 5.6 GB available, budgeting 50% of it
+source    : {"path": "ch2_tmc_ncn_20260813T0627378557_d_img_d18.img", "reader": "pds4", "profile": "tmc2", "instrument": "TMC-2", "shape": [148108, 4000], "gsd_m": 5.48, "bit_depth": 16, "georeferenced": false, "crs": null, "has_lonlat_lattice": true, "acquired_utc": "2026-08-13T06:27:37.855700+00:00", "sun_azimuth_deg": 69.556239, "sun_incidence_deg": 39.064886, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": []}
+reference : {"path": "TCO_MAPe04_S15E141S18E144SC.img", "reader": "pds3", "profile": "selene_tc", "instrument": "SELENE-TC", "shape": [12288, 12288], "gsd_m": 7.4031617246699, "bit_depth": 16, "georeferenced": true, "crs": "GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Longitude\",EAST],AXIS[\"Latitude\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": "UNK", "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": []}
+frame     : source geometry lattice -> reference lon/lat, source covers 31.1% of the reference grid
+character : {"cross_correlation": -0.517, "anti_correlated": true, "same_sensor": false, "sensor_pair": "tmc2-selene_tc", "scale_ratio": 0.7402, "overlap_fraction": 0.3112}
+plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
+  dense-ncc        {"method": "dense-ncc", "seconds": 3.41, "candidates": 100, "model": "affine", "inliers": 68, "inlier_ratio": 0.68, "verified": true, "coverage": 0.6545, "dispersion": 0.4451, "score": 74.2}
+  (stopping early: dense-ncc is comfortably sufficient)
+fine      : native probe -> dense-ncc  (dense-ncc 83/112)
+fine      : 1635 points from 14 native windows, 628 verified inliers
+preview   : panels at 1503 x 2048 (6x decimation; working grid 7x)
+status    : pass  (all checks passed)
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/real_tmc2_selene/d62d567ba69a

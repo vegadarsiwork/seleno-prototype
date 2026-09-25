@@ -1,4 +1,4 @@
-Phase 8 adversarial tests  (/tmp/seleno_tool_8ya3z1jm)
+Phase 8 adversarial tests  (/tmp/seleno_tool_r4rp4p7b)
 
 /home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
   dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
@@ -17,7 +17,7 @@ pass  cube_without_band_centres_says_so                    declared: pseudo-pan 
 pass  disjoint_footprints_report_no_overlap                no_overlap
 pass  empty_file_is_unreadable_input                       empty file handled
 pass  failure_codes_are_declared                           unreadable_input, no_overlap, insufficient_matches, verification_failed, degenerate_transform
-pass  fine_stage_beats_the_working_grid                    2.236 -> 1.271 reference px (4096 native points)
+pass  fine_stage_beats_the_working_grid                    2.236 -> 0.308 reference px (4012 native points)
 pass  fine_stage_cannot_replace_a_better_coarse_set        refused: native points did not verify (6 inliers); the coarse solution was kept
 pass  flipped_source_registers_or_fails_cleanly            failed cleanly: degenerate_transform
 pass  full_artifact_set_is_written                         285 matches, 7 artifacts
@@ -30,14 +30,14 @@ pass  locate_geometry_proves_disjoint_and_places_overlap   disjoint: by their ow
 /home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
   dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
 pass  locate_refuses_a_source_that_is_not_there            the source could not be located in the reference: the footprints differ 266.7x in area, so
-pass  memory_ceiling_shrinks_grid                          64000 -> 2249 (est 4.6 GB)
+pass  memory_ceiling_shrinks_grid                          64000 -> 1927 (est 3.3 GB)
 pass  missing_file_is_unreadable_input                     missing file handled
 /home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
   dataset = writer(
 pass  mostly_shadow_crop_fails_or_is_honest                status warning, coverage 0.27
 pass  no_metadata_input_still_runs                         ran in pixel space, refused to report metres
-pass  pixel_space_strip_fine_windows_line_up               843/880 native inliers from 5 windows, off identity by 0.26 px
-pass  random_pixel_space_pairs_are_right_or_refused        4 right, 2 refused; worst tall 1854x295 shift(0,19) side 256 -> 0.85 px
+pass  pixel_space_strip_fine_windows_line_up               852/856 native inliers from 5 windows, off identity by 0.25 px
+pass  random_pixel_space_pairs_are_right_or_refused        4 right, 2 refused; worst square 1264x1232 shift(18,14) side 512 -> 0.56 px
 pass  reference_sampling_is_a_note_not_a_failure           floor 4.00 src px, attainable=False, status pass
 pass  rmse_is_reported_in_four_units                       ref 0.902 px = 3.61 m = 1.805 src px = 0.902 working px
 pass  rotated_source_registers_or_fails_cleanly            failed cleanly: degenerate_transform

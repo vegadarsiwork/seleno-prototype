@@ -5,17 +5,18 @@
   "One reference pixel spans 1.17 source pixels. This is a sampling scale, not an independently measured error bound."
  ],
  "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
- "accuracy_statement": "12.77 source px; reference sampling scale 1.17 source px",
- "job_id": "43de64c4701f",
- "generated_utc": "2026-09-23T12:45:44Z",
- "runtime_s": 51.7,
+ "accuracy_statement": "12.72 source px; reference sampling scale 1.17 source px",
+ "job_id": "5aa773459b5a",
+ "generated_utc": "2026-09-23T16:36:02Z",
+ "runtime_s": 71.98,
  "method_used": "dense-ncc",
  "model": "similarity",
  "accuracy": {
-  "held_out_n": 166,
-  "held_out_rmse_px": 5.440775039420754,
-  "held_out_median_px": 5.07782531548011,
-  "held_out_p90_px": 8.01307002425933,
+  "held_out_n": 165,
+  "held_out_rmse_px": 5.415652706679726,
+  "held_out_median_px": 5.01814293093815,
+  "held_out_p90_px": 7.956675453880396,
+  "held_out_exactly_on_model_n": 0,
   "evaluation_file": "evaluation.json",
   "matrix_sha256": "da67c68be0ff910579baff634fedea4dacdfce0269406d9b6983080cf67b84b9",
   "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
@@ -40,11 +41,11 @@
    "validation_rmse_px_after": 10.119628138249212,
    "adoption_basis": "validation fold, never test"
   },
-  "rmse_px": 5.440775039420754,
-  "rmse_reference_px": 10.8816,
-  "rmse_working_px": 5.4408,
-  "rmse_source_px": 12.7748,
-  "rmse_m": 1088.155,
+  "rmse_px": 5.415652706679726,
+  "rmse_reference_px": 10.8313,
+  "rmse_working_px": 5.4157,
+  "rmse_source_px": 12.7158,
+  "rmse_m": 1083.131,
   "metres_per_pixel": 200.0,
   "units": {
    "reference_decimation": 2,
@@ -64,7 +65,7 @@
   "attempted": true,
   "windows": 4,
   "windows_used": 4,
-  "points": 341,
+  "points": 340,
   "native": true,
   "note": null,
   "method": "dense-ncc",
@@ -76,6 +77,9 @@
    }
   ],
   "placement": "4 windows tiling 174 x 9698 reference px (1 x 4 grid)",
+  "quantised": 2,
+  "refined": 1,
+  "dropped": 1,
   "adopted": true,
   "inliers": 48
  },
@@ -157,7 +161,7 @@
  "attempts": [
   {
    "method": "dense-ncc",
-   "seconds": 0.66,
+   "seconds": 0.75,
    "candidates": 29,
    "note": "",
    "model": "similarity",
@@ -170,13 +174,13 @@
   },
   {
    "method": "disk_lightglue",
-   "seconds": 0.56,
+   "seconds": 0.81,
    "candidates": 0,
    "note": ""
   },
   {
    "method": "sift",
-   "seconds": 1.19,
+   "seconds": 1.38,
    "candidates": 6,
    "note": "",
    "model": "similarity",
@@ -186,7 +190,7 @@
   },
   {
    "method": "akaze",
-   "seconds": 0.38,
+   "seconds": 0.42,
    "candidates": 9,
    "note": "",
    "model": "similarity",
@@ -196,7 +200,7 @@
   },
   {
    "method": "orb",
-   "seconds": 0.34,
+   "seconds": 0.38,
    "candidates": 8,
    "note": "",
    "model": "similarity",

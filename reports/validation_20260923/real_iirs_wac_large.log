@@ -1,0 +1,17 @@
+memory   : working grid capped at 2195 px a side (asked for 6144): 8.7 GB available, budgeting 50% of it
+source    : {"path": "ch2_iir_ndi_20250729T0936115604_d_rfl_d18_srd.qub", "reader": "pds4", "profile": "iirs", "instrument": "IIRS", "shape": [13067, 250], "gsd_m": 85.18, "bit_depth": 32, "georeferenced": false, "crs": null, "has_lonlat_lattice": true, "acquired_utc": "2025-07-29T09:36:11.560400+00:00", "sun_azimuth_deg": 110.14417, "sun_incidence_deg": 31.721852, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": ["pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)", "geometry from the loc backplane"]}
+reference : {"path": "Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif", "reader": "gdal", "profile": "wac", "instrument": "WAC", "shape": [54582, 109164], "gsd_m": 100.0, "bit_depth": 8, "georeferenced": true, "crs": "PROJCS[\"SimpleCylindrical MOON\",GEOGCS[\"GCS_MOON\",DATUM[\"D_MOON\",SPHEROID[\"MOON\",1737400,0]],PRIMEM[\"Reference_Meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Equirectangular\"],PARAMETER[\"standard_parallel_1\",0],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": ["5958 megapixels: read lazily, in windows"]}
+frame     : source geometry lattice -> reference projected plane, source covers 39.0% of the reference grid
+character : {"cross_correlation": 0.1966, "anti_correlated": false, "same_sensor": false, "sensor_pair": "iirs-wac", "scale_ratio": 0.8518, "overlap_fraction": 0.3902}
+plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
+  dense-ncc        {"method": "dense-ncc", "seconds": 0.19, "candidates": 17, "model": "similarity", "inliers": 11, "inlier_ratio": 0.6471, "verified": true, "coverage": 0.1449, "dispersion": 0.244, "score": 5.28}
+Loaded LightGlue model
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 1.29, "candidates": 9, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2222, "verified": true}
+  sift             {"method": "sift", "seconds": 0.15, "candidates": 8, "model": "similarity", "inliers": 2, "inlier_ratio": 0.25, "verified": true}
+  akaze            {"method": "akaze", "seconds": 0.06, "candidates": 6, "model": "similarity", "inliers": 2, "inlier_ratio": 0.3333, "verified": true}
+  orb              {"method": "orb", "seconds": 0.13, "candidates": 7, "model": "similarity", "inliers": 2, "inlier_ratio": 0.2857, "verified": true}
+fine      : native probe -> dense-ncc  (dense-ncc 53/93)
+fine      : 379 points from 4 native windows, 81 verified inliers
+preview   : panels at 285 x 5375 (2x decimation; working grid 5x)
+status    : warning  (matches cover 25% of the reference grid; the transform is extrapolated over the rest; 87% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/real_iirs_wac_large/ccf8c960347e

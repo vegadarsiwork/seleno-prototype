@@ -1,0 +1,10 @@
+source    : {"path": "lroc_055_235_r10240_c43008_source.png", "reader": "gdal", "profile": "unknown", "instrument": "unknown", "shape": [1024, 1024], "gsd_m": null, "bit_depth": 8, "georeferenced": false, "crs": null, "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 0.9836, "degraded": ["GeoTIFF carries no CRS; pixel-space registration only"]}
+reference : {"path": "lroc_055_235_r10240_c43008_reference.png", "reader": "gdal", "profile": "unknown", "instrument": "unknown", "shape": [1024, 1024], "gsd_m": null, "bit_depth": 8, "georeferenced": false, "crs": null, "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 0.9635, "degraded": ["GeoTIFF carries no CRS; pixel-space registration only"]}
+frame     : pixel space (GSD ratio 1.0000, 1x decimation), source covers 98.4% of the reference grid
+character : {"cross_correlation": -0.4076, "anti_correlated": true, "same_sensor": true, "sensor_pair": "unknown-unknown", "scale_ratio": null, "overlap_fraction": 0.9836}
+plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
+  dense-ncc        {"method": "dense-ncc", "seconds": 0.61, "candidates": 9, "model": "similarity", "inliers": 3, "inlier_ratio": 0.3333, "verified": true}
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 11.05, "candidates": 22, "model": "similarity", "inliers": 3, "inlier_ratio": 0.1364, "verified": true}
+  sift             {"method": "sift", "seconds": 1.49, "candidates": 32, "model": "homography", "inliers": 5, "inlier_ratio": 0.1562, "verified": true}
+  akaze            {"method": "akaze", "seconds": 0.28, "candidates": 19, "model": "similarity", "inliers": 2, "inlier_ratio": 0.1053, "verified": true}
+  orb              {"method": "orb", "seconds": 0.41, "candidates": 23, "model": "similarity", "inliers": 2, "inlier_ratio": 0.087, "verified": true}

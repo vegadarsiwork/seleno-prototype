@@ -22,9 +22,9 @@
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
       "accuracy_statement": "106.46 source px; reference sampling scale 4.17 source px",
-      "job_id": "965a4de75c23",
-      "generated_utc": "2026-09-23T12:44:05Z",
-      "runtime_s": 34.21,
+      "job_id": "8ccdfe86d5e4",
+      "generated_utc": "2026-09-23T16:34:04Z",
+      "runtime_s": 30.16,
       "method_used": "akaze",
       "model": "affine",
       "accuracy": {
@@ -32,6 +32,7 @@
         "held_out_rmse_px": 6.387415805387857,
         "held_out_median_px": 1.6430079803875244,
         "held_out_p90_px": 3.3238769876916003,
+        "held_out_exactly_on_model_n": 0,
         "evaluation_file": "evaluation.json",
         "matrix_sha256": "841f605e42bf0430e67d3d5ecdc468ec47a916f9b83e3c90aff60eedb2e95a57",
         "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
@@ -88,6 +89,9 @@
           }
         ],
         "placement": "8 windows tiling 2955 x 1355 reference px (4 x 2 grid)",
+        "quantised": 0,
+        "refined": 0,
+        "dropped": 0,
         "adopted": true,
         "inliers": 6104
       },
@@ -163,13 +167,13 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 1.17,
+          "seconds": 1.27,
           "candidates": 1,
           "note": ""
         },
         {
           "method": "disk_lightglue",
-          "seconds": 8.29,
+          "seconds": 11.31,
           "candidates": 339,
           "note": "",
           "model": "affine",
@@ -182,7 +186,7 @@
         },
         {
           "method": "sift",
-          "seconds": 1.34,
+          "seconds": 1.92,
           "candidates": 328,
           "note": "",
           "model": "affine",
@@ -195,7 +199,7 @@
         },
         {
           "method": "akaze",
-          "seconds": 0.64,
+          "seconds": 0.77,
           "candidates": 485,
           "note": "",
           "model": "affine",
@@ -208,7 +212,7 @@
         },
         {
           "method": "orb",
-          "seconds": 0.41,
+          "seconds": 0.49,
           "candidates": 348,
           "note": "",
           "model": "affine",
@@ -268,10 +272,11 @@
       "degraded": [
         "source: label Sun angles are confounded by 14.6 deg of roll; treated as untrusted",
         "source: reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error",
-        "source reduced 10.2x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
+        "source reduced 10.2x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth",
+        "working grid capped at 1930 px a side (asked for 2048): 6.7 GB available, budgeting 50% of it"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/ohrc_nac/965a4de75c23",
+    "artifacts": "outputs/validation_fixes_20260923/ohrc_nac/8ccdfe86d5e4",
     "robust_accuracy": {
       "median_source_px": 27.383466339792072,
       "p90_source_px": 55.39794979486001,
@@ -318,29 +323,30 @@
       "segments": 6
     },
     "status": "warning",
-    "reason": "80% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+    "reason": "76% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
     "metrics": {
       "status": "warning",
-      "reason": "80% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+      "reason": "76% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
       "notes": [
         "One reference pixel spans 1.35 source pixels. This is a sampling scale, not an independently measured error bound."
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
-      "accuracy_statement": "9.82 source px; reference sampling scale 1.35 source px",
-      "job_id": "a36b733bc35a",
-      "generated_utc": "2026-09-23T12:44:52Z",
-      "runtime_s": 46.27,
+      "accuracy_statement": "12.27 source px; reference sampling scale 1.35 source px",
+      "job_id": "86d002890611",
+      "generated_utc": "2026-09-23T16:34:49Z",
+      "runtime_s": 45.55,
       "method_used": "dense-ncc",
       "model": "affine",
       "accuracy": {
-        "held_out_n": 479,
-        "held_out_rmse_px": 1.2119543789689955,
-        "held_out_median_px": 0.7435244417219551,
-        "held_out_p90_px": 1.9691456177276443,
+        "held_out_n": 478,
+        "held_out_rmse_px": 1.514245275743099,
+        "held_out_median_px": 0.9250692551775352,
+        "held_out_p90_px": 2.595144016073719,
+        "held_out_exactly_on_model_n": 0,
         "evaluation_file": "evaluation.json",
-        "matrix_sha256": "f884e992f4686ef4af203801327b92fdeb3fd18455ceacb9987f8c787b043daf",
+        "matrix_sha256": "4bdfdf19a9d29dc0b09f254cca408e094d39620ad6263210bbab9baf6a0ff595",
         "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
-        "transform_sha256": "388cb758b1c386add0b0b867ff17e7c8c3c8351f1fae698113006b4398bfbdc7",
+        "transform_sha256": "e89a2425d2dde999f9f52105daf9b504935e2832b1788c6ae4e068ab373d8fd2",
         "applied_model": {
           "kind": "blended_segments",
           "sampling": "inverse mapping; smoothstep between segment centres",
@@ -353,11 +359,11 @@
           "adopted": false,
           "note": "ECC disabled or too few validation points"
         },
-        "rmse_px": 1.2119543789689955,
-        "rmse_reference_px": 7.2717,
-        "rmse_working_px": 1.212,
-        "rmse_source_px": 9.8237,
-        "rmse_m": 53.834,
+        "rmse_px": 1.514245275743099,
+        "rmse_reference_px": 9.0855,
+        "rmse_working_px": 1.5142,
+        "rmse_source_px": 12.2739,
+        "rmse_m": 67.261,
         "metres_per_pixel": 44.4189703480194,
         "units": {
           "reference_decimation": 6,
@@ -377,7 +383,7 @@
         "attempted": true,
         "windows": 8,
         "windows_used": 8,
-        "points": 976,
+        "points": 971,
         "native": true,
         "note": null,
         "method": "dense-ncc",
@@ -389,13 +395,16 @@
           }
         ],
         "placement": "8 windows tiling 2486 x 10235 reference px (2 x 5 grid)",
+        "quantised": 9,
+        "refined": 4,
+        "dropped": 5,
         "adopted": true,
-        "inliers": 267
+        "inliers": 268
       },
       "matches": {
-        "candidates": 497,
-        "inliers": 267,
-        "inlier_ratio": 0.5372
+        "candidates": 493,
+        "inliers": 268,
+        "inlier_ratio": 0.5436
       },
       "distribution": {
         "grid": [
@@ -403,8 +412,8 @@
           12
         ],
         "coverage_fraction": 0.2778,
-        "dispersion": 0.1673,
-        "extrapolation_fraction": 0.7963,
+        "dispersion": 0.1869,
+        "extrapolation_fraction": 0.7593,
         "eligible_cells": 54,
         "total_cells": 144,
         "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
@@ -454,13 +463,13 @@
         "source_coverage": 0.3111
       },
       "decomposition": {
-        "est_scale_x": 1.0133,
+        "est_scale_x": 1.0171,
         "est_scale_y": 0.9999,
-        "est_rotation_deg": -0.009,
-        "est_shear_det": 1.0132,
+        "est_rotation_deg": 0.021,
+        "est_shear_det": 1.017,
         "est_translation_px": [
-          -8.84,
-          1.62
+          -10.55,
+          1.38
         ],
         "est_perspective": [
           0.0,
@@ -470,7 +479,7 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 1.36,
+          "seconds": 1.52,
           "candidates": 36,
           "note": "",
           "model": "affine",
@@ -483,19 +492,19 @@
         },
         {
           "method": "disk_lightglue",
-          "seconds": 6.72,
+          "seconds": 8.01,
           "candidates": 3,
           "note": ""
         },
         {
           "method": "sift",
-          "seconds": 1.44,
+          "seconds": 1.96,
           "candidates": 3,
           "note": ""
         },
         {
           "method": "akaze",
-          "seconds": 0.93,
+          "seconds": 1.15,
           "candidates": 12,
           "note": "",
           "model": "similarity",
@@ -505,7 +514,7 @@
         },
         {
           "method": "orb",
-          "seconds": 0.47,
+          "seconds": 0.56,
           "candidates": 7,
           "note": "",
           "model": "similarity",
@@ -560,18 +569,18 @@
         "source reduced 9.0x onto the working grid and sampled without anti-aliasing; a filter wide enough to band-limit it costs more reads than the stage is worth"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/tmc2_selene/a36b733bc35a",
+    "artifacts": "outputs/validation_fixes_20260923/tmc2_selene/86d002890611",
     "robust_accuracy": {
-      "median_source_px": 6.026750023699854,
-      "p90_source_px": 15.96120817605412,
-      "within_1_source_px": 0.05010438413361169,
-      "within_2_source_px": 0.1524008350730689,
-      "within_3_source_px": 0.25052192066805845,
-      "held_out_n": 479
+      "median_source_px": 7.498289017444403,
+      "p90_source_px": 21.035333047229656,
+      "within_1_source_px": 0.03556485355648536,
+      "within_2_source_px": 0.10669456066945607,
+      "within_3_source_px": 0.18200836820083682,
+      "held_out_n": 478
     },
     "artifact_checks": {
       "rmse_recomputed_exactly": true,
-      "transform_sha256": "388cb758b1c386add0b0b867ff17e7c8c3c8351f1fae698113006b4398bfbdc7"
+      "transform_sha256": "e89a2425d2dde999f9f52105daf9b504935e2832b1788c6ae4e068ab373d8fd2"
     },
     "export": {
       "shape": [
@@ -608,17 +617,18 @@
         "One reference pixel spans 1.17 source pixels. This is a sampling scale, not an independently measured error bound."
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
-      "accuracy_statement": "12.77 source px; reference sampling scale 1.17 source px",
-      "job_id": "43de64c4701f",
-      "generated_utc": "2026-09-23T12:45:44Z",
-      "runtime_s": 51.7,
+      "accuracy_statement": "12.72 source px; reference sampling scale 1.17 source px",
+      "job_id": "5aa773459b5a",
+      "generated_utc": "2026-09-23T16:36:02Z",
+      "runtime_s": 71.98,
       "method_used": "dense-ncc",
       "model": "similarity",
       "accuracy": {
-        "held_out_n": 166,
-        "held_out_rmse_px": 5.440775039420754,
-        "held_out_median_px": 5.07782531548011,
-        "held_out_p90_px": 8.01307002425933,
+        "held_out_n": 165,
+        "held_out_rmse_px": 5.415652706679726,
+        "held_out_median_px": 5.01814293093815,
+        "held_out_p90_px": 7.956675453880396,
+        "held_out_exactly_on_model_n": 0,
         "evaluation_file": "evaluation.json",
         "matrix_sha256": "da67c68be0ff910579baff634fedea4dacdfce0269406d9b6983080cf67b84b9",
         "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
@@ -643,11 +653,11 @@
           "validation_rmse_px_after": 10.119628138249212,
           "adoption_basis": "validation fold, never test"
         },
-        "rmse_px": 5.440775039420754,
-        "rmse_reference_px": 10.8816,
-        "rmse_working_px": 5.4408,
-        "rmse_source_px": 12.7748,
-        "rmse_m": 1088.155,
+        "rmse_px": 5.415652706679726,
+        "rmse_reference_px": 10.8313,
+        "rmse_working_px": 5.4157,
+        "rmse_source_px": 12.7158,
+        "rmse_m": 1083.131,
         "metres_per_pixel": 200.0,
         "units": {
           "reference_decimation": 2,
@@ -667,7 +677,7 @@
         "attempted": true,
         "windows": 4,
         "windows_used": 4,
-        "points": 341,
+        "points": 340,
         "native": true,
         "note": null,
         "method": "dense-ncc",
@@ -679,6 +689,9 @@
           }
         ],
         "placement": "4 windows tiling 174 x 9698 reference px (1 x 4 grid)",
+        "quantised": 2,
+        "refined": 1,
+        "dropped": 1,
         "adopted": true,
         "inliers": 48
       },
@@ -760,7 +773,7 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 0.66,
+          "seconds": 0.75,
           "candidates": 29,
           "note": "",
           "model": "similarity",
@@ -773,13 +786,13 @@
         },
         {
           "method": "disk_lightglue",
-          "seconds": 0.56,
+          "seconds": 0.81,
           "candidates": 0,
           "note": ""
         },
         {
           "method": "sift",
-          "seconds": 1.19,
+          "seconds": 1.38,
           "candidates": 6,
           "note": "",
           "model": "similarity",
@@ -789,7 +802,7 @@
         },
         {
           "method": "akaze",
-          "seconds": 0.38,
+          "seconds": 0.42,
           "candidates": 9,
           "note": "",
           "model": "similarity",
@@ -799,7 +812,7 @@
         },
         {
           "method": "orb",
-          "seconds": 0.34,
+          "seconds": 0.38,
           "candidates": 8,
           "note": "",
           "model": "similarity",
@@ -862,14 +875,14 @@
         "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/iirs_20250729_wac/43de64c4701f",
+    "artifacts": "outputs/validation_fixes_20260923/iirs_20250729_wac/5aa773459b5a",
     "robust_accuracy": {
-      "median_source_px": 11.922576462737993,
-      "p90_source_px": 18.814440066352027,
-      "within_1_source_px": 0.012048192771084338,
-      "within_2_source_px": 0.04819277108433735,
-      "within_3_source_px": 0.07228915662650602,
-      "held_out_n": 166
+      "median_source_px": 11.782444073581004,
+      "p90_source_px": 18.682027362949977,
+      "within_1_source_px": 0.012121212121212121,
+      "within_2_source_px": 0.048484848484848485,
+      "within_3_source_px": 0.07272727272727272,
+      "held_out_n": 165
     },
     "artifact_checks": {
       "rmse_recomputed_exactly": true,
@@ -902,29 +915,30 @@
     "reference": "data/raw/wac/Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif",
     "options": {},
     "status": "warning",
-    "reason": "matches cover 14% of the reference grid; the transform is extrapolated over the rest; 90% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+    "reason": "matches cover 17% of the reference grid; the transform is extrapolated over the rest; 82% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
     "metrics": {
       "status": "warning",
-      "reason": "matches cover 14% of the reference grid; the transform is extrapolated over the rest; 90% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+      "reason": "matches cover 17% of the reference grid; the transform is extrapolated over the rest; 82% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
       "notes": [
         "One reference pixel spans 1.76 source pixels. This is a sampling scale, not an independently measured error bound."
       ],
       "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
-      "accuracy_statement": "23.42 source px; reference sampling scale 1.76 source px",
-      "job_id": "f9dcf8fba91e",
-      "generated_utc": "2026-09-23T12:46:36Z",
-      "runtime_s": 47.93,
+      "accuracy_statement": "24.41 source px; reference sampling scale 1.76 source px",
+      "job_id": "2523f1138472",
+      "generated_utc": "2026-09-23T16:37:19Z",
+      "runtime_s": 68.42,
       "method_used": "dense-ncc",
       "model": "similarity",
       "accuracy": {
         "held_out_n": 127,
-        "held_out_rmse_px": 6.643187428371385,
-        "held_out_median_px": 5.478419069198646,
-        "held_out_p90_px": 10.649867039015996,
+        "held_out_rmse_px": 6.925306829800386,
+        "held_out_median_px": 5.484725699332267,
+        "held_out_p90_px": 9.464558010834894,
+        "held_out_exactly_on_model_n": 0,
         "evaluation_file": "evaluation.json",
-        "matrix_sha256": "2bb06e6db79c572414deb20a28a76ab0fee7f5afb603ba31c5ae8210b9864d01",
+        "matrix_sha256": "b0019aefacda0ef17a6f50959d41b9ee7f55cc161b92b08f86a79277e7365ec7",
         "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
-        "transform_sha256": "796729d55f7c40bf6971b0feb66311328b377904b6dc68a8d87943d25073cb64",
+        "transform_sha256": "0293f2243c1848afac3356c797da56923f60ccd7c89f4afc8ddb43dad5063fd0",
         "applied_model": {
           "kind": "global",
           "sampling": "inverse matrix",
@@ -936,20 +950,20 @@
           "attempted": true,
           "converged": true,
           "adopted": true,
-          "correlation": 0.369171,
-          "max_corner_shift_px": 3.6204,
+          "correlation": 0.365275,
+          "max_corner_shift_px": 2.9026,
           "note": null,
-          "max_corner_shift_allowed_px": 27.372,
-          "validation_n": 30,
-          "validation_rmse_px_before": 5.481324913969441,
-          "validation_rmse_px_after": 5.354005487196413,
+          "max_corner_shift_allowed_px": 27.41,
+          "validation_n": 29,
+          "validation_rmse_px_before": 9.846953327874438,
+          "validation_rmse_px_after": 9.509154800380296,
           "adoption_basis": "validation fold, never test"
         },
-        "rmse_px": 6.643187428371385,
-        "rmse_reference_px": 13.2864,
-        "rmse_working_px": 6.6432,
-        "rmse_source_px": 23.4204,
-        "rmse_m": 1328.637,
+        "rmse_px": 6.925306829800386,
+        "rmse_reference_px": 13.8506,
+        "rmse_working_px": 6.9253,
+        "rmse_source_px": 24.415,
+        "rmse_m": 1385.061,
         "metres_per_pixel": 200.0,
         "units": {
           "reference_decimation": 2,
@@ -969,34 +983,37 @@
         "attempted": true,
         "windows": 4,
         "windows_used": 4,
-        "points": 294,
+        "points": 291,
         "native": true,
         "note": null,
         "method": "dense-ncc",
         "probe": [
           {
             "method": "dense-ncc",
-            "candidates": 19,
-            "inliers": 8
+            "candidates": 13,
+            "inliers": 10
           }
         ],
-        "placement": "4 windows tiling 597 x 9042 reference px (1 x 4 grid)",
+        "placement": "4 windows tiling 403 x 9040 reference px (1 x 4 grid)",
+        "quantised": 4,
+        "refined": 2,
+        "dropped": 2,
         "adopted": true,
         "inliers": 22
       },
       "matches": {
-        "candidates": 137,
+        "candidates": 135,
         "inliers": 22,
-        "inlier_ratio": 0.1606
+        "inlier_ratio": 0.163
       },
       "distribution": {
         "grid": [
           12,
           12
         ],
-        "coverage_fraction": 0.1389,
-        "dispersion": 0.4057,
-        "extrapolation_fraction": 0.9028,
+        "coverage_fraction": 0.1667,
+        "dispersion": 0.2898,
+        "extrapolation_fraction": 0.8194,
         "eligible_cells": 72,
         "total_cells": 144,
         "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
@@ -1009,50 +1026,50 @@
         "reference_sun_incidence_deg": null
       },
       "pair": {
-        "cross_correlation": -0.0532,
+        "cross_correlation": -0.0538,
         "anti_correlated": true,
         "same_sensor": false,
         "sensor_pair": "iirs-wac",
         "scale_ratio": 0.5673,
-        "overlap_fraction": 0.4031
+        "overlap_fraction": 0.3969
       },
       "frame": {
         "target_shape": [
-          5453,
-          483
+          5460,
+          490
         ],
         "reference_decimation": 2,
         "reference_origin": [
-          38395,
-          65847
+          38387,
+          65838
         ],
         "reference_sample_offset": [
-          0.0,
+          0.5,
           0.5
         ],
         "pixel_convention": "zero-based pixel centres; GDAL affine receives centre + 0.5",
         "route": "source geometry lattice -> reference projected plane",
         "notes": [
-          "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
+          "refined: re-placed at 2 x decimation over the overlap instead of 4 x over the whole reference"
         ],
         "reference_window": [
-          38395,
-          65847,
-          49300,
-          66813
+          38387,
+          65838,
+          49307,
+          66818
         ],
         "source_oversample": 2.369,
         "source_taps": 2,
-        "source_coverage": 0.4031
+        "source_coverage": 0.3969
       },
       "decomposition": {
-        "est_scale_x": 0.9925,
+        "est_scale_x": 0.9931,
         "est_scale_y": 0.9996,
-        "est_rotation_deg": -0.313,
-        "est_shear_det": 0.9922,
+        "est_rotation_deg": -0.332,
+        "est_shear_det": 0.9927,
         "est_translation_px": [
-          -4.46,
-          -6.73
+          -11.64,
+          -6.31
         ],
         "est_perspective": [
           0.0,
@@ -1062,51 +1079,55 @@
       "attempts": [
         {
           "method": "dense-ncc",
-          "seconds": 1.47,
-          "candidates": 28,
+          "seconds": 1.7,
+          "candidates": 27,
           "note": "",
           "model": "similarity",
           "inliers": 9,
-          "inlier_ratio": 0.3214,
+          "inlier_ratio": 0.3333,
           "verified": true,
-          "coverage": 0.1111,
-          "dispersion": 0.4865,
-          "score": 5.43
+          "coverage": 0.125,
+          "dispersion": 0.4488,
+          "score": 5.34
         },
         {
           "method": "disk_lightglue",
-          "seconds": 1.0,
-          "candidates": 2,
-          "note": ""
+          "seconds": 1.51,
+          "candidates": 6,
+          "note": "",
+          "model": "similarity",
+          "inliers": 2,
+          "inlier_ratio": 0.3333,
+          "verified": true
         },
         {
           "method": "sift",
-          "seconds": 1.45,
+          "seconds": 1.73,
+          "candidates": 10,
+          "note": "",
+          "model": "similarity",
+          "inliers": 3,
+          "inlier_ratio": 0.3,
+          "verified": true
+        },
+        {
+          "method": "akaze",
+          "seconds": 1.28,
+          "candidates": 12,
+          "note": "",
+          "model": "similarity",
+          "inliers": 2,
+          "inlier_ratio": 0.1667,
+          "verified": true
+        },
+        {
+          "method": "orb",
+          "seconds": 0.53,
           "candidates": 9,
           "note": "",
           "model": "similarity",
           "inliers": 2,
           "inlier_ratio": 0.2222,
-          "verified": true
-        },
-        {
-          "method": "akaze",
-          "seconds": 1.17,
-          "candidates": 22,
-          "note": "",
-          "model": "similarity",
-          "inliers": 2,
-          "inlier_ratio": 0.0909,
-          "verified": true
-        },
-        {
-          "method": "orb",
-          "seconds": 0.48,
-          "candidates": 7,
-          "note": "",
-          "model": "similarity",
-          "inliers": 2,
-          "inlier_ratio": 0.2857,
           "verified": true
         }
       ],
@@ -1161,35 +1182,36 @@
         "source: pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)",
         "source: geometry from the loc backplane",
         "reference: 5958 megapixels: read lazily, in windows",
-        "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
+        "refined: re-placed at 2 x decimation over the overlap instead of 4 x over the whole reference",
+        "working grid capped at 6053 px a side (asked for 6144): 5.6 GB available, budgeting 50% of it"
       ]
     },
-    "artifacts": "outputs/validation_fixes_20260923/iirs_20240120_wac/f9dcf8fba91e",
+    "artifacts": "outputs/validation_fixes_20260923/iirs_20240120_wac/2523f1138472",
     "robust_accuracy": {
-      "median_source_px": 19.314010467825298,
-      "p90_source_px": 37.54580306369116,
+      "median_source_px": 19.336244312823084,
+      "p90_source_px": 33.36702982843256,
       "within_1_source_px": 0.0,
-      "within_2_source_px": 0.023622047244094488,
-      "within_3_source_px": 0.05511811023622047,
+      "within_2_source_px": 0.0,
+      "within_3_source_px": 0.0,
       "held_out_n": 127
     },
     "artifact_checks": {
       "rmse_recomputed_exactly": true,
-      "transform_sha256": "796729d55f7c40bf6971b0feb66311328b377904b6dc68a8d87943d25073cb64"
+      "transform_sha256": "0293f2243c1848afac3356c797da56923f60ccd7c89f4afc8ddb43dad5063fd0"
     },
     "export": {
       "shape": [
-        5453,
-        483
+        5460,
+        490
       ],
       "bands": 1,
       "transform": [
         200.0,
         0.0,
-        1126496.9236530997,
+        1125596.9236530997,
         0.0,
         -200.0,
-        -1110348.4618265498,
+        -1109598.4618265498,
         0.0,
         0.0,
         1.0

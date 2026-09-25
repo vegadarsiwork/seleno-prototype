@@ -1,0 +1,15 @@
+START real_ohrc_nac
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+DONE real_ohrc_nac warning src_rmse 6.0533 truth_corner None seconds 54.25
+START real_tmc2_selene
+DONE real_tmc2_selene pass src_rmse 2.1845 truth_corner None seconds 67.64
+START real_iirs_wac
+PRESERVED real_ohrc_nac
+PRESERVED real_tmc2_selene
+START real_iirs_wac
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+DONE real_iirs_wac failed src_rmse None truth_corner None seconds 20.83
+START real_iirs_ohrc_disjoint
+DONE real_iirs_ohrc_disjoint failed src_rmse None truth_corner None seconds 4.52

@@ -1,0 +1,53 @@
+START lroc_005_055_r6144_c27648
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+DONE lroc_005_055_r6144_c27648 pass src_rmse None truth_corner 0.666 seconds 19.27
+START lroc_005_055_r4096_c23552
+DONE lroc_005_055_r4096_c23552 pass src_rmse None truth_corner 0.8637 seconds 27.2
+START lroc_095_145_r4096_c43008
+DONE lroc_095_145_r4096_c43008 pass src_rmse None truth_corner 0.9733 seconds 21.63
+START lroc_095_145_r9216_c43008
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+DONE lroc_095_145_r9216_c43008 warning src_rmse None truth_corner 171.8393 seconds 24.7
+START lroc_145_235_r9216_c41984
+DONE lroc_145_235_r9216_c41984 failed src_rmse None truth_corner None seconds 23.88
+START lroc_235_325_r1024_c43008
+DONE lroc_235_325_r1024_c43008 failed src_rmse None truth_corner None seconds 21.34
+START lroc_235_325_r3072_c41984
+PRESERVED lroc_005_055_r6144_c27648
+PRESERVED lroc_005_055_r4096_c23552
+PRESERVED lroc_095_145_r4096_c43008
+PRESERVED lroc_095_145_r9216_c43008
+PRESERVED lroc_145_235_r9216_c41984
+PRESERVED lroc_235_325_r1024_c43008
+START lroc_235_325_r3072_c41984
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+DONE lroc_235_325_r3072_c41984 failed src_rmse None truth_corner None seconds 13.68
+START lroc_055_145_r8192_c43008
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+DONE lroc_055_145_r8192_c43008 failed src_rmse None truth_corner None seconds 15.28
+START lroc_055_145_r5120_c43008
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+DONE lroc_055_145_r5120_c43008 warning src_rmse None truth_corner 8.241 seconds 15.79
+START lroc_145_325_r3072_c43008
+DONE lroc_145_325_r3072_c43008 failed src_rmse None truth_corner None seconds 14.7
+START lroc_145_325_r12288_c32768
+DONE lroc_145_325_r12288_c32768 failed src_rmse None truth_corner None seconds 14.32
+START lroc_055_235_r10240_c43008
+DONE lroc_055_235_r10240_c43008 failed src_rmse None truth_corner None seconds 13.99
+START lroc_005_235_r6144_c27648_neg
+DONE lroc_005_235_r6144_c27648_neg failed src_rmse None truth_corner None seconds 19.54
+START lroc_005_325_r4096_c23552_neg
+DONE lroc_005_325_r4096_c23552_neg failed src_rmse None truth_corner None seconds 19.34

@@ -3,8 +3,8 @@ START OHRC → NAC {'max_side': 2048, 'grid': (12, 12), 'segments': 6}
   warnings.warn(
 DONE OHRC → NAC warning 106.46 source px; reference sampling scale 4.17 source px
 START TMC-2 → SELENE {'max_side': 2048, 'grid': (12, 12), 'segments': 6}
-DONE TMC-2 → SELENE warning 9.82 source px; reference sampling scale 1.35 source px
+DONE TMC-2 → SELENE warning 12.27 source px; reference sampling scale 1.35 source px
 START IIRS 2025-07-29 → WAC bare sensor defaults
-DONE IIRS 2025-07-29 → WAC warning 12.77 source px; reference sampling scale 1.17 source px
+DONE IIRS 2025-07-29 → WAC warning 12.72 source px; reference sampling scale 1.17 source px
 START IIRS 2024-01-20 → WAC bare sensor defaults
-DONE IIRS 2024-01-20 → WAC warning 23.42 source px; reference sampling scale 1.76 source px
+DONE IIRS 2024-01-20 → WAC warning 24.41 source px; reference sampling scale 1.76 source px

@@ -4,12 +4,12 @@ settings  : max_side=2048, grid=(12, 12) (explicit options override sensor defau
 frame     : source geometry lattice -> reference lon/lat, source covers 31.1% of the reference grid
 character : {"cross_correlation": 0.9017, "anti_correlated": false, "same_sensor": false, "sensor_pair": "tmc2-selene_tc", "scale_ratio": 0.7402, "overlap_fraction": 0.3087}
 plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
-  dense-ncc        {"method": "dense-ncc", "seconds": 1.51, "candidates": 44, "model": "affine", "inliers": 44, "inlier_ratio": 1.0, "verified": true, "coverage": 0.4815, "dispersion": 0.3528, "score": 36.83}
+  dense-ncc        {"method": "dense-ncc", "seconds": 1.57, "candidates": 44, "model": "affine", "inliers": 44, "inlier_ratio": 1.0, "verified": true, "coverage": 0.4815, "dispersion": 0.3528, "score": 36.83}
 Loaded LightGlue model
-  disk_lightglue   {"method": "disk_lightglue", "seconds": 6.44, "candidates": 485, "model": "affine", "inliers": 423, "inlier_ratio": 0.8722, "verified": true, "coverage": 0.4815, "dispersion": 0.3352, "score": 346.76}
-  sift             {"method": "sift", "seconds": 1.51, "candidates": 968, "model": "affine", "inliers": 960, "inlier_ratio": 0.9917, "verified": true, "coverage": 0.5926, "dispersion": 0.366, "score": 908.33}
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 6.99, "candidates": 485, "model": "affine", "inliers": 423, "inlier_ratio": 0.8722, "verified": true, "coverage": 0.4815, "dispersion": 0.3352, "score": 346.76}
+  sift             {"method": "sift", "seconds": 1.71, "candidates": 968, "model": "affine", "inliers": 960, "inlier_ratio": 0.9917, "verified": true, "coverage": 0.5926, "dispersion": 0.366, "score": 908.33}
   (stopping early: sift is comfortably sufficient)
 fine      : native probe -> sift  (sift 999/1003)
 fine      : 45146 points from 11 native windows, 19946 verified inliers
 status    : pass  (all checks passed)
-wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/diagnostics/control_tmc2_selene/d1d17440e3e1
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/diagnostics/control_tmc2_selene/e6211d3a6944

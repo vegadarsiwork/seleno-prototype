@@ -1,25 +1,26 @@
 {
  "status": "warning",
- "reason": "80% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
+ "reason": "76% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
  "notes": [
   "One reference pixel spans 1.35 source pixels. This is a sampling scale, not an independently measured error bound."
  ],
  "status_meaning": "verified model with adequate fit-point coverage; not an accuracy guarantee",
- "accuracy_statement": "9.82 source px; reference sampling scale 1.35 source px",
- "job_id": "a36b733bc35a",
- "generated_utc": "2026-09-23T12:44:52Z",
- "runtime_s": 46.27,
+ "accuracy_statement": "12.27 source px; reference sampling scale 1.35 source px",
+ "job_id": "86d002890611",
+ "generated_utc": "2026-09-23T16:34:49Z",
+ "runtime_s": 45.55,
  "method_used": "dense-ncc",
  "model": "affine",
  "accuracy": {
-  "held_out_n": 479,
-  "held_out_rmse_px": 1.2119543789689955,
-  "held_out_median_px": 0.7435244417219551,
-  "held_out_p90_px": 1.9691456177276443,
+  "held_out_n": 478,
+  "held_out_rmse_px": 1.514245275743099,
+  "held_out_median_px": 0.9250692551775352,
+  "held_out_p90_px": 2.595144016073719,
+  "held_out_exactly_on_model_n": 0,
   "evaluation_file": "evaluation.json",
-  "matrix_sha256": "f884e992f4686ef4af203801327b92fdeb3fd18455ceacb9987f8c787b043daf",
+  "matrix_sha256": "4bdfdf19a9d29dc0b09f254cca408e094d39620ad6263210bbab9baf6a0ff595",
   "evaluation_basis": "all held-out matcher correspondences; not external ground truth",
-  "transform_sha256": "388cb758b1c386add0b0b867ff17e7c8c3c8351f1fae698113006b4398bfbdc7",
+  "transform_sha256": "e89a2425d2dde999f9f52105daf9b504935e2832b1788c6ae4e068ab373d8fd2",
   "applied_model": {
    "kind": "blended_segments",
    "sampling": "inverse mapping; smoothstep between segment centres",
@@ -32,11 +33,11 @@
    "adopted": false,
    "note": "ECC disabled or too few validation points"
   },
-  "rmse_px": 1.2119543789689955,
-  "rmse_reference_px": 7.2717,
-  "rmse_working_px": 1.212,
-  "rmse_source_px": 9.8237,
-  "rmse_m": 53.834,
+  "rmse_px": 1.514245275743099,
+  "rmse_reference_px": 9.0855,
+  "rmse_working_px": 1.5142,
+  "rmse_source_px": 12.2739,
+  "rmse_m": 67.261,
   "metres_per_pixel": 44.4189703480194,
   "units": {
    "reference_decimation": 6,
@@ -56,7 +57,7 @@
   "attempted": true,
   "windows": 8,
   "windows_used": 8,
-  "points": 976,
+  "points": 971,
   "native": true,
   "note": null,
   "method": "dense-ncc",
@@ -68,13 +69,16 @@
    }
   ],
   "placement": "8 windows tiling 2486 x 10235 reference px (2 x 5 grid)",
+  "quantised": 9,
+  "refined": 4,
+  "dropped": 5,
   "adopted": true,
-  "inliers": 267
+  "inliers": 268
  },
  "matches": {
-  "candidates": 497,
-  "inliers": 267,
-  "inlier_ratio": 0.5372
+  "candidates": 493,
+  "inliers": 268,
+  "inlier_ratio": 0.5436
  },
  "distribution": {
   "grid": [
@@ -82,8 +86,8 @@
    12
   ],
   "coverage_fraction": 0.2778,
-  "dispersion": 0.1673,
-  "extrapolation_fraction": 0.7963,
+  "dispersion": 0.1869,
+  "extrapolation_fraction": 0.7593,
   "eligible_cells": 54,
   "total_cells": 144,
   "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
@@ -133,13 +137,13 @@
   "source_coverage": 0.3111
  },
  "decomposition": {
-  "est_scale_x": 1.0133,
+  "est_scale_x": 1.0171,
   "est_scale_y": 0.9999,
-  "est_rotation_deg": -0.009,
-  "est_shear_det": 1.0132,
+  "est_rotation_deg": 0.021,
+  "est_shear_det": 1.017,
   "est_translation_px": [
-   -8.84,
-   1.62
+   -10.55,
+   1.38
   ],
   "est_perspective": [
    0.0,
@@ -149,7 +153,7 @@
  "attempts": [
   {
    "method": "dense-ncc",
-   "seconds": 1.36,
+   "seconds": 1.52,
    "candidates": 36,
    "note": "",
    "model": "affine",
@@ -162,19 +166,19 @@
   },
   {
    "method": "disk_lightglue",
-   "seconds": 6.72,
+   "seconds": 8.01,
    "candidates": 3,
    "note": ""
   },
   {
    "method": "sift",
-   "seconds": 1.44,
+   "seconds": 1.96,
    "candidates": 3,
    "note": ""
   },
   {
    "method": "akaze",
-   "seconds": 0.93,
+   "seconds": 1.15,
    "candidates": 12,
    "note": "",
    "model": "similarity",
@@ -184,7 +188,7 @@
   },
   {
    "method": "orb",
-   "seconds": 0.47,
+   "seconds": 0.56,
    "candidates": 7,
    "note": "",
    "model": "similarity",

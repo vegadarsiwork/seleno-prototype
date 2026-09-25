@@ -1,0 +1,30 @@
+START synthetic_translation
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+DONE synthetic_translation pass src_rmse None truth_corner 0.1062 seconds 5.58
+START synthetic_brightness
+DONE synthetic_brightness pass src_rmse None truth_corner 0.1011 seconds 4.92
+START synthetic_contrast_inversion
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+DONE synthetic_contrast_inversion warning src_rmse None truth_corner 0.1193 seconds 7.19
+START synthetic_rotation_20
+DONE synthetic_rotation_20 pass src_rmse None truth_corner 0.2049 seconds 5.97
+START synthetic_rotation_60
+DONE synthetic_rotation_60 failed src_rmse None truth_corner None seconds 9.72
+START synthetic_scale_1p5
+DONE synthetic_scale_1p5 failed src_rmse None truth_corner None seconds 5.76
+START synthetic_perspective
+DONE synthetic_perspective pass src_rmse None truth_corner 0.0718 seconds 5.48
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: The given matrix is equal to Affine.identity or its flipped counterpart. GDAL may ignore this matrix and save no geotransform without raising an error. This behavior is somewhat driver-specific.
+  dataset = writer(
+START synthetic_scale4_geo
+DONE synthetic_scale4_geo pass src_rmse 1.8452 truth_corner 651.6813 seconds 1.58
+START synthetic_decimated_identity
+DONE synthetic_decimated_identity pass src_rmse 1.2464 truth_corner 0.4434 seconds 9.81

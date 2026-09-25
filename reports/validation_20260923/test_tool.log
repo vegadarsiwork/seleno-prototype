@@ -1,0 +1,60 @@
+Phase 8 adversarial tests  (/tmp/seleno_tool_1s53i_z5)
+
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+Loaded LightGlue model
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+pass  8bit_and_16bit_agree                                 8-bit 0.2804 px, 16-bit 0.2082 px
+pass  band_centres_in_nanometres_are_converted             0.7123..1.2343 um, band centres from the label, 0.81-1.23 um) geometry from the loc backplane
+pass  cube_without_band_centres_says_so                    declared: pseudo-pan from 21 of 64 bands (middle third (label carried no band ce
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: The given matrix is equal to Affine.identity or its flipped counterpart. GDAL may ignore this matrix and save no geotransform without raising an error. This behavior is somewhat driver-specific.
+  dataset = writer(
+pass  disjoint_footprints_report_no_overlap                no_overlap
+pass  empty_file_is_unreadable_input                       empty file handled
+pass  failure_codes_are_declared                           unreadable_input, no_overlap, insufficient_matches, verification_failed, degenerate_transform
+pass  fine_stage_beats_the_working_grid                    2.670 -> 1.234 reference px (4083 native points)
+pass  fine_stage_cannot_replace_a_better_coarse_set        refused: native points fail checks the coarse set passed (only 10 verified inliers; inlier ratio 5.
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+pass  flipped_source_registers_or_fails_cleanly            inlier ratio 0.27
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+pass  full_artifact_set_is_written                         614 matches, 7 artifacts
+pass  geometry_comes_from_the_loc_backplane                lattice (300, 64), lon 40.00..40.40 lat -70.00..-66.00
+pass  identical_pair_is_near_identity                      RMSE 0.0000 px, scale 1.0000, rot 0.000 deg
+pass  label_names_the_data_file_not_the_extension          ch2_iir_ndi_20240120T1432235872_d_rfl_qb.qub
+pass  large_raster_is_read_lazily                          2048x2048 lazy reads match eager, threshold 512 MB
+pass  locate_finds_a_small_source_in_a_large_reference     found at 25 deg, 130 inliers, median 0.18 ref px from truth
+pass  locate_geometry_proves_disjoint_and_places_overlap   disjoint: by their own geometry the two footprints are 314.5 km apart ; placed at scale 0.0250, rotation 29.9 deg
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+pass  locate_refuses_a_source_that_is_not_there            the source could not be located in the reference: the footprints differ 266.7x in area, so
+pass  memory_ceiling_shrinks_grid                          64000 -> 1935 (est 3.4 GB)
+pass  missing_file_is_unreadable_input                     missing file handled
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+pass  mostly_shadow_crop_fails_or_is_honest                status warning, coverage 0.27
+pass  no_metadata_input_still_runs                         ran in pixel space, refused to report metres
+pass  pixel_space_strip_fine_windows_line_up               1729/1803 native inliers from 6 windows, off identity by 0.23 px
+pass  random_pixel_space_pairs_are_right_or_refused        4 right, 2 refused; worst wide 229x1659 shift(17,1) side 256 -> 0.58 px
+pass  rmse_is_reported_in_four_units                       ref 0.877 px = 3.51 m = 1.753 src px = 0.877 working px
+pass  rotated_source_registers_or_fails_cleanly            failed cleanly: degenerate_transform
+pass  spectrometer_cube_collapses_to_reflected_light       pseudo-pan from 13 of 64 bands, r=0.988 vs terrain
+pass  subpixel_flag_is_about_source_pixels                 subpixel=None basis=source pixels floor=None
+pass  thermal_bands_are_excluded                           13 of 64 bands, 0.80-1.56 um
+pass  truncated_file_is_unreadable_input                   tr_src.img is 4096 bytes; the label declares 4000 lines x 40
+pass  uniform_distribution_is_reported                     coverage 0.92, dispersion 0.45 over 36 eligible cells
+pass  unreachable_subpixel_is_a_note_not_a_failure         floor 4.00 src px, attainable=False, status pass
+pass  upload_names_stay_inside_their_batch                 traversal, absolute and hidden names all contained
+pass  view_overview_agrees_with_native_reads               factor 8, max difference 0 grey level(s)
+pass  view_tiles_are_the_size_the_viewer_expects           25 tiles over 11 levels, georef eqc
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+pass  zero_overlap_reports_no_overlap                      verification_failed
+
+35 passed, 0 failed, 0 skipped

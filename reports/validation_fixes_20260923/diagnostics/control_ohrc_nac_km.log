@@ -1,15 +1,4 @@
 source    : {"path": "ch2_ohr_ncp_20241115T1326321339_d_img_d18.img", "reader": "pds4", "profile": "ohrc", "instrument": "OHRC", "shape": [101074, 12000], "gsd_m": 0.24, "bit_depth": 8, "georeferenced": false, "crs": null, "has_lonlat_lattice": true, "acquired_utc": "2024-11-15T13:26:32.133900+00:00", "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 0.9995, "degraded": ["label Sun angles are confounded by 14.6 deg of roll; treated as untrusted", "reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error"]}
 reference : {"path": "synthetic_nac_control_c.tif", "reader": "gdal", "profile": "nac", "instrument": "NAC", "shape": [6296, 6296], "gsd_m": 1.0, "bit_depth": 8, "georeferenced": true, "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 0.5808, "degraded": []}
-settings  : max_side=2048, grid=(12, 12) (explicit options override sensor defaults)
-frame     : source geometry lattice -> reference projected plane, source covers 51.5% of the reference grid
-character : {"cross_correlation": -0.5347, "anti_correlated": true, "same_sensor": false, "sensor_pair": "ohrc-nac", "scale_ratio": 0.24, "overlap_fraction": 0.3833}
-plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
-  dense-ncc        {"method": "dense-ncc", "seconds": 1.14, "candidates": 3}
-  disk_lightglue   {"method": "disk_lightglue", "seconds": 9.34, "candidates": 433, "model": "affine", "inliers": 421, "inlier_ratio": 0.9723, "verified": true, "coverage": 0.1765, "dispersion": 0.1646, "score": 189.27}
-  sift             {"method": "sift", "seconds": 1.66, "candidates": 920, "model": "affine", "inliers": 913, "inlier_ratio": 0.9924, "verified": true, "coverage": 0.1765, "dispersion": 0.1857, "score": 423.52}
-  akaze            {"method": "akaze", "seconds": 0.61, "candidates": 1094, "model": "affine", "inliers": 1076, "inlier_ratio": 0.9835, "verified": true, "coverage": 0.1912, "dispersion": 0.1808, "score": 506.28}
-  orb              {"method": "orb", "seconds": 0.43, "candidates": 1236, "model": "affine", "inliers": 1142, "inlier_ratio": 0.9239, "verified": true, "coverage": 0.1765, "dispersion": 0.1694, "score": 517.1}
-fine      : native probe -> orb  (orb 1033/1039)
-fine      : 48084 points from 8 native windows, 41269 verified inliers
-status    : warning  (matches cover 19% of the reference grid; the transform is extrapolated over the rest; 85% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
-wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/diagnostics/control_ohrc_nac_km/a08fc5f3deeb
+memory   : working grid capped at 1788 px a side (asked for 2048): 5.8 GB available, budgeting 50% of it
+settings  : max_side=1788, grid=(12, 12) (explicit options override sensor defaults)

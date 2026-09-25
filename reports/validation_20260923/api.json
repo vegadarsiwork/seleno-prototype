@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "job_status": "pass",
+  "file_listing_keys": [
+    "root",
+    "count",
+    "files",
+    "note"
+  ],
+  "registered_tif_bytes": 194749,
+  "zip_entries": [
+    "bc19af071e56/matches.csv",
+    "bc19af071e56/metrics.json",
+    "bc19af071e56/overlay.png",
+    "bc19af071e56/preview.json",
+    "bc19af071e56/reference.png",
+    "bc19af071e56/registered.png",
+    "bc19af071e56/registered.tif",
+    "bc19af071e56/report.md",
+    "bc19af071e56/source.png",
+    "bc19af071e56/transform.json"
+  ],
+  "metrics_equal_job_response": true,
+  "log_lines": 9
+}

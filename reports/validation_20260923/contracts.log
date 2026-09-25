@@ -1,0 +1,134 @@
+START contract_native_identity
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/torch/jit/_script.py:1485: FutureWarning: `torch.jit.script` is not supported in Python 3.14+ and may break. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+DONE contract_native_identity pass src_rmse 0.0 truth_corner 0.0 seconds 1.12
+START contract_holdout
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:367: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+/home/paardhu/Projects/seleno-prototype/.venv/lib/python3.14/site-packages/rasterio/__init__.py:377: NotGeoreferencedWarning: Dataset has no geotransform, gcps, or rpcs. The identity matrix will be returned.
+  dataset = writer(
+DONE contract_holdout pass src_rmse None truth_corner None seconds 2.51
+{
+  "holdout_export": {
+    "heldout_count": 639,
+    "refit_calls": 1,
+    "export_equals_holdout_fit": false,
+    "max_matrix_difference": 0.056537043317475444,
+    "run": {
+      "name": "contract_holdout",
+      "source": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/translation.png",
+      "reference": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/inputs/reference.png",
+      "options": {
+        "max_side": 512,
+        "fine": false,
+        "subpixel": false
+      },
+      "status": "pass",
+      "reason": null,
+      "out_dir": "/home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/contract_holdout/5fe10fdc58a1",
+      "accuracy": {
+        "held_out_n": 639,
+        "held_out_rmse_px": 0.6974,
+        "held_out_median_px": 0.6667,
+        "held_out_p90_px": 0.9135,
+        "subpixel_method": "parabolic",
+        "ecc": {
+          "attempted": false
+        },
+        "rmse_px": 0.6974,
+        "rmse_reference_px": 0.6974,
+        "rmse_working_px": 0.6974,
+        "rmse_source_px": null,
+        "rmse_m": null,
+        "metres_per_pixel": null,
+        "units": {
+          "reference_decimation": 1,
+          "metres_per_reference_px": null,
+          "source_px_per_reference_px": null,
+          "metres_per_working_px": null
+        },
+        "subpixel": null,
+        "subpixel_basis": "source pixels",
+        "subpixel_working_grid": true,
+        "subpixel_floor_source_px": null,
+        "subpixel_attainable": null
+      },
+      "matches": {
+        "candidates": 1826,
+        "inliers": 1826,
+        "inlier_ratio": 1.0
+      },
+      "distribution": {
+        "grid": [
+          8,
+          8
+        ],
+        "coverage_fraction": 0.8906,
+        "dispersion": 0.4384,
+        "extrapolation_fraction": 0.3281,
+        "eligible_cells": 64,
+        "total_cells": 64,
+        "note": "coverage is the fraction of ELIGIBLE reference grid cells holding at least one inlier, where eligible means both images have data there; dispersion is the mean distance from the centroid over the half-diagonal; extrapolation_fraction is the share of eligible cells OUTSIDE the convex hull of the inliers, where the transform is extrapolated rather than interpolated"
+      },
+      "fine_stage": {
+        "attempted": false,
+        "adopted": false
+      },
+      "method_used": "disk_lightglue",
+      "frame": {
+        "target_shape": [
+          512,
+          512
+        ],
+        "reference_decimation": 1,
+        "reference_origin": [
+          0,
+          0
+        ],
+        "route": "pixel space (GSD ratio 1.0000, 1x decimation)",
+        "notes": [
+          "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+        ],
+        "source_oversample": 1.0,
+        "source_taps": 1,
+        "source_coverage": 0.9786
+      },
+      "degraded": [
+        "source: GeoTIFF carries no CRS; pixel-space registration only",
+        "reference: GeoTIFF carries no CRS; pixel-space registration only",
+        "no shared frame and no GSD on at least one side; registered in pixel space at native sampling. No metre-scale accuracy can be reported."
+      ],
+      "export": {
+        "shape": [
+          512,
+          512
+        ],
+        "bands": 1,
+        "transform": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "crs": "None"
+      },
+      "seconds": 2.51
+    }
+  },
+  "native_reference_nodata": {
+    "nodata": -9999.0,
+    "expected_invalid_pixels": 16384,
+    "observed_invalid_pixels": 0,
+    "finite_nodata_marked_valid": true
+  },
+  "geographic_units": {
+    "reported_scalar_gsd_m": 30.323350424149485,
+    "approx_x_m_at_60south": 15.16167521207474,
+    "approx_y_m": 30.32335042414948
+  }
+}

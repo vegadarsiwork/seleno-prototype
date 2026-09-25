@@ -1,0 +1,12 @@
+source    : {"path": "fine_source.tif", "reader": "gdal", "profile": "unknown", "instrument": "unknown", "shape": [1024, 1024], "gsd_m": 1.0, "bit_depth": 32, "georeferenced": true, "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": []}
+reference : {"path": "fine_source.tif", "reader": "gdal", "profile": "unknown", "instrument": "unknown", "shape": [1024, 1024], "gsd_m": 1.0, "bit_depth": 32, "georeferenced": true, "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 1.0, "degraded": []}
+frame     : both georeferenced: reference CRS -> source CRS, source covers 100.0% of the reference grid
+character : {"cross_correlation": 0.9705, "anti_correlated": false, "same_sensor": true, "sensor_pair": "unknown-unknown", "scale_ratio": 1.0, "overlap_fraction": 1.0}
+plan      : disk_lightglue -> dense-ncc -> sift -> akaze -> orb
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 1.4, "candidates": 1013, "model": "homography", "inliers": 1013, "inlier_ratio": 1.0, "verified": true, "coverage": 0.875, "dispersion": 0.4298, "score": 1295.05}
+  (stopping early: disk_lightglue is comfortably sufficient)
+fine      : native probe -> disk_lightglue  (disk_lightglue 1046/1047)
+fine      : 4051 points from 4 native windows, 4032 verified inliers
+preview   : panels at 1024 x 1024 (1x decimation; working grid 4x)
+status    : pass  (all checks passed)
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_20260923/synthetic_decimated_identity/9d9e4106c5e3

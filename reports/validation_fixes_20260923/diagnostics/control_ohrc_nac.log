@@ -1,15 +1,16 @@
 source    : {"path": "ch2_ohr_ncp_20241115T1326321339_d_img_d18.img", "reader": "pds4", "profile": "ohrc", "instrument": "OHRC", "shape": [101074, 12000], "gsd_m": 0.24, "bit_depth": 8, "georeferenced": false, "crs": null, "has_lonlat_lattice": true, "acquired_utc": "2024-11-15T13:26:32.133900+00:00", "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 0.9995, "degraded": ["label Sun angles are confounded by 14.6 deg of roll; treated as untrusted", "reference_data_used = System: geolocation is unrefined ephemeris, expect kilometre-scale error"]}
 reference : {"path": "synthetic_nac_control_b.tif", "reader": "gdal", "profile": "nac", "instrument": "NAC", "shape": [6296, 6296], "gsd_m": 1.0, "bit_depth": 8, "georeferenced": true, "crs": "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"unknown\",SPHEROID[\"unknown\",1737400,0]],PRIMEM[\"Reference meridian\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]", "has_lonlat_lattice": false, "acquired_utc": null, "sun_azimuth_deg": null, "sun_incidence_deg": null, "sub_solar_lon_deg": null, "valid_fraction": 0.5142, "degraded": []}
-settings  : max_side=2048, grid=(12, 12) (explicit options override sensor defaults)
+memory   : working grid capped at 1812 px a side (asked for 2048): 5.9 GB available, budgeting 50% of it
+settings  : max_side=1812, grid=(12, 12) (explicit options override sensor defaults)
 frame     : source geometry lattice -> reference projected plane, source covers 51.5% of the reference grid
 character : {"cross_correlation": 0.9519, "anti_correlated": false, "same_sensor": false, "sensor_pair": "ohrc-nac", "scale_ratio": 0.24, "overlap_fraction": 0.5138}
 plan      : dense-ncc -> disk_lightglue -> sift -> akaze -> orb
-  dense-ncc        {"method": "dense-ncc", "seconds": 1.18, "candidates": 14, "model": "similarity", "inliers": 14, "inlier_ratio": 1.0, "verified": true, "coverage": 0.1647, "dispersion": 0.2277, "score": 6.77}
-  disk_lightglue   {"method": "disk_lightglue", "seconds": 8.19, "candidates": 702, "model": "affine", "inliers": 675, "inlier_ratio": 0.9615, "verified": true, "coverage": 0.2471, "dispersion": 0.2346, "score": 370.45}
-  sift             {"method": "sift", "seconds": 1.34, "candidates": 1374, "model": "affine", "inliers": 1364, "inlier_ratio": 0.9927, "verified": true, "coverage": 0.3176, "dispersion": 0.2553, "score": 842.38}
-  akaze            {"method": "akaze", "seconds": 0.51, "candidates": 1285, "model": "affine", "inliers": 1274, "inlier_ratio": 0.9914, "verified": true, "coverage": 0.3176, "dispersion": 0.276, "score": 808.39}
-  orb              {"method": "orb", "seconds": 0.39, "candidates": 1726, "model": "affine", "inliers": 1578, "inlier_ratio": 0.9143, "verified": true, "coverage": 0.2824, "dispersion": 0.286, "score": 970.34}
+  dense-ncc        {"method": "dense-ncc", "seconds": 1.3, "candidates": 14, "model": "similarity", "inliers": 14, "inlier_ratio": 1.0, "verified": true, "coverage": 0.1647, "dispersion": 0.2277, "score": 6.77}
+  disk_lightglue   {"method": "disk_lightglue", "seconds": 41.43, "candidates": 702, "model": "affine", "inliers": 675, "inlier_ratio": 0.9615, "verified": true, "coverage": 0.2471, "dispersion": 0.2346, "score": 370.45}
+  sift             {"method": "sift", "seconds": 1.74, "candidates": 1374, "model": "affine", "inliers": 1364, "inlier_ratio": 0.9927, "verified": true, "coverage": 0.3176, "dispersion": 0.2553, "score": 842.38}
+  akaze            {"method": "akaze", "seconds": 0.59, "candidates": 1285, "model": "affine", "inliers": 1274, "inlier_ratio": 0.9914, "verified": true, "coverage": 0.3176, "dispersion": 0.276, "score": 808.39}
+  orb              {"method": "orb", "seconds": 0.55, "candidates": 1726, "model": "affine", "inliers": 1578, "inlier_ratio": 0.9143, "verified": true, "coverage": 0.2824, "dispersion": 0.286, "score": 970.34}
 fine      : native probe -> orb  (orb 1036/1116)
-fine      : 44141 points from 8 native windows, 25649 verified inliers
+fine      : 44126 points from 8 native windows, 25698 verified inliers
 status    : warning  (64% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it)
-wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/diagnostics/control_ohrc_nac/6bff7364dd7c
+wrote     : /home/paardhu/Projects/seleno-prototype/outputs/validation_fixes_20260923/diagnostics/control_ohrc_nac/fbed2a646923

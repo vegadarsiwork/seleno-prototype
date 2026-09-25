@@ -81,7 +81,7 @@
     },
     "status": "pass",
     "reason": null,
-    "artifacts": "outputs/validation_fixes_20260923/diagnostics/control_tmc2_selene/d1d17440e3e1"
+    "artifacts": "outputs/validation_fixes_20260923/diagnostics/control_tmc2_selene/e6211d3a6944"
   },
   {
     "pair": "Control: OHRC \u2192 synthetic NAC (4.17x)",
@@ -165,90 +165,6 @@
     },
     "status": "warning",
     "reason": "64% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
-    "artifacts": "outputs/validation_fixes_20260923/diagnostics/control_ohrc_nac/6bff7364dd7c"
-  },
-  {
-    "pair": "Control: OHRC \u2192 synthetic NAC (4.17x, 4.6 km offset)",
-    "name": "control_ohrc_nac_km",
-    "source": "data/raw/ch2/ohrc/data/calibrated/20241115/ch2_ohr_ncp_20241115T1326321339_d_img_d18.xml",
-    "reference": "outputs/validation_fixes_20260923/diagnostics/synthetic/synthetic_nac_control_c.tif",
-    "grid_of": "data/raw/nac/NAC_CM355_P892S2250_pole_6km.tif",
-    "options": {
-      "max_side": 2048,
-      "grid": [
-        12,
-        12
-      ],
-      "segments": 6
-    },
-    "truth": {
-      "T_native_ref_px": [
-        [
-          0.9969965833368168,
-          0.0026101369147557394,
-          2537.608044648049
-        ],
-        [
-          -0.0026101369147557394,
-          0.9969965833368168,
-          -3781.9485333366483
-        ],
-        [
-          0.0,
-          0.0,
-          1.0
-        ]
-      ],
-      "T_inverse_native_ref_px": [
-        [
-          1.003005589825461,
-          -0.002625868492896683,
-          -2555.165953063497
-        ],
-        [
-          0.002625868492896683,
-          1.003005589825461,
-          3786.6520943571
-        ],
-        [
-          0.0,
-          0.0,
-          1.0
-        ]
-      ],
-      "meaning": "synthetic reference pixel p shows the ground the source geometry places at T p; the recovered model should equal T^-1 in native reference pixels",
-      "rotation_deg": -0.15,
-      "scale": 0.997,
-      "shift_ref_px": [
-        2536.37,
-        -3799.62
-      ],
-      "source_px_per_ref_px": 4.166666666666667,
-      "geometry_footprint_rows": [
-        0,
-        6296
-      ],
-      "geometry_footprint_cols": [
-        0,
-        6296
-      ],
-      "rotation_scale_centre_ref_px": [
-        3148.0,
-        3148.0
-      ],
-      "blur_sigma_source_px": 2.0833333333333335,
-      "noise_sigma_dn": 1.4186331748962402,
-      "snr": 40.0,
-      "scene_std_dn": 56.74532699584961,
-      "valid_pixels": 23020792,
-      "geometry_bilinear_vs_exact_source_px": {
-        "median": 7.332580706405269e-12,
-        "max": 0.4812265368539352,
-        "n": 11494
-      }
-    },
-    "status": "warning",
-    "reason": "matches cover 19% of the reference grid; the transform is extrapolated over the rest; 85% of the reference area lies outside the tie-point hull, so the transform is extrapolated there and the quoted RMSE does not describe it",
-    "artifacts": "outputs/validation_fixes_20260923/diagnostics/control_ohrc_nac_km/a08fc5f3deeb"
+    "artifacts": "outputs/validation_fixes_20260923/diagnostics/control_ohrc_nac/fbed2a646923"
   }
 ]
