@@ -197,6 +197,10 @@ function MetricsTable({ m }) {
         <Row k="inliers" v={m.matches?.inliers} />
         <Row k="inlier ratio" v={pct(m.matches?.inlier_ratio)} />
         <Row k="held-out points" v={a.held_out_n} />
+        {a.check_point_n != null && (
+          <Row k="check points" mono={false}
+               v={`${a.check_point_n} of ${a.held_out_n} held-out (${a.check_point_rejected_n} isolated mismatches set aside, without consulting the exported model)`} />
+        )}
         {/* The working grid is internal to the run, so a residual quoted only in
             its pixels says nothing about either input. All four, always. */}
         <Row k="RMSE (source px)" v={num(a.rmse_source_px, 3)}
@@ -206,8 +210,18 @@ function MetricsTable({ m }) {
           ? <span title="no scale on the reference; metres would be invented">null</span>
           : num(a.rmse_m, 3)} />
         <Row k="RMSE (working-grid px)" v={num(a.rmse_working_px, 4)} />
-        <Row k="median / p90 (working px)"
+        {a.check_point_source_median_px != null && (
+          <Row k="median / p90 (source px)"
+               v={`${num(a.check_point_source_median_px, 3)} / ${num(a.check_point_source_p90_px, 3)}`} />
+        )}
+        <Row k="all held-out median / p90 (working px)"
              v={`${num(a.held_out_median_px, 3)} / ${num(a.held_out_p90_px, 3)}`} />
+        {a.held_out_rmse_px != null && a.check_point_n != null && (
+          <Row k="all held-out RMSE (working px)" v={num(a.held_out_rmse_px, 4)} />
+        )}
+        {a.held_out_source_invalid_n > 0 && (
+          <Row k="invalid held-out predictions" v={`${a.held_out_source_invalid_n}; acceptance fails`} />
+        )}
         <Row k="sub-pixel (source)" v={a.subpixel == null ? 'unknown — no scale'
           : String(a.subpixel)} tone={a.subpixel ? 'ok' : ''} />
         <Row k="accuracy" mono={false} v={m.accuracy_statement} />
@@ -221,6 +235,18 @@ function MetricsTable({ m }) {
         {m.fine_stage?.adopted && (
           <Row k="fine stage" mono={false}
                v={`${m.fine_stage.method} at native resolution, ${m.fine_stage.points} points from ${m.fine_stage.windows_used} windows`} />
+        )}
+        {m.fine_stage?.model_fit?.field && (
+          <Row k="local field" mono={false}
+               v={`B-spline correction, ${num(m.fine_stage.model_fit.field.spacing_px, 1)} working px spacing, chosen by cross-validation on fit cells`} />
+        )}
+        {m.fine_stage?.patch_px != null && (
+          <Row k="correlation patch" mono={false}
+               v={`${m.fine_stage.patch_px} px; ${m.fine_stage.patch_selection || 'fixed setting'}`} />
+        )}
+        {m.fine_stage?.adopted && m.fine_stage?.model_fit?.parallax && (
+          <Row k="terrain parallax" mono={false}
+               v={`${m.fine_stage.dem || 'DEM height correction'}; chosen by cross-validation on fit cells`} />
         )}
         {m.fine_stage?.attempted && !m.fine_stage?.adopted && (
           <Row k="fine stage" mono={false} v={m.fine_stage.note || 'not adopted'} />
