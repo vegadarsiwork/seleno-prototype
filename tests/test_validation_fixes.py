@@ -51,7 +51,12 @@ class ValidationFixes(unittest.TestCase):
         self.assertEqual(matrix.tobytes(), np.asarray(warp.call_args_list[0].args[2]).tobytes())
         self.assertEqual(E.matrix_digest(matrix), evidence["matrix_sha256"])
         residual = transfer_error(matrix, np.array(evidence["source"]), np.array(evidence["reference"]))
-        self.assertEqual(float(np.sqrt(np.mean(residual ** 2))), metrics["accuracy"]["rmse_px"])
+        # Every held-out correspondence is scored; the headline is over the
+        # check points, which the evidence marks individually.
+        self.assertEqual(float(np.sqrt(np.mean(residual ** 2))), metrics["accuracy"]["held_out_rmse_px"])
+        check = np.asarray(evidence["check_point"], bool)
+        self.assertEqual(len(check), len(residual))
+        self.assertEqual(float(np.sqrt(np.mean(residual[check] ** 2))), metrics["accuracy"]["rmse_px"])
         self.assertEqual(len(residual), metrics["accuracy"]["held_out_n"])
 
     def test_poisoning_test_points_cannot_change_selection_or_export(self):
@@ -189,7 +194,7 @@ class ValidationFixes(unittest.TestCase):
             self.assertEqual(cap.call_args.args[0], expected)
             self.assertEqual(result.metrics["distribution"]["grid"], [12, 12])
 
-    def test_pass_does_not_require_subpixel_and_statement_uses_source_pixels(self):
+    def test_pass_requires_native_precision_and_statement_uses_source_pixels(self):
         from seleno.tool.scene import Scene
         from types import SimpleNamespace
         scene = Scene(path="scaled", array=self.a, valid=self.a > 0, reader="test")
@@ -202,10 +207,24 @@ class ValidationFixes(unittest.TestCase):
             m = REG._write_metrics(str(self.root), "test", scene, scene, {}, {}, [],
                 {"name": "test", "model": "affine"}, vr, {"held_out_rmse_px": error},
                 .9, .7, 12., [], [], {}, 0., (8, 8), list(range(64)), .1, conv, {})
-            self.assertEqual(m["status"], "pass")
+            self.assertEqual(m["status"], "warning")
+            self.assertFalse(m["acceptance"]["passed"])
+            self.assertFalse(m["accuracy"]["independently_verified_subpixel"])
             self.assertIs(m["accuracy"]["subpixel"], subpixel)
             self.assertIn("reference sampling scale 3.00 source px", m["accuracy_statement"])
             self.assertIn("not an accuracy guarantee", m["status_meaning"])
+        # Native precision is measured directly, rather than inferred from
+        # nominal GSD. Even excellent internal residuals need external controls
+        # before they can certify source-pixel accuracy.
+        errors = np.tile([[.1, 0], [-.1, 0]], (10, 1))
+        acc = {"held_out_rmse_px": .1} | {
+            "held_out_source_" + key: value for key, value in E.error_statistics(errors).items()}
+        m = REG._write_metrics(str(self.root), "test", scene, scene, {}, {}, [],
+            {"name": "test", "model": "affine"}, vr, acc,
+            .9, .7, 12., [], [], {}, 0., (8, 8), list(range(64)), .1, conv, {})
+        self.assertEqual(m["status"], "pass")
+        self.assertAlmostEqual(m["accuracy"]["rmse_source_px"], .1)
+        self.assertFalse(m["accuracy"]["independently_verified_subpixel"])
 
     def test_finite_nodata_is_excluded_at_native_and_decimated_resolution(self):
         from seleno.tool.scene import Scene
@@ -256,6 +275,35 @@ class ValidationFixes(unittest.TestCase):
                 points = np.genfromtxt(Path(result.out_dir) / "matches.csv", delimiter=",", names=True)
                 np.testing.assert_allclose(points["src_x"], points["ref_x"], atol=1e-6, rtol=0)
                 np.testing.assert_allclose(points["src_y"], points["ref_y"], atol=1e-6, rtol=0)
+
+    def test_zero_displacement_points_are_remeasured_not_kept_on_the_prewarp(self):
+        from seleno.tool.methods import refine_quantised
+        rng = np.random.default_rng(4)
+        A = cv2.GaussianBlur(rng.random((200, 200)).astype(np.float32), (0, 0), 2.0) * 100
+        d = np.array([0.3, -0.4])        # B(x) = A(x - d): ground moved by +d
+        B = cv2.warpAffine(A, np.float32([[1, 0, d[0]], [0, 1, d[1]]]), (200, 200),
+                           flags=cv2.INTER_CUBIC)
+        ok = np.ones(A.shape, bool)
+        seeds = np.array([[x, y] for y in range(50, 151, 25) for x in range(50, 151, 25)], np.float32)
+        subpix = np.array([[60.25, 70.75]], np.float32)
+        c = Correspondences(np.vstack([seeds, subpix]), np.vstack([seeds, subpix + d]),
+                            np.ones(len(seeds) + 1, np.float32), "orb", "sparse")
+        out = refine_quantised(c, A, ok, B, ok)
+        self.assertEqual(out.detail["quantised"], len(seeds))
+        self.assertEqual(out.detail["dropped"], 0)
+        step = out.ref[:-1].astype(float) - out.src[:-1].astype(float)
+        np.testing.assert_allclose(np.median(step, axis=0), d, atol=0.05)
+        self.assertFalse(np.any(np.all(np.abs(step - np.round(step)) < 1e-6, axis=1)))
+        np.testing.assert_array_equal(out.src[-1], subpix[0])      # already sub-pixel: untouched
+        np.testing.assert_array_equal(out.ref[-1], (subpix + d).astype(np.float32)[0])
+        # A genuine zero offset (same image) is measured as zero and kept, not dropped.
+        same = refine_quantised(Correspondences(seeds, seeds.copy(), np.ones(len(seeds), np.float32),
+                                                "orb", "sparse"), A, ok, A, ok)
+        self.assertEqual(len(same), len(seeds))
+        np.testing.assert_allclose(same.ref - same.src, 0, atol=0.05)
+        # Dense tie points are already this measurement and pass through untouched.
+        dense = Correspondences(seeds, seeds.copy(), np.ones(len(seeds), np.float32), "dense-ncc", "dense")
+        self.assertIs(refine_quantised(dense, A, ok, B, ok), dense)
 
     def test_fractional_backmap_and_decimation_centres(self):
         from seleno.tool.coordinates import grid_to_reference, project, sample_backmap
