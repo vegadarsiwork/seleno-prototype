@@ -324,12 +324,10 @@ class Conventions(unittest.TestCase):
         self.assertTrue(row["count_met"])
 
 
-def _killed_like_oom(src, ref, options, out, channel):
-    """Stands in for a registration the kernel kills at the memory cap."""
-    import os
-    import signal
-    channel.send(("log", "settings  : about to be killed"))
-    os.kill(os.getpid(), signal.SIGKILL)
+# Stands in for a registration the kernel kills at the memory cap.
+_KILLED_LIKE_OOM = ("import os, signal, sys; f = os.fdopen(int(sys.argv[1]), 'w', buffering=1); "
+                    "f.write('[\"log\", \"settings  : about to be killed\"]\\n'); "
+                    "os.kill(os.getpid(), signal.SIGKILL)")
 
 
 class AppWorker(unittest.TestCase):
@@ -361,6 +359,21 @@ class AppWorker(unittest.TestCase):
         grid = job["metrics"]["working_grid"]
         self.assertEqual(grid["used"], grid["planned"])
         self.assertIn(grid["basis"], ("requested", "memory limit"))
+        self.assertIn("scope", job["memory_scope"])
+
+    def test_a_job_does_not_share_memory_with_the_server(self):
+        """Inside a capped cgroup the job gets its own scope with the same cap."""
+        import tool_routes
+        from seleno.tool.register import _memory_limit
+        limit, source = _memory_limit()
+        command, scope = tool_routes._job_command()
+        self.assertEqual(command[-3:], [sys.executable, "-m", "seleno.tool.jobrun"])
+        if source == "cgroup memory limit" and tool_routes._SCOPES_WORK():
+            self.assertEqual(command[:4], ["systemd-run", "--user", "--scope", "--quiet"])
+            self.assertIn("MemoryMax=%d" % limit, command)
+            self.assertEqual(scope, limit)
+        else:
+            self.assertIsNone(scope)
 
     def test_registrations_queue_instead_of_sharing_the_memory_cap(self):
         import threading
@@ -395,7 +408,7 @@ class AppWorker(unittest.TestCase):
         self.assertTrue(all(j["state"] == "done" for j in jobs.values()))
 
     def test_a_killed_child_is_reported_not_left_running(self):
-        job, _ = self.run_job(_run_child=_killed_like_oom)
+        job, _ = self.run_job(_job_command=lambda: ([sys.executable, "-c", _KILLED_LIKE_OOM], None))
         self.assertEqual(job["state"], "crashed")
         self.assertIn("signal 9", job["error"])
         self.assertIn("memory cap", job["error"])

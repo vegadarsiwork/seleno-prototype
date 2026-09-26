@@ -85,6 +85,28 @@ class NativeExportTests(unittest.TestCase):
                 write_registered_native(self.root, scene, scene, {}, {"matrix": np.eye(3).tolist()})
         self.assertEqual(list(self.root.iterdir()), [])        # no partial file left
 
+    def test_lazy_raster_reads_safely_from_many_threads(self):
+        # The viewer serves tiles of one cached raster from several request
+        # threads; a shared GDAL handle corrupted deflate decoding and aborted.
+        from concurrent.futures import ThreadPoolExecutor
+        from seleno.tool.scene import LazyRaster
+        rng = np.random.default_rng(0)
+        data = rng.integers(1, 60000, (1024, 1024)).astype(np.uint16)
+        path = self.root / "tiled.tif"
+        with rasterio.open(path, "w", driver="GTiff", width=1024, height=1024, count=1,
+                           dtype="uint16", tiled=True, blockxsize=256, blockysize=256,
+                           compress="deflate", crs=self.crs, transform=Affine(1, 0, 0, 0, -1, 0)) as ds:
+            ds.write(data, 1)
+        raster = LazyRaster(str(path), dtype=np.uint16)
+        windows = [tuple(int(v) for v in rng.integers(0, 900, 2)) for _ in range(400)]
+
+        def read(w):
+            r, c = w
+            return np.array_equal(raster[r:r + 120, c:c + 120], data[r:r + 120, c:c + 120])
+
+        with ThreadPoolExecutor(8) as pool:
+            self.assertTrue(all(pool.map(read, windows)))
+
     def test_complete_segment_field_samples_original_cube(self):
         yy, xx = np.mgrid[:90, :70]
         bands = tuple(NativeBand((xx + 3 * yy + i * 1000).astype(np.float32))

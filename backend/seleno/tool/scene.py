@@ -25,6 +25,7 @@ from __future__ import annotations
 import math
 import os
 import re
+import threading
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -531,7 +532,12 @@ class LazyRaster:
             with rasterio.open(path) as ds:
                 shape = (ds.height, ds.width)
         self.shape = shape
-        self._ds = None
+        # One GDAL dataset per thread. A handle is not thread-safe: the viewer
+        # serves tiles of one cached raster from several request threads, and
+        # sharing a handle corrupted deflate decoding and then aborted the
+        # server. `shared` still lets the data and mask bands use one handle
+        # per thread.
+        self._handles = {} if shared is None else shared
 
     @property
     def ndim(self):
@@ -542,14 +548,12 @@ class LazyRaster:
         return int(self.shape[0]) * int(self.shape[1])
 
     def _open(self):
-        if self._shared is not None and self._shared.get("dataset") is not None:
-            return self._shared["dataset"]
-        if self._ds is None:
+        key = ("dataset", threading.get_ident())
+        ds = self._handles.get(key)
+        if ds is None:
             import rasterio
-            self._ds = rasterio.open(self._path)
-            if self._shared is not None:
-                self._shared["dataset"] = self._ds
-        return self._ds
+            ds = self._handles[key] = rasterio.open(self._path)
+        return ds
 
     def _norm(self, sl, n):
         start, stop, step = sl.indices(n)

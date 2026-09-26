@@ -6,20 +6,22 @@ entry point the CLI uses, with the same artifact set landing on disk. The
 UI reads the job's metrics and frozen evaluation evidence. Read-only quality
 diagnostics can also be computed for older jobs without rerunning registration.
 
-Each run happens in its own child process, watched by a worker thread that
-streams its real stage transitions through `register(progress=...)`, so the
-progress the UI draws is the pipeline's own log rather than a timer pretending
-to be one. The child returns all of its memory when it exits, so one job's
-leftovers cannot shrink the next job's working grid.
+Each run is its own process (`seleno.tool.jobrun`), in its own memory scope
+with the server's cap when systemd can make one, watched by a worker thread
+that streams its real stage transitions through `register(progress=...)`, so
+the progress the UI draws is the pipeline's own log rather than a timer
+pretending to be one. Neither the server's heap nor an earlier job can shrink
+a job's working grid: it sees what a capped command-line run sees.
 """
 from __future__ import annotations
 
 import io
 import json
-import multiprocessing
 import os
 import re
 import shutil
+import subprocess
+import sys
 import threading
 import time
 import uuid
@@ -30,7 +32,7 @@ from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 
-from seleno.tool import FAILURE_CODES, register
+from seleno.tool import FAILURE_CODES
 from seleno.tool import view as tview
 from seleno.tool import quality as quality_diagnostics
 from seleno.tool.profiles import Profiles
@@ -184,21 +186,38 @@ def _resolve(rel: str) -> str:
     return full
 
 
-def _run_child(src: str, ref: str, options: dict, out: str, channel):
-    """One registration in a fresh process, streaming its log to the server.
+def _job_command():
+    """How to start one registration: `python -m seleno.tool.jobrun`, in its own
+    memory scope with this server's cap when systemd can make one.
 
-    A registration run inside the server left gigabytes of heap behind it, and
-    the next job sized its working grid from what was left: the same pair and
-    settings then gave different results. A process per job returns all of its
-    memory when it exits, so every job starts from the same headroom.
+    Inside the server's cgroup a job shared the cap with the server itself, and
+    the server keeps what the image viewer read: after some viewing a job had
+    4.3 of 5.8 GB and shrank its working grid. In its own scope with the same
+    cap, a job sees exactly what a capped command-line run sees.
     """
-    try:
-        res = register(src, ref, out, progress=lambda line: channel.send(("log", line)),
-                       verbose=False, **options)
-        channel.send(("done", {"job_dir_id": res.job_id, "status": res.status,
-                               "reason": res.reason, "metrics": res.metrics}))
-    except Exception as exc:                                          # noqa: BLE001
-        channel.send(("crashed", "%s: %s" % (type(exc).__name__, exc)))
+    from seleno.tool.register import _memory_limit
+
+    command = [sys.executable, "-m", "seleno.tool.jobrun"]
+    limit, source = _memory_limit()
+    if source == "cgroup memory limit" and _SCOPES_WORK():
+        return ["systemd-run", "--user", "--scope", "--quiet", "-p", "MemoryMax=%d" % limit,
+                "-p", "MemorySwapMax=0", "--"] + command, limit
+    return command, None
+
+
+def _systemd_scopes_work(cache=[]):
+    if not cache:
+        try:
+            ok = shutil.which("systemd-run") is not None and subprocess.run(
+                ["systemd-run", "--user", "--scope", "--quiet", "true"],
+                capture_output=True, timeout=20).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            ok = False
+        cache.append(ok)
+    return cache[0]
+
+
+_SCOPES_WORK = _systemd_scopes_work
 
 
 # One registration at a time. Two at once shared one memory cap: each planned
@@ -219,7 +238,7 @@ def _worker(jid: str, req: RunRequest, src: str, ref: str):
 
 
 def _run_job(job: dict, req: RunRequest, src: str, ref: str):
-    """Run one registration in a child process and record its outcome on `job`."""
+    """Run one registration as its own process and record its outcome on `job`."""
 
     def progress(line: str):
         with _LOCK:
@@ -228,29 +247,33 @@ def _run_job(job: dict, req: RunRequest, src: str, ref: str):
             job["stage"] = line.split(":")[0].strip() if ":" in line else line[:40]
 
     options = dict(model=req.model, max_side=req.max_side,
-                   grid=(req.grid, req.grid) if req.grid is not None else None,
+                   grid=[req.grid, req.grid] if req.grid is not None else None,
                    segments=req.segments, subpixel=req.subpixel, locate=req.locate)
-    # spawn, not fork: the server is multi-threaded, and a fresh interpreter is
-    # the point - nothing of the server's heap comes along.
-    ctx = multiprocessing.get_context("spawn")
-    # A pipe, not a Queue: send() writes straight into the OS pipe, so the last
-    # log line before an out-of-memory kill still arrives.
-    receiver, sender = ctx.Pipe(duplex=False)
-    child = ctx.Process(target=_run_child, args=(src, ref, options, OUTPUTS, sender), daemon=True)
-    child.start()
-    sender.close()                    # the child's exit now reads as end-of-file
+    command, scope_limit = _job_command()
+    job["memory_scope"] = ("own scope, MemoryMax %.1f GB" % (scope_limit / 1e9)
+                           if scope_limit else "no separate scope")
+    read_fd, write_fd = os.pipe()
+    log_path = os.path.join(OUTPUTS, ".joblogs", job["id"] + ".log")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    env = dict(os.environ, PYTHONPATH=os.pathsep.join(
+        [HERE] + [p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p]))
+    with open(log_path, "w") as stderr:
+        child = subprocess.Popen(command + [str(write_fd)], stdin=subprocess.PIPE,
+                                 stdout=stderr, stderr=stderr, pass_fds=(write_fd,),
+                                 cwd=ROOT, env=env)
+    os.close(write_fd)                # the child's exit now reads as end-of-file
+    child.stdin.write(json.dumps({"source": src, "reference": ref, "out": OUTPUTS,
+                                  "options": options}).encode())
+    child.stdin.close()
     outcome = None
-    while outcome is None:
-        try:
-            kind, payload = receiver.recv()
-        except EOFError:
-            break
-        if kind == "log":
-            progress(payload)
-        else:
-            outcome = (kind, payload)
-    child.join(timeout=10)
-    receiver.close()
+    with os.fdopen(read_fd, "r") as messages:
+        for line in messages:
+            kind, payload = json.loads(line)
+            if kind == "log":
+                progress(payload)
+            else:
+                outcome = (kind, payload)
+    code = child.wait()
     with _LOCK:
         if outcome and outcome[0] == "done":
             job.update(state="done", finished=time.time(), **outcome[1])
@@ -259,13 +282,17 @@ def _run_job(job: dict, req: RunRequest, src: str, ref: str):
             # tool reports those through metrics.json. Keep them distinguishable.
             job.update(state="crashed", error=outcome[1], finished=time.time())
         else:
-            code = child.exitcode
             why = ""
-            if code is not None and code < 0:
+            if code < 0:
                 why = " (killed by signal %d%s)" % (-code, "; SIGKILL here usually means the "
                                                    "memory cap was reached" if code == -9 else "")
+            try:
+                tail = open(log_path).read().strip().splitlines()[-3:]
+            except OSError:
+                tail = []
             job.update(state="crashed", finished=time.time(),
-                       error="registration process exited with code %s%s" % (code, why))
+                       error="registration process exited with code %s%s%s"
+                             % (code, why, (": " + " | ".join(tail)) if tail else ""))
 
 
 @router.post("/register")

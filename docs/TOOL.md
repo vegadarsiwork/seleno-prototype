@@ -351,11 +351,20 @@ not comparable. `metrics.json:working_grid` records requested, planned and used
 sizes, the limit and its source, and the basis (`requested`, `memory limit` or
 `memory pressure`).
 
-The web app runs each registration in its own spawned child process, so one
-job's leftover heap cannot shrink the next job's headroom. It also runs one
-registration at a time; later submissions show the stage `queued`. A child
-killed at the cap is reported as a crash naming the signal, and a pipe carries
-its log so the last line before the kill still arrives.
+The web app runs each registration as its own process (`seleno.tool.jobrun`).
+When the server is in a capped cgroup and `systemd-run --user --scope` works,
+that process gets its own memory scope with the same cap. Neither the server's
+heap (the image viewer keeps what it reads) nor an earlier job can shrink its
+working grid, and it sees what a capped command-line run sees. After the server
+had grown to about 1 GB, an app run still produced the CLI run's exact
+transform. The app runs one registration at a time; later submissions show the
+stage `queued`. A job killed at its cap is reported as a crash naming the signal.
+Its log comes over a dedicated pipe, not stdout, so the last line before a kill
+still arrives, and stderr is kept in `outputs/.joblogs/<job>.log`.
+
+Raster reads are thread-safe: `LazyRaster` opens one GDAL handle per thread.
+The viewer serves tiles of a cached raster from several request threads, and a
+shared handle once corrupted deflate decoding and aborted the server.
 
 The
 dominant cost is not the imagery — it is masked NCC, which correlates in *full*
