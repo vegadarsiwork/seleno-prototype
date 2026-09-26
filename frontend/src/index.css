@@ -333,6 +333,44 @@ table.data td.st-refused, table.data td.st-error { color: var(--refused); }
 
 .tool-canvas { border-radius: 2px; }
 
+.quality-status { display: flex; justify-content: space-between; gap: 16px; font-size: 16px; }
+.quality-status span { color: var(--text-dim); font-size: 12px; }
+.quality-reasons { color: var(--text-2); padding-left: 20px; }
+.quality-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 20px 0; }
+.quality-cards > div { background: var(--panel-2); padding: 14px; border: 1px solid var(--line); border-radius: 4px; }
+.quality-cards span, .quality-cards strong { display: block; }
+.quality-cards span { color: var(--text-dim); font-size: 12px; }
+.quality-cards strong { font-family: var(--mono); font-size: 23px; margin-top: 6px; }
+.quality-cards small { font-family: var(--sans); font-size: 11px; font-weight: normal; color: var(--text-dim); }
+.quality-table-wrap { overflow-x: auto; }
+.quality-table caption { text-align: left; color: var(--text); padding: 14px 0 8px; font-weight: 600; }
+.quality-table th { text-align: left; font-weight: normal; color: var(--text-dim); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.quality-table td { text-align: right; white-space: nowrap; }
+.quality-table thead th { font-size: 11px; }
+.quality-controls { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; padding-top: 12px; }
+.quality-controls select { margin-left: 8px; background: var(--panel-2); border: 1px solid var(--line-2); padding: 5px; }
+.quality-plot svg { display: block; width: 100%; height: auto; margin-top: 12px; }
+.quality-plot svg text { fill: var(--text-dim); font: 11px var(--sans); }
+.quality-grid { stroke: var(--line-2); }
+.quality-threshold { stroke: var(--text-dim); stroke-dasharray: 5 4; }
+.quality-support { padding: 8px 14px; background: var(--panel-2); margin-top: 14px; }
+.quality-run-details, .quality-independent { margin-top: 16px; }
+.quality-run-details summary, .quality-independent summary { cursor: pointer; padding: 8px 0; color: var(--text-2); }
+.quality-cards em { display: block; font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+.quality-section { margin-top: 22px; }
+.quality-section h4 { font-size: 13px; font-weight: 600; color: var(--text); margin: 0 0 4px; }
+.quality-conventions th, .quality-conventions td { text-align: left; white-space: normal; vertical-align: top; }
+.quality-conventions td { min-width: 150px; }
+.quality-conventions a { color: var(--text); }
+.quality-conventions .caption { margin-top: 3px; }
+.quality-flag { display: inline-block; font-size: 11px; padding: 1px 6px; border: 1px solid var(--line-2); border-radius: 2px; }
+.quality-flag.ok { color: var(--accepted); border-color: #2f5a3a; }
+.quality-flag.warn { color: var(--warning); border-color: #5a4a25; }
+.quality-flag.bad { color: var(--refused); border-color: #5c3030; }
+.quality-gap { fill: var(--line); opacity: .45; }
+.quality-bin-median { stroke: var(--s3); stroke-width: 2.5; }
+.quality-bin-p95 { stroke: var(--s2); stroke-width: 2; stroke-dasharray: 6 4; }
+
 .tool-wipe {
   position: relative; display: inline-block; vertical-align: top;
   border-radius: 2px; overflow: hidden;

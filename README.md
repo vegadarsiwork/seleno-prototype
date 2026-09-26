@@ -359,9 +359,13 @@ The commands below are written as `capped python …`. Without `systemd-run`
 (Windows, macOS), drop `capped` and close other heavy programs. Also:
 
 - Run **one heavy job at a time**.
-- The tool sizes its working grid to 50% of the memory it can see, and respects
-  the cap above. It logs `working grid capped at N px` when it does so; that is
-  expected.
+- The tool plans its working grid from the memory **limit** (the cap above, else
+  physical RAM), so the same inputs and settings give the same result on every
+  run. It logs `working grid capped at N px` when the limit is the constraint;
+  that is expected. `working grid reduced … not directly comparable` means free
+  memory was too short even for that plan: close other programs and rerun.
+- The web app runs one registration at a time; further submissions wait as
+  `queued`.
 
 ### 6.1 The web app
 
@@ -382,18 +386,28 @@ Using it:
    - **Model**: `auto`, `similarity`, `affine` or `homography`.
    - **Working grid**: size of the coarse grid. "Sensor default" is usually right.
      The published OHRC/TMC-2 results used 2048.
-   - **Coverage grid**: N × N cells used for the uniformity metric (12 × 12 for
-     the published results).
+   - **Coverage grid**: N × N cells for the uniformity metric and the held-out
+     split. **Sensor default** (the default) uses the source's profile and shows
+     the value it resolves to: 12 × 12 for IIRS, 8 × 8 otherwise. The published
+     OHRC/TMC-2 results used 12 × 12. The grid changes the fold layout and can
+     change the chosen model, so pin it when comparing runs.
    - **Segments**: separate transforms along long strips (6 for OHRC/TMC-2).
    - **ECC sub-pixel polish**: kept only if it improves a separate validation set.
 4. Press **Register**. The **Run** log streams each stage live: placement,
    matcher candidates, fine stage and model choice. OHRC → NAC takes about 2 min,
    TMC-2 → SELENE about 5 min, and IIRS → WAC 3–5 min.
 5. **Result**:
-   - The **Metrics** table shows status and reasons, method, inliers, inlier
-     ratio, check points, RMSE in source px / reference px / m, median and p90,
-     sub-pixel yes/no, correlation patch, terrain term, coverage and extrapolated
-     area.
+   - The **Registration quality** panel comes first: whether quality acceptance
+     failed and why, all-held-out RMSE / p95 / fraction below one source pixel
+     with 95% spatial-block bootstrap intervals, raw and screened error tables
+     in native source pixels and in surface east/north metres on the reference
+     datum, the same errors restated in NASA ASP, USGS ISIS and JAXA Kaguya TC
+     reporting forms, error profiles along and across the strip, fit-point
+     support and a final-warp validity check. See `docs/TOOL.md`.
+   - **Run details** (collapsed) holds the **Metrics** table: status and
+     reasons, method, inliers, inlier ratio, check points, source / reference /
+     surface RMSE, median and p90, correlation patch, terrain term, coverage and
+     extrapolated area.
    - **Degraded capability** lists every assumption the tool could not verify.
    - The viewer tabs are **Zoom & compare**, **Match lines**, **Before / after**
      and **Composite**. Zoom & compare shows both images at full resolution with
@@ -638,7 +652,8 @@ PYTHONPATH=backend python -m seleno profiles
 | The first run hangs at "Loaded LightGlue model", or fails offline | The weights (~50 MB) download on first use. Connect once, or copy `~/.cache/torch/hub/checkpoints/` from another machine |
 | `FutureWarning: torch.jit.script is not supported in Python 3.14+` | Harmless |
 | `NotGeoreferencedWarning` | Harmless for PNG/JPEG inputs; they have no map coordinates |
-| `working grid capped at N px (asked for M)` | Expected. The tool fits the grid to the memory it has |
+| `working grid capped at N px (asked for M)` | Expected. The grid is planned from the memory limit, identically on every run |
+| `working grid reduced to N px … not directly comparable` | Free memory was short of the plan; the run is valid but not comparable with others. Free memory and rerun |
 | The TMC-2 morning-SELENE case is `failed` | Expected. The low-Sun morning map doesn't match this high-Sun strip well enough, so the tool refuses |
 | IIRS runs take minutes and write 1.4–1.8 GB | Expected. The export keeps all 256 bands at WAC resolution |
 | `python -m seleno`: `No module named seleno` | Prefix `PYTHONPATH=backend`, or run from inside `backend/` |

@@ -45,7 +45,9 @@ export const legacyPairImageUrl = (pairId, which, maxSide = 640) =>
 // --- Phase 7 registration tool ------------------------------------------- //
 export const toolFiles = () => jget('/api/tool/files')
 export const toolRegister = (payload) => jpost('/api/tool/register', payload)
+export const toolProfiles = () => jget('/api/tool/profiles')
 export const toolJob = (id) => jget(`/api/tool/jobs/${id}`)
+export const toolQuality = (id) => jget(`/api/tool/jobs/${id}/quality`)
 export const toolFile = (id, name) => jget(`/api/tool/jobs/${id}/file/${name}`)
 export const toolFileUrl = (id, name) => `${BASE}/api/tool/jobs/${id}/file/${name}`
 export const toolDownloadUrl = (id) => `${BASE}/api/tool/jobs/${id}/download`

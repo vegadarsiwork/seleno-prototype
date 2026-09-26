@@ -306,7 +306,7 @@ def t_full_artifact_set_is_written():
     r = write_png(os.path.join(TMP, "art_b.png"), np.roll(a, 5, axis=1))
     res = run(s, r)
     assert res.status != "failed", res.reason
-    want = ["matches.csv", "metrics.json", "transform.json", "overlay.png", "report.md"]
+    want = ["matches.csv", "metrics.json", "quality.json", "transform.json", "overlay.png", "report.md"]
     missing = [f for f in want if not os.path.exists(os.path.join(res.out_dir, f))]
     assert not missing, "missing artifacts: %s" % missing
     reg = [f for f in os.listdir(res.out_dir) if f.startswith("registered.")]
@@ -318,7 +318,7 @@ def t_full_artifact_set_is_written():
 
 
 def t_rmse_is_reported_in_four_units():
-    """One error, four units, and they must agree with each other."""
+    """Directional errors retain their units; metres scale the reference error."""
     master = terrain(21, n=1024)
     src, ref = geo_pair(master, 2.0, 4.0, "u")
     res = run(src, ref, max_side=256)
@@ -332,12 +332,17 @@ def t_rmse_is_reported_in_four_units():
     ref_px = a_["rmse_reference_px"]
     assert abs(a_["rmse_m"] - ref_px * u["metres_per_reference_px"]) < 0.05, \
         "metres disagree with reference px"
-    assert abs(a_["rmse_source_px"] - ref_px * u["source_px_per_reference_px"]) < 0.05, \
-        "source px disagree with reference px"
-    assert abs(a_["rmse_working_px"] - ref_px / u["reference_decimation"]) < 0.05, \
-        "working px disagree with reference px"
-    return "ref %.3f px = %.2f m = %.3f src px = %.3f working px" % (
-        ref_px, a_["rmse_m"], a_["rmse_source_px"], a_["rmse_working_px"])
+    assert ref_px == a_["check_point_reference_rmse_px"], "reference headline must use forward transfer"
+    assert a_["rmse_source_px"] == a_["check_point_source_rmse_px"], "source headline must use native backward transfer"
+    # Polar stereographic this close to the pole has scale ~1, so surface and
+    # nominal metres must agree here; elsewhere they need not.
+    assert a_["rmse_ground_m"] is not None, "a georeferenced reference must give surface metres"
+    assert abs(a_["rmse_ground_m"] - a_["rmse_m"]) < 0.01 * max(a_["rmse_m"], 1e-3), \
+        "surface %.4f m vs nominal %.4f m at map scale ~1" % (a_["rmse_ground_m"], a_["rmse_m"])
+    q = json.load(open(os.path.join(res.out_dir, "quality.json")))
+    assert q["ground"]["all"]["std_en_m"] is not None and q["conventions"], "quality diagnostics missing"
+    return "ref %.3f px = %.2f nominal m = %.2f surface m; %.3f src px; %.3f working px" % (
+        ref_px, a_["rmse_m"], a_["rmse_ground_m"], a_["rmse_source_px"], a_["rmse_working_px"])
 
 
 def t_subpixel_flag_is_about_source_pixels():
@@ -368,8 +373,8 @@ def t_reference_sampling_is_a_note_not_a_failure():
     acc = m["accuracy"]
     assert acc["subpixel_floor_source_px"] is not None
     assert acc["subpixel_floor_source_px"] > 1.0, acc["subpixel_floor_source_px"]
-    assert acc["subpixel_attainable"] is False, \
-        "legacy flag describes the nominal one-reference-pixel sampling assumption"
+    assert acc["subpixel_attainable"] is None, \
+        "reference sampling alone cannot establish subpixel attainability"
     joined = " ".join(m.get("notes") or [])
     assert "sampling scale" in joined, "the reference sampling must be stated: %r" % joined
     assert "source px" in m["accuracy_statement"]

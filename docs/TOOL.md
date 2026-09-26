@@ -30,9 +30,10 @@ that leaves no artifact is indistinguishable from a crash, so there is always a
 | `matches.csv` | verified fit points with a strict per-cell quota; `src_x, src_y, ref_x, ref_y, confidence, inlier` in original source and full-resolution reference pixel centres |
 | `matches_all.csv` | every fit candidate before the delivery quota, including outliers with `inlier=0`; excludes validation/test points |
 | `tiepoints.npz` | when the native fit is adopted: all measured native-stage points, working coordinates, native source coordinates, confidence and fit/validation/test labels |
-| `registered.tif` | all original source bands on the native reference grid, cropped to the registered footprint; adaptive 1–4× supersampling per axis and NaN nodata |
+| `registered.tif` | all original source bands on the native reference grid, cropped to the registered footprint; adaptive 1–4× supersampling per axis and NaN nodata. When the reference is finer than the source, every N-th reference pixel is written (N = reference px per source px, e.g. 7 for IIRS on 7.4 m TC) so the source is never upsampled. An export needing more than half the free disk is skipped and reported |
 | `transform.json` | working-grid residual matrix, `matrix_reference_px`, frame, decomposition, optional `local_field` B-spline coefficients and `parallax` DEM sampler/coefficient, optional segment matrices and unit conversions |
-| `evaluation.json` | sealed test coordinates, split, exact matrix and complete-model hashes for recomputation |
+| `evaluation.json` | sealed test coordinates, split, exact matrix and complete-model hashes for recomputation; directional reference and surface east/north error vectors |
+| `quality.json` | raw/screened native error distributions, surface east/north metres, threshold rates, per-point residuals, along/across-track profiles, block-bootstrap intervals, final-warp validity, agency-style statistics, support and acceptance; also included as `metrics.json:quality` |
 | `metrics.json` | accuracy, match counts, distribution, illumination, pair character, every method tried, status and reason |
 | `overlay.png` | source and reference with tie lines, over a checkerboard of reference and registered |
 | `report.md` | the same numbers as prose |
@@ -105,6 +106,78 @@ the coordinates, screen flags, rule, partition and complete-model fingerprint.
 Both raw and screened statistics remain visible. Invalid predictions retain
 `invalid_n` and fail acceptance, while valid predictions still have statistics.
 
+**Quality scorecard.** The result opens with all-held-out native source RMSE,
+p95, fraction strictly below one source pixel, and invalid count. Tables place
+all held-out observations beside the neighbour-screened subset, in separate
+source/backward and reference/forward grids. They include median, p90, p95,
+maximum, x/y bias and component NMAD (`1.4826 × median absolute deviation from
+the component median`). NMAD describes scatter; it does not remove or replace bias.
+The interactive strip plot shows error magnitude or signed sample/line errors;
+screened-out observations can be toggled, and invalid predictions remain marked.
+
+`thresholds` records strict `<0.25`, `<0.5`, `<1` and `<2` pixel counts. Its
+`fraction_all` includes invalid predictions as unsuccessful; `fraction_valid`
+uses only finite observations. Empty sets have null fractions. Distance
+statistics use finite observations and retain both valid and invalid counts.
+The older `within_1_px` field keeps its valid-observation denominator for
+compatibility; acceptance already fails on any invalid held-out prediction.
+
+`distribution.valid_pixel_support` measures the share of valid overlap pixel
+centres inside/outside the fit-point hull. Up to 100,000 uniformly ranked valid
+pixels are sampled in bounded blocks; smaller overlaps are evaluated entirely.
+This avoids the thin-strip bias of using coarse grid-cell centres. The original
+grid-based coverage/extrapolation gates remain unchanged: the new support
+estimate is an additional diagnostic, not a relaxation of acceptance.
+
+It also reports the distance from each sampled valid pixel to its closest fit
+point (`distance_to_fit_point`, native reference px): the maximum is the radius
+of the largest unsupported gap, which being inside the hull does not rule out.
+
+**Surface metres.** Nominal metres (`rmse_m`) multiply a reference-pixel error by
+the reference's declared pixel size. On a cylindrical map that overstates
+east-west distance by 1/cos(latitude): about 1.25x at 37 S and 3.2x at 72 S on
+the WAC mosaic. When the reference has a CRS, every held-out forward error is
+therefore also mapped through the local Jacobian of that CRS (native pixel
+centre -> geodetic longitude/latitude -> east/north metres on the CRS's own
+ellipsoid, `seleno/tool/geodesy.py`). `held_out_ground_*`, `check_point_ground_*`
+and the headline `rmse_ground_m` hold the result, with component mean and
+1-sigma (`bias_en_m`, `std_en_m`), and `evaluation.json` keeps every vector.
+They are relative to the reference, not absolute lunar positions.
+
+**Where the error is.** `quality.json:profiles` bins all held-out native source
+errors along the strip's long axis (3-12 bins) and across it (2-5 bins) over the
+whole image, so unmeasured stretches appear as empty bins; a bin's p95 is only
+quoted with 8+ observations. `drift_xy_px_per_1000` is the least-squares slope of
+each component along the strip. `intervals` gives 95% spatial-block bootstrap
+intervals (2000 replicates, seed 0) that resample whole held-out split cells,
+because neighbouring matches are not independent; they cover sampling only, not
+bias shared with the reference or matcher.
+
+**Final-warp validity.** `quality.json:warp` evaluates the complete exported
+inverse map on a lattice over its footprint and compares its Jacobian with the
+base (global/segment) model's: `folded_fraction` (orientation flips),
+`relative_area` and `relative_shear` of the local field/terrain terms, and the
+size of the non-global correction. Flags are diagnostic, not acceptance gates.
+
+**Agency-style statistics.** `quality.json:conventions` restates the same
+errors in the form each source publishes, checked against the primary sources
+on 2026-09-26: NASA ASP `bundle_adjust` (mean and median reprojection error per
+image, "under 1 pixel, ideally under 0.5 pixels", at least a dozen points);
+USGS ISIS `jigsaw` (sample, line and overall residual in pixels); JAXA Kaguya TC
+(Haruyama et al., LPSC 2012 #1200: mean/1-sigma longitude 5.4/8.0 m and latitude
+3.6/7.2 m over nine repeated sites at 10 m GSD), with ours also per source GSD;
+empirical CE90/CE95; and SLDEM2015's practice of reporting spatial variation.
+Every row states how the measurement differs. None is a pass mark: an agency
+residual comes from a camera model and triangulated ground points, ours from
+held-out matcher correspondences through a 2-D warp.
+
+The UI separates export completion, quality acceptance and independent checks.
+The endpoint `GET /api/tool/jobs/{id}/quality` reconstructs diagnostics from
+saved JSON evidence without reading the rasters or changing files. It checks
+the complete transform hash against metrics and evaluation. Older runs can
+therefore gain source p95, threshold rates and residual plots without a rerun;
+missing reference vectors/support remain unavailable rather than inferred.
+
 **Significance and model terms.** Each coarse candidate must pass an a-contrario
 number-of-false-alarms test (`log10_nfa`) and geometry checks for folds, scale,
 anisotropy and area-scale variation across the overlap. Dense fitting uses loose
@@ -121,7 +194,12 @@ working/reference transfer error in several units, plus backward transfer measur
 directly in native source coordinates (`check_point_source_*`). The source error
 is not inferred by multiplying a symmetric transfer distance by a nominal GSD ratio.
 `check_point_reference_*` separately measures forward transfer in native reference
-coordinates; metres use the reference's declared sampling. For example:
+coordinates. The headline `rmse_reference_px` now uses that directional error,
+not a converted symmetric working-grid residual. Metres use the reference's
+declared sampling and are explicitly nominal reference-scale distances, not
+absolute geolocation accuracy or a correction for map distortion. The legacy
+`subpixel_attainable` is null: sampling ratio alone cannot establish attainability.
+For example:
 
 ```json
 "rmse_source_px": 2.285, "rmse_reference_px": 1.6914,
@@ -259,9 +337,27 @@ equatorial TMC-2/IIRS pairs have no available terrain term.
 
 ## 6. Memory
 
-The working grid is capped against the smaller of `MemAvailable` and cgroup v2
-headroom, checking limits on all ancestors and discounting reclaimable page
-cache from current usage. The
+The working grid is **planned from the memory limit**: the tightest cgroup v2
+`memory.max` on the process or its ancestors, else physical memory, less a 1 GiB
+reserve for the process itself, budgeting 50%. It is not planned from what
+happens to be free. The working grid moves the placement window, the folds and
+the chosen model. When it followed free memory, the same pair and settings gave
+1.3 px on one run and 3.0 px on another. Under the same cap it is now the same
+on every run: an app run and a CLI run of IIRS 20240119 → WAC produced
+bit-identical transforms. Free memory is still checked, as the smaller of
+`MemAvailable` and cgroup headroom net of reclaimable page cache. When it cannot
+hold the planned grid, the grid shrinks further and the note says the result is
+not comparable. `metrics.json:working_grid` records requested, planned and used
+sizes, the limit and its source, and the basis (`requested`, `memory limit` or
+`memory pressure`).
+
+The web app runs each registration in its own spawned child process, so one
+job's leftover heap cannot shrink the next job's headroom. It also runs one
+registration at a time; later submissions show the stage `queued`. A child
+killed at the cap is reported as a crash naming the signal, and a pipe carries
+its log so the last line before the kill still arrives.
+
+The
 dominant cost is not the imagery — it is masked NCC, which correlates in *full*
 mode and allocates FFT buffers of (2H−1)×(2W−1) in float64, several at once.
 Measured at roughly 900 bytes per target-grid pixel, so a 2048² grid peaks near

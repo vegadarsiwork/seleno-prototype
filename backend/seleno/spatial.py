@@ -123,6 +123,66 @@ def extrapolation_fraction(pts: np.ndarray, shape: tuple[int, int],
     return float((~inside).sum()) / len(cells)
 
 
+def valid_pixel_support(points, valid_mask, max_samples=100_000, scale=1.0, unit="mask px"):
+    """Estimate hull support on actual valid pixel centres, not cell centres.
+
+    Equally spaced ranks in the valid-pixel list give every valid pixel equal
+    representation even for a one-pixel-wide strip. Scan in bounded blocks to
+    avoid allocating coordinates for an entire full-resolution image.
+    This diagnostic does not replace the established acceptance gates.
+
+    Inside the hull is not the same as near a measurement, so the distance
+    from each sampled pixel to its closest fit point is reported too; its
+    maximum is the radius of the largest unsupported gap. `scale` converts
+    mask pixels to the unit quoted (native reference pixels for a decimated
+    working grid).
+    """
+    if max_samples < 1:
+        raise ValueError("max_samples must be positive")
+    mask = np.asarray(valid_mask, bool)
+    if mask.ndim != 2:
+        raise ValueError("valid_mask must be two dimensional")
+    count = int(mask.sum())
+    report = {"valid_pixels": count, "sampled_pixels": min(count, max_samples),
+              "valid_fraction_of_frame": float(count / mask.size) if mask.size else 0.,
+              "supported_fraction": None, "extrapolation_fraction": None,
+              "distance_to_fit_point": None,
+              "basis": "valid overlap pixel centres inside the fit-point convex hull",
+              "sampling": "all valid pixels" if count <= max_samples else "uniform ranks among valid pixels"}
+    if not count:
+        return report
+    ranks = np.linspace(0, count - 1, min(count, max_samples), dtype=np.int64)
+    samples = []
+    flat = mask.ravel()
+    seen = 0
+    for start in range(0, flat.size, 1_000_000):
+        indices = np.flatnonzero(flat[start:start + 1_000_000])
+        lo, hi = np.searchsorted(ranks, [seen, seen + len(indices)])
+        if hi > lo:
+            samples.append(start + indices[ranks[lo:hi] - seen])
+        seen += len(indices)
+    ids = np.concatenate(samples)
+    y, x = np.divmod(ids, mask.shape[1])
+    pts = np.asarray(points, float).reshape(-1, 2)
+    pts = pts[np.isfinite(pts).all(axis=1)]
+    hull = _convex_hull(pts)
+    inside = np.zeros(len(ids), bool)
+    if len(hull) >= 3:
+        inside[:] = True
+        for a, b in zip(hull, np.roll(hull, -1, axis=0)):
+            inside &= ((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0])) >= -1e-9
+    report.update(supported_fraction=float(inside.mean()),
+                  extrapolation_fraction=float((~inside).mean()))
+    if len(pts):
+        from scipy.spatial import cKDTree
+        distance = cKDTree(pts).query(np.column_stack([x, y]))[0] * float(scale)
+        report["distance_to_fit_point"] = {
+            "median": float(np.median(distance)), "p95": float(np.percentile(distance, 95)),
+            "max": float(distance.max()), "scale": float(scale),
+            "unit": unit}
+    return report
+
+
 def _convex_hull(p: np.ndarray) -> np.ndarray:
     """Counter-clockwise convex hull, monotone chain. Kept local to avoid
     pulling OpenCV or SciPy into this module for twenty lines of geometry."""

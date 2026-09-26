@@ -3,17 +3,20 @@
 Separate from the endpoints in `app.py`, which wrap the earlier OHRC-specific
 pipeline. These drive `seleno.tool.register` on arbitrary file pairs: the same
 entry point the CLI uses, with the same artifact set landing on disk. The
-server adds nothing to the result and hides nothing from it - every number the
-UI shows is read back out of the job's own `metrics.json`.
+UI reads the job's metrics and frozen evaluation evidence. Read-only quality
+diagnostics can also be computed for older jobs without rerunning registration.
 
-Runs happen in a worker thread and stream their real stage transitions through
-`register(progress=...)`, so the progress the UI draws is the pipeline's own
-log rather than a timer pretending to be one.
+Each run happens in its own child process, watched by a worker thread that
+streams its real stage transitions through `register(progress=...)`, so the
+progress the UI draws is the pipeline's own log rather than a timer pretending
+to be one. The child returns all of its memory when it exits, so one job's
+leftovers cannot shrink the next job's working grid.
 """
 from __future__ import annotations
 
 import io
 import json
+import multiprocessing
 import os
 import re
 import shutil
@@ -29,6 +32,7 @@ from starlette.concurrency import run_in_threadpool
 
 from seleno.tool import FAILURE_CODES, register
 from seleno.tool import view as tview
+from seleno.tool import quality as quality_diagnostics
 from seleno.tool.profiles import Profiles
 from seleno.tool.scene import UnreadableInput
 
@@ -180,8 +184,42 @@ def _resolve(rel: str) -> str:
     return full
 
 
+def _run_child(src: str, ref: str, options: dict, out: str, channel):
+    """One registration in a fresh process, streaming its log to the server.
+
+    A registration run inside the server left gigabytes of heap behind it, and
+    the next job sized its working grid from what was left: the same pair and
+    settings then gave different results. A process per job returns all of its
+    memory when it exits, so every job starts from the same headroom.
+    """
+    try:
+        res = register(src, ref, out, progress=lambda line: channel.send(("log", line)),
+                       verbose=False, **options)
+        channel.send(("done", {"job_dir_id": res.job_id, "status": res.status,
+                               "reason": res.reason, "metrics": res.metrics}))
+    except Exception as exc:                                          # noqa: BLE001
+        channel.send(("crashed", "%s: %s" % (type(exc).__name__, exc)))
+
+
+# One registration at a time. Two at once shared one memory cap: each planned
+# its working grid from what the other left free, and together they could reach
+# the cap and be killed. Later jobs wait their turn instead.
+_RUN_SLOT = threading.Semaphore(1)
+
+
 def _worker(jid: str, req: RunRequest, src: str, ref: str):
     job = _JOBS[jid]
+    with _LOCK:
+        job["stage"] = "queued"
+    with _RUN_SLOT:
+        with _LOCK:
+            job["stage"] = "starting"
+            job["started"] = time.time()
+        _run_job(job, req, src, ref)
+
+
+def _run_job(job: dict, req: RunRequest, src: str, ref: str):
+    """Run one registration in a child process and record its outcome on `job`."""
 
     def progress(line: str):
         with _LOCK:
@@ -189,21 +227,45 @@ def _worker(jid: str, req: RunRequest, src: str, ref: str):
                                "line": line})
             job["stage"] = line.split(":")[0].strip() if ":" in line else line[:40]
 
-    try:
-        res = register(src, ref, OUTPUTS, model=req.model, max_side=req.max_side,
-                       grid=(req.grid, req.grid) if req.grid is not None else None, segments=req.segments,
-                       subpixel=req.subpixel, locate=req.locate,
-                       progress=progress, verbose=False)
-        with _LOCK:
-            job.update(state="done", job_dir_id=res.job_id, status=res.status,
-                       reason=res.reason, metrics=res.metrics,
-                       finished=time.time())
-    except Exception as exc:                                          # noqa: BLE001
-        # A crash here is a bug in the tool, not a registration failure - the
-        # tool reports those through metrics.json. Keep them distinguishable.
-        with _LOCK:
-            job.update(state="crashed", error="%s: %s" % (type(exc).__name__, exc),
-                       finished=time.time())
+    options = dict(model=req.model, max_side=req.max_side,
+                   grid=(req.grid, req.grid) if req.grid is not None else None,
+                   segments=req.segments, subpixel=req.subpixel, locate=req.locate)
+    # spawn, not fork: the server is multi-threaded, and a fresh interpreter is
+    # the point - nothing of the server's heap comes along.
+    ctx = multiprocessing.get_context("spawn")
+    # A pipe, not a Queue: send() writes straight into the OS pipe, so the last
+    # log line before an out-of-memory kill still arrives.
+    receiver, sender = ctx.Pipe(duplex=False)
+    child = ctx.Process(target=_run_child, args=(src, ref, options, OUTPUTS, sender), daemon=True)
+    child.start()
+    sender.close()                    # the child's exit now reads as end-of-file
+    outcome = None
+    while outcome is None:
+        try:
+            kind, payload = receiver.recv()
+        except EOFError:
+            break
+        if kind == "log":
+            progress(payload)
+        else:
+            outcome = (kind, payload)
+    child.join(timeout=10)
+    receiver.close()
+    with _LOCK:
+        if outcome and outcome[0] == "done":
+            job.update(state="done", finished=time.time(), **outcome[1])
+        elif outcome:
+            # A crash here is a bug in the tool, not a registration failure - the
+            # tool reports those through metrics.json. Keep them distinguishable.
+            job.update(state="crashed", error=outcome[1], finished=time.time())
+        else:
+            code = child.exitcode
+            why = ""
+            if code is not None and code < 0:
+                why = " (killed by signal %d%s)" % (-code, "; SIGKILL here usually means the "
+                                                   "memory cap was reached" if code == -9 else "")
+            job.update(state="crashed", finished=time.time(),
+                       error="registration process exited with code %s%s" % (code, why))
 
 
 @router.post("/register")
@@ -258,9 +320,21 @@ def _job_dir(jid: str) -> str:
     return d
 
 
-ARTIFACTS = ("evaluation.json", "metrics.json", "transform.json", "matches.csv", "report.md",
+ARTIFACTS = ("evaluation.json", "quality.json", "metrics.json", "transform.json", "matches.csv", "report.md",
              "preview.json", "overlay.png", "source.png", "reference.png",
              "registered.png", "registered.tif")
+
+
+@router.get("/jobs/{jid}/quality")
+def quality(jid: str):
+    """Recompute from sealed small JSON evidence; never read the large rasters."""
+    directory = _job_dir(jid)
+    try:
+        return quality_diagnostics.load(directory)
+    except FileNotFoundError:
+        raise HTTPException(404, "This run has no saved held-out evaluation evidence")
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(409, "Quality evidence cannot be assessed: %s" % exc)
 
 
 @router.get("/jobs/{jid}/artifacts")

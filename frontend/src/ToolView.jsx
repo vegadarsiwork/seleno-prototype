@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as api from './api'
 import { Panel, num, pct } from './components'
 import DeepZoom, { Explore } from './DeepZoom'
+import QualityPanel from './QualityPanel'
 
 const MODELS = ['auto', 'similarity', 'affine', 'homography']
 const SIDES = [768, 1024, 2048, 4096]
@@ -189,7 +190,9 @@ function MetricsTable({ m }) {
   return (
     <table className="tool-table">
       <tbody>
-        <Row k="status" v={String(m.status).toUpperCase()} tone={tone} />
+        <Row k="run status" v={String(m.status).toUpperCase()} tone={tone} />
+        <Row k="quality acceptance" v={m.acceptance?.status || 'unknown'}
+             tone={m.acceptance?.passed === false ? 'bad' : 'warn'} />
         {m.reason && <Row k="reason" v={m.reason} mono={false} />}
         <Row k="method used" v={m.method_used} />
         <Row k="model" v={m.model} />
@@ -198,17 +201,17 @@ function MetricsTable({ m }) {
         <Row k="inlier ratio" v={pct(m.matches?.inlier_ratio)} />
         <Row k="held-out points" v={a.held_out_n} />
         {a.check_point_n != null && (
-          <Row k="check points" mono={false}
-               v={`${a.check_point_n} of ${a.held_out_n} held-out (${a.check_point_rejected_n} isolated mismatches set aside, without consulting the exported model)`} />
+          <Row k="screened held-out points" mono={false}
+               v={`${a.check_point_n} of ${a.held_out_n} retained (${a.check_point_rejected_n} set aside by neighbour screening)`} />
         )}
         {/* The working grid is internal to the run, so a residual quoted only in
             its pixels says nothing about either input. All four, always. */}
         <Row k="RMSE (source px)" v={num(a.rmse_source_px, 3)}
-             tone={a.subpixel ? 'ok' : ''} />
-        <Row k="RMSE (reference px)" v={num(a.rmse_reference_px, 3)} />
-        <Row k="RMSE (m)" v={a.rmse_m == null
-          ? <span title="no scale on the reference; metres would be invented">null</span>
-          : num(a.rmse_m, 3)} />
+             tone={m.acceptance?.passed ? 'ok' : ''} />
+        <Row k="forward RMSE (reference px)" v={num(a.check_point_reference_rmse_px ?? a.held_out_reference_rmse_px, 3)} />
+        {a.rmse_ground_m != null && (
+          <Row k="surface RMSE (east/north m)" v={num(a.rmse_ground_m, 1)} />
+        )}
         <Row k="RMSE (working-grid px)" v={num(a.rmse_working_px, 4)} />
         {a.check_point_source_median_px != null && (
           <Row k="median / p90 (source px)"
@@ -222,8 +225,7 @@ function MetricsTable({ m }) {
         {a.held_out_source_invalid_n > 0 && (
           <Row k="invalid held-out predictions" v={`${a.held_out_source_invalid_n}; acceptance fails`} />
         )}
-        <Row k="sub-pixel (source)" v={a.subpixel == null ? 'unknown — no scale'
-          : String(a.subpixel)} tone={a.subpixel ? 'ok' : ''} />
+        <Row k="independently verified" v={String(m.acceptance?.independently_verified ?? false)} />
         <Row k="accuracy" mono={false} v={m.accuracy_statement} />
         <Row k="status meaning" mono={false} v={m.status_meaning} />
         <Row k="refinement" v={a.subpixel_method} />
@@ -253,10 +255,10 @@ function MetricsTable({ m }) {
         )}
         <Row k="coverage" v={`${pct(d.coverage_fraction)} of ${d.eligible_cells} eligible cells`} />
         <Row k="dispersion" v={num(d.dispersion, 3)} />
-        <Row k="extrapolated area" v={pct(d.extrapolation_fraction)} />
+        <Row k="extrapolation (cell estimate)" v={pct(d.extrapolation_fraction)} />
         <Row k="Δ Sun azimuth" v={il.delta_sun_azimuth_deg == null ? 'unknown'
           : num(il.delta_sun_azimuth_deg, 2) + '°'} />
-        <Row k="cross-correlation" v={num(p.cross_correlation, 4)} />
+        <Row k="initial fit-region correlation" v={num(p.cross_correlation, 4)} />
         <Row k="scale ratio" v={num(p.scale_ratio, 4)} />
         <Row k="overlap" v={pct(p.overlap_fraction)} />
         <Row k="runtime" v={num(m.runtime_s, 2) + ' s'} />
@@ -412,7 +414,8 @@ export default function ToolView({ view, setView }) {
 
   const [model, setModel] = useState('auto')
   const [maxSide, setMaxSide] = useState('')
-  const [grid, setGrid] = useState(8)
+  // '' sends no grid, so the source's sensor profile decides (iirs: 12 x 12).
+  const [grid, setGrid] = useState('')
   const [segments, setSegments] = useState(0)
   const [subpixel, setSubpixel] = useState(true)
 
@@ -428,6 +431,10 @@ export default function ToolView({ view, setView }) {
       .then((d) => { setFiles(d.files); return d.files })
       .catch((e) => { setErr(String(e)); return [] }), [])
   useEffect(() => { refresh() }, [refresh])
+  const [profiles, setProfiles] = useState(null)
+  useEffect(() => {
+    api.toolProfiles().then((d) => setProfiles(d.profiles)).catch(() => setProfiles(null))
+  }, [])
 
   const filtered = (all, q) => {
     const s = q.trim().toLowerCase()
@@ -440,6 +447,11 @@ export default function ToolView({ view, setView }) {
 
   const byPath = useMemo(() => Object.fromEntries(files.map((f) => [f.path, f])), [files])
   const usesFixture = [src, ref_].some((p) => p && byPath[p]?.kind === 'fixture')
+  // What "Sensor default" resolves to; register() falls back to 8 x 8 when a
+  // profile sets no grid.
+  const sensorGrid = src && profiles
+    ? profiles.find((p) => p.name === byPath[src]?.instrument)?.registration?.grid || [8, 8]
+    : null
 
   // Poll while a run is in flight. The log the server returns is the pipeline's
   // own, so the stages that appear are stages that actually happened.
@@ -463,7 +475,7 @@ export default function ToolView({ view, setView }) {
     setErr(null); setPreview(null); setTab('explore')
     api.toolRegister({
       source: src, reference: ref_, model, max_side: maxSide || null,
-      grid, segments, subpixel,
+      grid: grid || null, segments, subpixel,
     })
       .then((d) => setJob({ id: d.job, state: 'running', log: [], stage: 'starting' }))
       .catch((e) => setErr(String(e)))
@@ -519,7 +531,8 @@ export default function ToolView({ view, setView }) {
           </div>
           <div className="field">
             <label>Coverage grid</label>
-            <select value={grid} onChange={(e) => setGrid(+e.target.value)}>
+            <select value={grid} onChange={(e) => setGrid(e.target.value ? +e.target.value : '')}>
+              <option value="">Sensor default{sensorGrid ? ` (${sensorGrid[0]} × ${sensorGrid[1]})` : ''}</option>
               {[6, 8, 12, 16].map((x) => <option key={x} value={x}>{x} × {x}</option>)}
             </select>
           </div>
@@ -623,6 +636,9 @@ export default function ToolView({ view, setView }) {
           <>
             <div className="section">
               <h3>Result</h3>
+              <QualityPanel metrics={m} jobId={job.id} />
+              <details className="quality-run-details">
+                <summary>Run details and capabilities</summary>
               <div className="grid2">
                 <Panel title="Metrics" meta="metrics.json">
                   <MetricsTable m={m} />
@@ -644,6 +660,7 @@ export default function ToolView({ view, setView }) {
                   </div>
                 </Panel>
               </div>
+              </details>
             </div>
 
             <div className="section">

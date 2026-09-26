@@ -178,7 +178,8 @@ class ValidationFixes(unittest.TestCase):
         from seleno.tool.profiles import Profiles
         profile = Profiles.load().get("iirs")["registration"]
         self.assertEqual(profile, {"max_side": 6144, "grid": [12, 12]})
-        with patch.object(REG, "_available_bytes", return_value=4_000_000_000):
+        with patch.object(REG, "_available_bytes", return_value=4_000_000_000), \
+                patch.object(REG, "_memory_limit", return_value=(5_000_000_000, "test")):
             square, _ = REG._cap_max_side(6144, shape=(10000, 10000))
             strip, _ = REG._cap_max_side(6144, shape=(10000, 500))
         self.assertLess(square, 2048)
@@ -193,6 +194,40 @@ class ValidationFixes(unittest.TestCase):
             self.assertNotEqual(result.status, "failed")
             self.assertEqual(cap.call_args.args[0], expected)
             self.assertEqual(result.metrics["distribution"]["grid"], [12, 12])
+
+    def test_working_grid_follows_the_limit_not_momentary_free_memory(self):
+        limit = (5_767_168_000, "cgroup memory limit")             # a 5500M cap
+        shape = (10568, 660)                                        # the IIRS 20240119 window
+        sides, notes = [], []
+        for free in (5.4e9, 4.9e9, 4.4e9):                          # anything that can hold the plan
+            info = {}
+            with patch.object(REG, "_memory_limit", return_value=limit), \
+                    patch.object(REG, "_available_bytes", return_value=int(free)):
+                side, note = REG._cap_max_side(6144, shape=shape, info=info)
+            sides.append(side)
+            notes.append(note)
+            self.assertEqual(info["basis"], "requested")
+        self.assertEqual(sides, [6144] * 3)
+        self.assertEqual(notes, [None] * 3)
+        # A huge request is capped by the limit, identically whatever is free.
+        capped = set()
+        for free in (5.4e9, 4.9e9):
+            with patch.object(REG, "_memory_limit", return_value=limit), \
+                    patch.object(REG, "_available_bytes", return_value=int(free)):
+                capped.add(REG._cap_max_side(64000, shape=(10000, 10000))[0])
+        self.assertEqual(len(capped), 1)
+
+    def test_memory_pressure_still_shrinks_the_grid_and_says_so(self):
+        info = {}
+        with patch.object(REG, "_memory_limit", return_value=(5_767_168_000, "cgroup memory limit")), \
+                patch.object(REG, "_available_bytes", return_value=3_900_000_000):
+            side, note = REG._cap_max_side(6144, shape=(10568, 660), info=info)
+        # 3.9 GB free is what an app server holding earlier jobs' memory left.
+        self.assertLess(side, info["planned"])
+        self.assertEqual(info["basis"], "memory pressure")
+        self.assertIn("not directly comparable", note)
+        target_px = side * side * 660 / 10568                      # the strip's own aspect
+        self.assertLessEqual(target_px * REG._BYTES_PER_TARGET_PX, 0.5 * 3.9e9 * 1.001)
 
     def test_pass_requires_native_precision_and_statement_uses_source_pixels(self):
         from seleno.tool.scene import Scene

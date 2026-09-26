@@ -45,10 +45,12 @@ from .. import spatial, verify as V
 from . import locate as LOC
 from . import methods as M
 from . import evaluation as E
+from . import geodesy
+from . import quality as Q
 from . import warp_model as WM
 from . import terrain
 from .fitting import balanced_refit
-from .export import write_registered_native, reference_to_source
+from .export import ExportTooLarge, write_registered_native, reference_to_source
 from .coordinates import grid_to_reference, project, sample_backmap
 from .profiles import Profiles
 from .scene import Scene, UnreadableInput, load, normalised
@@ -89,6 +91,10 @@ _CHUNK_ROWS = 256
 # on a TMC-2/SELENE pair peaks at 3.9 GB, i.e. ~930 B per target pixel including
 # the memmap pages that get touched.
 _BYTES_PER_TARGET_PX = 900
+# Kept out of the working-grid plan for the process itself (interpreter, the
+# libraries, lazily opened scenes), so a fresh run under a cap can always hold
+# the grid it planned and the plan does not move with what is free right now.
+_BASELINE_RESERVE = 1 << 30
 
 # Pixel budgets for what a person looks at: each preview panel, and each panel
 # of the overlay.png composite (three of them, in colour, so it is kept smaller).
@@ -150,25 +156,87 @@ def _available_bytes() -> int:
     return min(avail, headroom) if headroom is not None else avail
 
 
-def _cap_max_side(max_side: int, budget_fraction: float = 0.5, shape=None) -> tuple[int, str | None]:
+def _memory_limit() -> tuple[int, str]:
+    """The memory a run may plan for, and where that figure came from.
+
+    The tightest cgroup v2 limit on this process when there is one, else the
+    machine's physical memory. Unlike what happens to be free, it is the same
+    every time a job runs under the same cap.
+    """
+    limit = None
+    try:
+        with open("/proc/self/cgroup") as fh:
+            rel = next(line.split("::", 1)[1].strip() for line in fh if line.startswith("0::"))
+        base = "/sys/fs/cgroup" + rel
+        while base.startswith("/sys/fs/cgroup"):
+            try:
+                value = open(os.path.join(base, "memory.max")).read().strip()
+                if value != "max":
+                    limit = int(value) if limit is None else min(limit, int(value))
+            except OSError:
+                pass
+            if base == "/sys/fs/cgroup":
+                break
+            base = os.path.dirname(base)
+    except Exception:                                                 # noqa: BLE001
+        pass
+    if limit is not None:
+        return limit, "cgroup memory limit"
+    try:
+        with open("/proc/meminfo") as fh:
+            for line in fh:
+                if line.startswith("MemTotal:"):
+                    return int(line.split()[1]) * 1024, "physical memory"
+    except Exception:                                                 # noqa: BLE001
+        pass
+    return 8 << 30, "assumed 8 GiB"
+
+
+def _side_for(budget_bytes: float, shape=None) -> int:
+    allowed_px = max(budget_bytes, 0) / _BYTES_PER_TARGET_PX
+    aspect_factor = (max(shape) / math.sqrt(shape[0] * shape[1])) if shape else 1.0
+    return int(max(512, allowed_px ** 0.5 * aspect_factor))
+
+
+def _cap_max_side(max_side: int, budget_fraction: float = 0.5, shape=None,
+                  info: dict | None = None) -> tuple[int, str | None]:
     """Shrink the working grid so the run cannot exhaust memory.
 
     An earlier version of this tool asked for a 6144^2 working grid on a 15 GB
     machine and was OOM-killed. The size of an unseen reference is not something
-    a caller should have to reason about, so the ceiling is computed here from
-    what the OS actually has free, and the reduction is reported rather than
-    applied silently.
+    a caller should have to reason about, so the ceiling is computed here, and
+    the reduction is reported rather than applied silently.
+
+    The grid is planned from the memory LIMIT, less a fixed reserve, not from
+    what is free at this moment: the working grid changes the placement window,
+    the folds and the chosen model, so a grid that followed free memory made the
+    same inputs and settings give 1.3 px on one run and 3.0 px on another. What
+    is free is still checked. When it cannot hold the planned grid the grid
+    shrinks further, because a run must not be killed, and the note says the
+    result is not comparable with one at the planned size.
     """
-    budget = _available_bytes() * budget_fraction
-    allowed_px = budget / _BYTES_PER_TARGET_PX
-    aspect_factor = (max(shape) / math.sqrt(shape[0] * shape[1])) if shape else 1.0
-    allowed_side = int(max(512, allowed_px ** 0.5 * aspect_factor))
-    if max_side <= allowed_side:
-        return max_side, None
-    return allowed_side, ("working grid capped at %d px a side (asked for %d): "
-                          "%.1f GB available, budgeting %.0f%% of it"
-                          % (allowed_side, max_side, _available_bytes() / 1e9,
-                             100 * budget_fraction))
+    limit, source = _memory_limit()
+    planned = min(max_side, _side_for((limit - _BASELINE_RESERVE) * budget_fraction, shape))
+    free = _available_bytes()
+    safe = _side_for(free * budget_fraction, shape)
+    if info is not None:
+        info.update(requested=max_side, planned=planned, limit_bytes=limit, limit_source=source,
+                    free_bytes=free, budget_fraction=budget_fraction,
+                    reserve_bytes=_BASELINE_RESERVE, bytes_per_px=_BYTES_PER_TARGET_PX)
+    if planned <= safe:
+        if info is not None:
+            info.update(used=planned, basis="requested" if planned == max_side else "memory limit")
+        if planned == max_side:
+            return max_side, None
+        return planned, ("working grid capped at %d px a side (asked for %d) by the %.1f GB %s, "
+                         "budgeting %.0f%% of it after a %.0f GB reserve"
+                         % (planned, max_side, limit / 1e9, source, 100 * budget_fraction,
+                            _BASELINE_RESERVE / 1e9))
+    if info is not None:
+        info.update(used=safe, basis="memory pressure")
+    return safe, ("working grid reduced to %d px a side (planned %d) because only %.1f GB of the "
+                  "%.1f GB %s is free; this result is not directly comparable with a run at "
+                  "the planned size" % (safe, planned, free / 1e9, limit / 1e9, source))
 
 
 _AA_MAX_TAPS = 4
@@ -849,7 +917,8 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     # cost follows area, not the square of its longest dimension.
     window = _source_window(S, R)
     shape = (window[2] - window[0], window[3] - window[1]) if window else R.array.shape[:2]
-    max_side, cap_note = _cap_max_side(max_side, shape=shape)
+    grid_plan = {}
+    max_side, cap_note = _cap_max_side(max_side, shape=shape, info=grid_plan)
     if cap_note:
         log("memory   : %s" % cap_note)
     log("settings  : max_side=%d, grid=%s (explicit options override sensor defaults)" % (max_side, grid))
@@ -1231,9 +1300,17 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                           [[fx.min() - 1.0, fy.min() - 1.0], [fx.max() + 1.0, fy.max() + 1.0]])
         footprint = (int(np.floor(corners[0, 1])), int(np.floor(corners[0, 0])),
                      int(np.ceil(corners[1, 1])) + 1, int(np.ceil(corners[1, 0])) + 1)
-    export_info = write_registered_native(job_dir, S, R, frame, tj,
-                         lattice_interpolators=_lattice_interpolators, cache=cache,
-                         window=footprint)
+    # Never export finer than the source itself (see `write_registered_native`).
+    ratio = conv.get("source_px_per_reference_px")
+    export_step = max(1, int(math.floor(1.0 / ratio))) if ratio and ratio < 1 else 1
+    try:
+        export_info = write_registered_native(job_dir, S, R, frame, tj,
+                             lattice_interpolators=_lattice_interpolators, cache=cache,
+                             window=footprint, step=export_step)
+    except ExportTooLarge as exc:
+        export_info = {"raster": None, "skipped": str(exc)}
+        degraded.append("multi-band export skipped: %s" % exc)
+        log("export    : skipped (%s)" % exc)
     def working_to_source(points):
         return reference_to_source(S, R, frame, project(grid_to_reference(frame), points),
                                    lattice_interpolators=_lattice_interpolators, cache=cache)
@@ -1251,8 +1328,17 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
     rule = ("held-out correspondence within max(3 reference px, 3 robust sigma) of the "
             "median displacement of its 10 nearest held-out neighbours, displacements "
             "taken against the coarse model; the exported model is not consulted")
+    reference_ground, ground_frame = None, None
+    if R.georeferenced:
+        try:
+            ground_frame = geodesy.describe(R.crs)
+            def reference_ground(positions, errors):
+                return geodesy.ground_errors(R.crs, R.transform, positions, errors)
+        except Exception as exc:                                      # noqa: BLE001
+            degraded.append("surface metres unavailable: reference CRS has no usable datum (%s)" % exc)
     acc = E.score_export(job_dir, sealed_test, split, working_to_source=working_to_source,
-                         check_points=check, check_point_rule=rule)
+                         check_points=check, check_point_rule=rule,
+                         reference_ground=reference_ground, ground_frame=ground_frame)
     independent = None
     if ground_truth is not None:
         try:
@@ -1277,7 +1363,22 @@ def register(source: str, reference: str, out_dir: str = "outputs", *,
                              time.time() - t_start, grid, eligible, ov_extrap,
                              conv, fine_info)
     metrics["distribution"]["delivered"] = delivered
+    metrics["distribution"]["valid_pixel_support"] = spatial.valid_pixel_support(
+        corr.ref[vr.inlier_mask], wvalid & Bm, scale=frame.get("reference_decimation", 1),
+        unit="native reference px")
     metrics["export"] = export_info
+    # How the working grid was sized, so runs sized differently are not compared blindly.
+    metrics["working_grid"] = dict(grid_plan, used=max_side)
+    # Diagnostics describe a finished export; they must never undo one.
+    try:
+        metrics["quality"] = Q.load(job_dir, metrics)
+        with open(os.path.join(job_dir, "quality.json"), "w") as fh:
+            json.dump(metrics["quality"], fh, indent=1, allow_nan=False)
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        metrics["quality"] = None
+        metrics["degraded"].append("quality diagnostics unavailable (%s: %s)"
+                                   % (type(exc).__name__, exc))
+        log("quality   : unavailable (%s)" % exc)
     with open(os.path.join(job_dir, "metrics.json"), "w") as fh:
         json.dump(metrics, fh, indent=1)
     layers = _display_layers(S, R, sp, rp, frame, A, Am, B, Bm, warped, wvalid, Hm,
@@ -2365,6 +2466,19 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
 
     units = _rmse_units(None if rmse_px is None else rmse_px * conv["reference_decimation"],
                         conv)
+    # Source and reference transfer errors have different directions and units.
+    # A symmetric working-grid distance is not a native reference displacement.
+    # Check points need at least three survivors; otherwise quote every held-out one.
+    def headline(name):
+        value = acc.get("check_point_" + name)
+        return acc.get("held_out_" + name) if value is None else value
+    ref_rmse = headline("reference_rmse_px")
+    units["rmse_reference_px"] = ref_rmse
+    ref_scale = conv.get("metres_per_reference_px")
+    units["rmse_m"] = (ref_rmse * ref_scale if ref_rmse is not None and ref_scale else None)
+    # The nominal figure ignores map distortion (x cos(latitude) on a cylindrical
+    # map); this one is measured on the datum, point by point.
+    units["rmse_ground_m"] = headline("ground_rmse_m")
 
     reasons = list(_quality_gates(vr.n_inliers, ratio, cov, extrap).values())
     if character.get("overlap_fraction", 1) < 0.15:
@@ -2413,6 +2527,10 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
              # working grid is an internal artefact of this run, so quoting a
              # residual only in its pixels says nothing about either input.
              **units,
+             reference_error_definition="forward transfer in native reference pixel centres",
+             metre_error_definition="forward error at nominal reference sampling; not absolute geolocation accuracy",
+             ground_metre_definition=("forward error in local east/north metres on the reference "
+                                      "datum; relative to the reference, not absolute geolocation"),
              metres_per_pixel=m_per_px,
              units=conv,
              # The problem statement asks for sub-pixel accuracy OF THE SOURCE
@@ -2429,8 +2547,7 @@ def _write_metrics(job_dir, job_id, S, R, character, frame, attempts, best, vr,
              sampling_floor_basis="nominal one-reference-pixel sampling; not an error lower bound",
              subpixel_floor_source_px=(round(conv["source_px_per_reference_px"], 3)
                                        if conv["source_px_per_reference_px"] else None),
-             subpixel_attainable=(None if not conv["source_px_per_reference_px"]
-                                  else bool(conv["source_px_per_reference_px"] < 1.0))),
+             subpixel_attainable=None),  # Sampling alone cannot establish attainability.
          "fine_stage": fine_info,
          "matches": {"candidates": n, "inliers": int(vr.n_inliers),
                      "inlier_ratio": round(ratio, 4)},
@@ -2637,13 +2754,17 @@ def _write_report(job_dir, job_id, S, R, m, tj, attempts):
          "| candidates | %d |" % m["matches"]["candidates"],
          "| inliers | %d |" % m["matches"]["inliers"],
          "| inlier ratio | %.1f%% |" % (100 * m["matches"]["inlier_ratio"]),
-         "| RMSE (px) | %s |" % a.get("rmse_px"),
-         "| RMSE (m) | %s |" % a.get("rmse_m"),
+         "| quality acceptance | %s |" % m["acceptance"]["status"],
+         "| screened source RMSE (native px) | %s |" % a.get("rmse_source_px"),
+         "| forward reference RMSE (native px) | %s |" % a.get("rmse_reference_px"),
+         "| nominal reference-scale RMSE (m; not absolute accuracy) | %s |" % a.get("rmse_m"),
+         "| surface RMSE (east/north m on the reference datum) | %s |" % a.get("rmse_ground_m"),
          "| held-out points | %s |" % a.get("held_out_n"),
-         "| sub-pixel | %s |" % a.get("subpixel"),
+         "| independent verification | %s |" % m["acceptance"]["independently_verified"],
          "| coverage fraction | %.2f |" % d["coverage_fraction"],
          "| dispersion | %.2f |" % d["dispersion"],
-         "| extrapolated area | %.0f%% |" % (100 * d.get("extrapolation_fraction", 0.0)),
+         "| extrapolation (legacy cell-centre estimate) | %.0f%% |" % (100 * d.get("extrapolation_fraction", 0.0)),
+         "| extrapolation (valid overlap pixels) | %s |" % d.get("valid_pixel_support", {}).get("extrapolation_fraction"),
          "| Δ Sun azimuth | %s |" % m["illumination"]["delta_sun_azimuth_deg"],
          "| scale ratio | %s |" % m["pair"]["scale_ratio"],
          "| cross-correlation | %s |" % m["pair"]["cross_correlation"],
@@ -2659,12 +2780,69 @@ def _write_report(job_dir, job_id, S, R, m, tj, attempts):
           "preference: Phase 2 measured that sparse learned matching wins on",
           "same-sensor illumination change while dense NCC wins on anti-correlated",
           "cross-sensor pairs, so the tool tries both and reports which won.\n"]
+    quality = m.get("quality") or {}
+
+    def fmt(v):
+        if v is None:
+            return "–"
+        if isinstance(v, (list, tuple)):
+            return " / ".join(fmt(x) for x in v)
+        return "%.3f" % v if isinstance(v, float) else str(v)
+
+    def table(title, groups, keys, note):
+        raw, screened = groups["all"], groups.get("screened") or {}
+        rows = ["\n## %s\n" % title, note + "\n",
+                "| measurement | all held-out | screened held-out |", "|---|---:|---:|"]
+        rows += ["| %s | %s | %s |" % (k, fmt(raw.get(k)), fmt(screened.get(k))) for k in keys]
+        for index, threshold in enumerate(raw.get("thresholds", [])):
+            other = screened.get("thresholds", [])
+            rows.append("| fraction < %s source px | %s | %s |" %
+                        (threshold["below_px"], fmt(threshold["fraction_all"]),
+                         fmt(other[index]["fraction_all"]) if other else "–"))
+        return rows
+
+    if quality.get("source"):
+        L += table("Held-out native source errors", quality["source"],
+                   ("n", "invalid_n", "rmse_px", "median_px", "p90_px", "p95_px", "max_px",
+                    "bias_xy_px", "std_xy_px", "rmse_xy_px", "nmad_xy_px"),
+                   "Matcher consistency, not independent ground truth. x/y are sample/line. "
+                   "Distance statistics use finite predictions; threshold fractions include "
+                   "invalid predictions as failures.")
+    if quality.get("ground"):
+        L += table("Held-out surface errors (east/north metres)", quality["ground"],
+                   ("n", "invalid_n", "rmse_m", "median_m", "p90_m", "p95_m", "max_m",
+                    "bias_en_m", "std_en_m", "nmad_en_m"),
+                   "Forward error on the reference datum (%s), relative to the reference, not "
+                   "absolute geolocation." % (quality.get("ground_frame") or {}).get("datum", "unknown"))
+    intervals = (quality.get("intervals") or {}).get("source") or {}
+    if intervals.get("all", {}).get("rmse_px"):
+        L += ["\n95%% spatial-block bootstrap (%d cells): all held-out RMSE %s px, p95 %s px; "
+              "screened RMSE %s px.\n" % (intervals["all"]["blocks"], fmt(intervals["all"]["rmse_px"]),
+                                        fmt(intervals["all"]["p95_px"]),
+                                        fmt((intervals.get("screened") or {}).get("rmse_px")))]
+    if quality.get("conventions"):
+        L += ["\n## Agency-style statistics\n",
+              "The same errors restated in the forms these sources publish. The form matches; "
+              "the measurement does not, so none of these is a pass mark.\n",
+              "| source | their statistic | this run | differs because |", "|---|---|---|---|"]
+        for c in quality["conventions"]:
+            ours = "; ".join("%s %s" % (k, fmt(v)) for k, v in c["ours"].items()
+                             if k not in ("basis", "per_source_gsd"))
+            L.append("| %s (%s) | %s | %s | %s |" % (c["agency"], c["tool"], c["reports"], ours,
+                                                      c["different"]))
+    warp = quality.get("warp") or {}
+    if warp.get("available"):
+        L += ["\nFinal warp: folds on %s of the footprint; local area %s–%s of the base model; "
+              "local correction up to %s source working px.%s\n"
+              % (fmt(warp["folded_fraction"]), fmt(warp["relative_area"]["min"]),
+                 fmt(warp["relative_area"]["max"]), fmt(warp["local_correction"]["max"]),
+                 "".join(" " + f + "." for f in warp["flags"]))]
     if m.get("degraded"):
         L += ["## What was missing\n"]
         L += ["- %s" % x for x in m["degraded"]]
         L.append("")
     L += ["\n## Artifacts\n",
           "`matches.csv`, `registered.tif`, `transform.json`, `metrics.json`,",
-          "`overlay.png`, `report.md`\n"]
+          "`quality.json`, `evaluation.json`, `overlay.png`, `report.md`\n"]
     with open(os.path.join(job_dir, "report.md"), "w") as fh:
         fh.write("\n".join(L))

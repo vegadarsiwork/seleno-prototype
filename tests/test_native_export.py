@@ -57,6 +57,34 @@ class NativeExportTests(unittest.TestCase):
             np.testing.assert_array_equal(ds.read(1), data[7:73, 9:80])
             self.assertEqual(ds.transform, transform * Affine.translation(9, 7))
 
+    def test_stepped_export_stays_on_the_reference_grid(self):
+        # A linear ramp: any sample, or average of symmetric samples, is exact.
+        H, W = 48, 44
+        data = (np.arange(H)[:, None] * W + np.arange(W)[None, :]).astype(np.float32)
+        transform = Affine(2, 0, 100, 0, -2, 500)
+        scene = self.scene(data, transform=transform, crs=self.crs)
+        frame = {"reference_origin": [4, 0], "reference_window": [4, 0, 44, 44]}
+        info = write_registered_native(self.root, scene, scene, frame,
+                                       {"matrix": np.eye(3).tolist()}, step=4, tile_size=5)
+        self.assertEqual(info["shape"], [10, 11])
+        self.assertEqual(info["reference_decimation"], 4)
+        rows = 4 + np.arange(10) * 4 + 1.5                     # block centres, native px
+        cols = np.arange(11) * 4 + 1.5
+        with rasterio.open(self.root / "registered.tif") as ds:
+            np.testing.assert_allclose(ds.read(1), rows[:, None] * W + cols[None, :], atol=1e-3)
+            self.assertEqual(ds.transform, transform * Affine.translation(0, 4) * Affine.scale(4))
+            self.assertEqual(ds.tags()["reference_step"], "4")
+
+    def test_export_that_could_fill_the_disk_is_refused(self):
+        from collections import namedtuple
+        from seleno.tool.export import ExportTooLarge
+        scene = self.scene(np.ones((64, 64), np.float32))
+        tiny = namedtuple("usage", "total used free")(10 ** 9, 10 ** 9 - 1000, 1000)
+        with patch("seleno.tool.export.shutil.disk_usage", return_value=tiny):
+            with self.assertRaisesRegex(ExportTooLarge, "uncompressed"):
+                write_registered_native(self.root, scene, scene, {}, {"matrix": np.eye(3).tolist()})
+        self.assertEqual(list(self.root.iterdir()), [])        # no partial file left
+
     def test_complete_segment_field_samples_original_cube(self):
         yy, xx = np.mgrid[:90, :70]
         bands = tuple(NativeBand((xx + 3 * yy + i * 1000).astype(np.float32))

@@ -97,18 +97,31 @@ def matrix_digest(matrix):
     return hashlib.sha256(np.asarray(matrix, dtype="<f8").tobytes()).hexdigest()
 
 
-def error_statistics(vectors):
+PIXEL_THRESHOLDS = (.25, .5, 1., 2.)
+
+
+def error_statistics(vectors, unit="px", axes="xy", thresholds=PIXEL_THRESHOLDS):
     """Summarize every measured error; invalid observations fail the assessment.
 
     Keeping the two components also exposes a systematic offset which a count
-    of RANSAC inliers, or a median alone, can hide.
+    of RANSAC inliers, or a median alone, can hide. `unit` and `axes` only name
+    the keys: image errors are (x, y) = (sample, line) pixels, ground errors
+    are (east, north) metres. Component mean and 1-sigma are the form JAXA's
+    Kaguya TC validation reports; RMSE per component is ISIS jigsaw's.
     """
+    u, a = unit, axes
     vectors = np.asarray(vectors, np.float64).reshape(-1, 2)
     valid = np.isfinite(vectors).all(axis=1)
     invalid = int((~valid).sum())
-    stats = {"n": len(vectors), "valid_n": int(valid.sum()), "invalid_n": invalid, "rmse_px": None,
-             "median_px": None, "p90_px": None, "max_px": None,
-             "within_1_px": None, "bias_xy_px": None, "bias_px": None}
+    stats = {"n": len(vectors), "valid_n": int(valid.sum()), "invalid_n": invalid, "rmse_" + u: None,
+             "median_" + u: None, "p90_" + u: None, "p95_" + u: None, "max_" + u: None}
+    if u == "px":
+        stats["within_1_px"] = None
+    stats |= {"bias_%s_%s" % (a, u): None, "bias_" + u: None,
+              "rmse_%s_%s" % (a, u): None, "std_%s_%s" % (a, u): None, "nmad_%s_%s" % (a, u): None,
+              "thresholds": [{"below_" + u: t, "count": 0,
+                              "fraction_all": 0. if len(vectors) else None,
+                              "fraction_valid": None} for t in thresholds]}
     # Report the available evidence without concealing invalid predictions.
     # Acceptance still fails on invalid_n, even when the valid subset is exact.
     if not valid.any():
@@ -116,16 +129,28 @@ def error_statistics(vectors):
     vectors = vectors[valid]
     distances = np.linalg.norm(vectors, axis=1)
     bias = np.mean(vectors, axis=0)
-    return stats | {"rmse_px": float(np.sqrt(np.mean(distances ** 2))),
-                    "median_px": float(np.median(distances)),
-                    "p90_px": float(np.percentile(distances, 90)),
-                    "max_px": float(np.max(distances)),
-                    "within_1_px": float(np.mean(distances < 1.0)),
-                    "bias_xy_px": bias.tolist(), "bias_px": float(np.linalg.norm(bias))}
+    stats |= {"rmse_" + u: float(np.sqrt(np.mean(distances ** 2))),
+              "median_" + u: float(np.median(distances)),
+              "p90_" + u: float(np.percentile(distances, 90)),
+              "p95_" + u: float(np.percentile(distances, 95)),
+              "max_" + u: float(np.max(distances)),
+              "bias_%s_%s" % (a, u): bias.tolist(), "bias_" + u: float(np.linalg.norm(bias)),
+              "rmse_%s_%s" % (a, u): np.sqrt(np.mean(vectors ** 2, axis=0)).tolist(),
+              "std_%s_%s" % (a, u): (np.std(vectors, axis=0, ddof=1).tolist()
+                                     if len(vectors) > 1 else None),
+              "nmad_%s_%s" % (a, u): (1.4826 * np.median(np.abs(vectors - np.median(vectors, axis=0)),
+                                                         axis=0)).tolist(),
+              "thresholds": [{"below_" + u: t, "count": int(np.sum(distances < t)),
+                              "fraction_all": float(np.sum(distances < t) / stats["n"]),
+                              "fraction_valid": float(np.mean(distances < t))}
+                             for t in thresholds]}
+    if u == "px":
+        stats["within_1_px"] = float(np.mean(distances < 1.0))
+    return stats
 
 
 def score_export(job_dir, test, split, *, working_to_source=None, check_points=None,
-                 check_point_rule=None):
+                 check_point_rule=None, reference_ground=None, ground_frame=None):
     """Only call after ALL model decisions and transform.json are finalized.
 
     No inlier filtering, RANSAC, selection, or refitting is allowed here. Reload
@@ -137,6 +162,10 @@ def score_export(job_dir, test, split, *, working_to_source=None, check_points=N
     held-out neighbours says nothing about the transform, while a model error
     moves a whole neighbourhood and survives the screen. Those are scored again
     as `check_point_*`, and how many the screen removed is reported with them.
+
+    `reference_ground(positions, errors)`, when the reference has a datum,
+    turns the forward errors (native reference px at the observed reference
+    point) into local east/north surface metres (`*_ground_*`).
     """
     with open(os.path.join(job_dir, "transform.json")) as fh:
         transform = json.load(fh)
@@ -173,6 +202,18 @@ def score_export(job_dir, test, split, *, working_to_source=None, check_points=N
         reference_stats = error_statistics(reference_errors)
         acc.update({"held_out_reference_" + key: value for key, value in reference_stats.items()})
         evidence["reference_errors"] = reference_stats
+        evidence["reference_error_vectors"] = np.where(np.isfinite(reference_errors), reference_errors, None).tolist()
+        ground_errors = None
+        if reference_ground is not None:
+            positions = project(grid_to_reference(transform.get("frame", {})), test.ref)
+            ground_errors = np.asarray(reference_ground(positions, reference_errors), np.float64)
+            ground_stats = error_statistics(ground_errors, unit="m", axes="en", thresholds=())
+            acc.update({"held_out_ground_" + key: value for key, value in ground_stats.items()})
+            acc["ground_error_definition"] = ("forward transfer error at the observed reference "
+                                              "point in local east/north surface metres")
+            evidence["ground_errors"] = ground_stats
+            evidence["ground_error_vectors"] = np.where(np.isfinite(ground_errors), ground_errors, None).tolist()
+            evidence["ground_frame"] = ground_frame
         # A symmetric transfer distance mixes the two grids' units. Evaluate
         # backward transfer in actual source detector coordinates instead of
         # multiplying that mixed distance by a nominal GSD ratio.
@@ -207,6 +248,10 @@ def score_export(job_dir, test, split, *, working_to_source=None, check_points=N
                 cref = error_statistics(reference_errors[cp])
                 acc.update({"check_point_reference_" + key: value for key, value in cref.items()})
                 evidence["check_point_reference_errors"] = cref
+                if ground_errors is not None:
+                    cground = error_statistics(ground_errors[cp], unit="m", axes="en", thresholds=())
+                    acc.update({"check_point_ground_" + key: value for key, value in cground.items()})
+                    evidence["check_point_ground_errors"] = cground
                 if working_to_source is not None:
                     cstats = error_statistics(errors[cp])
                     acc.update({"check_point_source_" + key: value

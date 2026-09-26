@@ -8,11 +8,16 @@ backmap at the edge of its support.
 from __future__ import annotations
 
 import os
+import shutil
 
 import numpy as np
 
 from .coordinates import grid_to_reference, project
 from . import warp_model
+
+
+class ExportTooLarge(RuntimeError):
+    """The multi-band raster would not fit safely on the output disk."""
 
 
 def reference_to_source(source, reference, frame, points, *,
@@ -112,7 +117,7 @@ def _native_window(reference, frame):
 
 def write_registered_native(job_dir, source, reference, frame, model, *,
                             lattice_interpolators=None, cache=None, tile_size=128,
-                            window=None, supersample=None):
+                            window=None, supersample=None, step=1):
     """Write all source bands at native reference resolution with bounded RAM.
 
     Returns export dimensions and sampling metadata suitable for metrics.json.
@@ -127,6 +132,12 @@ def write_registered_native(job_dir, source, reference, frame, model, *,
     is aliasing, so each output pixel averages a k x k grid of samples spread
     over its footprint through the local Jacobian of the mapping (k = the
     measured reduction, at most 4; `supersample` fixes it).
+
+    `step` > 1 writes every step-th native reference pixel (output pixels are
+    step x step native ones, on the same grid lines). It is for a reference
+    much finer than the source: a 55 m IIRS cube on a 7.4 m TC grid would
+    otherwise be 50 times the pixels - terabytes for 256 bands - with nothing
+    the source did not already say.
     """
     import rasterio
     from rasterio.transform import Affine
@@ -134,6 +145,9 @@ def write_registered_native(job_dir, source, reference, frame, model, *,
 
     if tile_size < 1:
         raise ValueError("tile_size must be positive")
+    step = int(step)
+    if step < 1:
+        raise ValueError("step must be a positive integer")
     cache = {} if cache is None else cache
     bands = source.bands
     r0, c0, r1, c1 = _native_window(reference, frame)
@@ -143,15 +157,23 @@ def write_registered_native(job_dir, source, reference, frame, model, *,
         r1, c1 = min(h, int(window[2])), min(w, int(window[3]))
         if r1 <= r0 or c1 <= c0:
             raise ValueError("empty native reference export window")
-    height, width = r1 - r0, c1 - c0
+    height, width = -(-(r1 - r0) // step), -(-(c1 - c0) // step)
     c = grid_to_reference(frame)
     cinv = np.linalg.inv(c)
     # float32 cannot retain all 32-bit integer digital numbers.
     dtypes = [np.dtype(b.array.dtype) for b in bands]
     dtype = "float64" if any(d.itemsize > 4 or (d.kind in "iu" and d.itemsize >= 4)
                               for d in dtypes) else "float32"
-    transform = (reference.transform * Affine.translation(c0, r0)
-                 if reference.georeferenced else Affine.translation(c0, r0))
+    transform = ((reference.transform if reference.georeferenced else Affine.identity())
+                 * Affine.translation(c0, r0) * Affine.scale(step))
+    estimate = height * width * len(bands) * np.dtype(dtype).itemsize
+    free = shutil.disk_usage(job_dir).free
+    if estimate > 0.5 * free:
+        # Compression usually shrinks this a lot, but a run must never be able
+        # to fill the disk it shares with everything else.
+        raise ExportTooLarge("registered.tif would be %.1f GB uncompressed (%d x %d x %d bands); "
+                             "only %.1f GB is free" % (estimate / 1e9, height, width, len(bands),
+                                                        free / 1e9))
     path = os.path.join(job_dir, "registered.tif")
     temporary = path + ".partial.tif"
     try:
@@ -163,7 +185,9 @@ def write_registered_native(job_dir, source, reference, frame, model, *,
                            BIGTIFF="IF_SAFER", interleave="band") as ds:
             ds.update_tags(**source.meta.get("raster_tags", {}))
             ds.update_tags(georeferenced=str(bool(reference.georeferenced)),
-                           grid="native reference pixel centres",
+                           grid=("native reference pixel centres" if step == 1 else
+                                 "every %d native reference pixels, centred in each block" % step),
+                           reference_step=str(step),
                            reference_origin_row=str(r0), reference_origin_col=str(c0),
                            resampling="bilinear original bands",
                            transform_sha256=warp_model.digest(model))
@@ -184,7 +208,10 @@ def write_registered_native(job_dir, source, reference, frame, model, *,
                     # One extra row and column: their differences are the
                     # mapping's Jacobian, which sizes the supersampling.
                     yy, xx = np.mgrid[row:row + bh + 1, col:col + bw + 1]
-                    native = np.column_stack([xx.ravel() + c0, yy.ravel() + r0])
+                    # Output pixel j covers native j*step .. j*step+step-1; its centre:
+                    centre = (step - 1) / 2.
+                    native = np.column_stack([xx.ravel() * step + c0 + centre,
+                                              yy.ravel() * step + r0 + centre])
                     prealigned = project(c, warp_model.inverse_points(model, project(cinv, native)))
                     grid = reference_to_source(
                         source, reference, frame, prealigned,
@@ -224,8 +251,10 @@ def write_registered_native(job_dir, source, reference, frame, model, *,
             os.unlink(temporary)
         raise
     return {"raster": "registered.tif", "shape": [height, width], "bands": len(bands),
-            "reference_decimation": 1, "reference_origin": [r0, c0],
-            "resolution": "native reference", "dtype": dtype,
+            "reference_decimation": step, "reference_origin": [r0, c0],
+            "resolution": ("native reference" if step == 1 else
+                           "every %d native reference pixels (source coarser than reference)" % step),
+            "dtype": dtype,
             "supersampling": sorted(used) if height and width else [],
             "sampling": "bilinear original bands, averaged over k x k samples per output "
                         "pixel where the source is finer; complete inverse registration field",
