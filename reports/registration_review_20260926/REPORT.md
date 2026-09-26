@@ -176,7 +176,7 @@ Metric-contract items from sections 4 and 6 now exist in code. Every registratio
 | Final-warp validity | Done: folds (orientation flips), area and shear relative to the base model, non-global correction size. Seam discontinuities not assessed | `quality.warp_validity` |
 | Agency reporting forms | Done: ASP bundle_adjust, ISIS jigsaw, Kaguya TC, CE90/CE95, SLDEM2015 practice. Each row states how the measurement differs | `quality.conventions` |
 | Export / quality / independent verification kept separate; sampling claim removed | Done | quality panel; `subpixel_attainable` is null |
-| Reference experiment (Kaguya TC vs WAC) | Northern half done, below; full strip pending the remaining tiles | `scripts/build_tc_mosaic.py`, `compare_references.py` |
+| Reference experiment (Kaguya TC vs WAC) | Done for the northern half and the full strip (below) | `scripts/build_tc_mosaic.py`, `compare_references.py` |
 | Independent checkpoints; viewer masks, wipe, whole-strip fit, residual vectors; masked before/after similarity; suite-level false-acceptance rate; terrain and camera experiments | **Not done** | — |
 
 The agency figures used were re-checked against the primary sources on 26 September 2026. ASP: "The errors should be under 1 pixel, ideally under 0.5 pixels", with mean, median and count per image and a count of "at least a dozen". Kaguya TC (Haruyama et al., LPSC 2012 #1200, TC at 10 m/pixel): longitude 5.4 m mean / 8.0 m 1σ and latitude 3.6 / 7.2 m at nine identical locations.
@@ -244,8 +244,39 @@ All three runs used the same source, the IIRS profile defaults (12 × 12 grid) a
 4. **Limits.**
    - This is half the strip and matcher consistency with TC, not independent accuracy.
    - Surface metres are relative to TC, whose own geolocation has its own error.
-   - The full-strip comparison waits on the remaining tiles.
    - The fine stage could choose a common measurement resolution automatically when the reference is much finer than the source, instead of relying on a pre-averaged mosaic.
+
+*Full strip (37–72° S), all 25 TC tiles.* The WAC column is the reproducible full-strip run (C, identical in the app and the CLI). Settings, cap and source are the same as above ([table data](reference_comparison_full_strip.json)).
+
+| Full strip | WAC 100 m | **TC averaged → 29.6 m** |
+|---|---:|---:|
+| Held-out / invalid / screened | 326 / 0 / 317 | 364 / 0 / 357 |
+| All held-out RMSE [95% block bootstrap] | 1.63 [1.31–1.97] px | **0.69 [0.57–0.82] px** |
+| All held-out p95 | 2.69 px | **1.36 px** |
+| Below 1 source px (all / screened) | 52.5% / 53.9% | **89.3% / 90.8%** |
+| Screened RMSE / median | 1.31 / 0.96 px | **0.61 / 0.40 px** |
+| Random part, NMAD sample / line | 0.79 / 0.65 px | **0.29 / 0.28 px** |
+| Surface RMSE (screened) | 90.6 m | **47.4 m** |
+| JAXA TC form: east / north mean ± 1σ | 13.0 ± 55.3 / −1.8 ± 70.7 m | **−0.3 ± 18.0 / 10.5 ± 42.6 m** |
+| … per source GSD | 0.24 ± 1.01 / −0.03 ± 1.29 | **−0.01 ± 0.33 / 0.19 ± 0.78** |
+| ASP form: mean / median | 1.09 / 0.96 px | **0.49 / 0.40 px** |
+| Mean sample error across the detector (5 bins) | −0.49 … +0.37 px | **−0.08 … +0.08 px** |
+| Precision gates: RMSE < 1, p90 < 1, ≥ 95% < 1 px, bias < 0.5 | 1.307 ✗, 2.033 ✗, 53.9% ✗, 0.227 ✓ | **0.608 ✓, 0.974 ✓, 90.8% ✗, 0.125 ✓** |
+| Legacy cell support gate (valid-pixel hull support) | fails (89%) | fails (91%) |
+
+Over the whole strip the matched-resolution TC reference cuts all-held-out RMSE 2.4× and random scatter 2.5×, with non-overlapping intervals. It halves surface RMSE and meets the ASP-form "ideally under 0.5 pixels".
+
+Two gates still fail. The first is "95% of check points below 1 source px", at 90.8%. The shortfall is spread along the strip, not concentrated at one end: bins at 40–49° S and 63–66° S have p95 of 1.2–1.9 px. The southernmost 69–72° S bin holds only 5 held-out points, and excluding it moves the rate only to 90.3%. The second is the legacy cell-support gate, left unchanged.
+
+The across-track sample bias seen against WAC (items 3–4 above) is absent against TC. That suggests it came from the WAC reference or matching against it, not from IIRS detector geometry, so an across-detector correction is not currently indicated.
+
+For context only: Kaguya TC's published repeat-location 1σ is 0.80 / 0.72 GSD. This run's 0.33 / 0.78 source-GSD scatter now has the same order, but it measures something different: cross-sensor matcher consistency against a mosaic, not repeat TC terrain models.
+
+Remaining steps, in order:
+1. Independent checkpoints, to turn consistency into accuracy.
+2. Automatic common-resolution measurement when the reference is much finer than the source, so native TC works without a pre-averaged mosaic.
+3. A principled decision on the legacy support gate.
+4. Examine the 1–2 px tail by location.
 
 **Evidence, reproducibility and limits**
 

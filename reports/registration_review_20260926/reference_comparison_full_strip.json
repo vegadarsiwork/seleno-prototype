@@ -1,0 +1,187 @@
+[
+ {
+  "name": "WAC 100 m (full)",
+  "job": "outputs/cc2d7baa879a",
+  "reference": "Lunar_LRO_LROC-WAC_Mosaic_global_100m_June2013.tif",
+  "reference_gsd_m": 100.0,
+  "status": "warning",
+  "acceptance": "failed",
+  "model": "affine",
+  "method": "dense-ncc",
+  "split": [
+   49,
+   3
+  ],
+  "working_grid": {
+   "requested": 6144,
+   "planned": 6144,
+   "limit_bytes": 5767168000,
+   "limit_source": "cgroup memory limit",
+   "free_bytes": 5085536256,
+   "budget_fraction": 0.5,
+   "reserve_bytes": 1073741824,
+   "bytes_per_px": 900,
+   "used": 6144,
+   "basis": "requested"
+  },
+  "transform_sha256": "53a1a2f7b18408084f2800f0a4ec78712f2498e10f931d1a21201edf8a2f179f",
+  "held_out": 326,
+  "invalid": 0,
+  "screened": 317,
+  "all_rmse_px": 1.6290289857852895,
+  "all_rmse_ci": [
+   1.3068575549886936,
+   1.9681488033305812
+  ],
+  "all_p95_px": 2.685192391842889,
+  "all_below_1": 0.5245398773006135,
+  "screened_rmse_px": 1.3072182175421672,
+  "screened_median_px": 0.9567842854689657,
+  "screened_p95_px": 2.4242751249565058,
+  "screened_below_1": 0.5394321766561514,
+  "nmad_xy_px": [
+   0.876738853714778,
+   0.7786586486298226
+  ],
+  "surface_rmse_m": 90.58682270402234,
+  "kaguya_form": {
+   "basis": "screened held-out",
+   "east_m": [
+    12.952382531001913,
+    55.33591007677441
+   ],
+   "north_m": [
+    -1.7704852125710244,
+    70.69963310103691
+   ],
+   "count": 317,
+   "source_gsd_m": 54.83,
+   "per_source_gsd": {
+    "east": [
+     0.23622802354553918,
+     1.0092268844934236
+    ],
+    "north": [
+     -0.032290447064946645,
+     1.289433395970033
+    ]
+   }
+  },
+  "ce90_m": 140.03984078896494,
+  "asp_mean_median_px": [
+   1.0938242594056378,
+   0.9567842854689657
+  ],
+  "support_inside_hull": 0.89154,
+  "noise": {
+   "sample": {
+    "explained_by_neighbours": 0.06677089030735239,
+    "random_nmad_px": 0.7883288699186861
+   },
+   "line": {
+    "explained_by_neighbours": 0.08979014822826692,
+    "random_nmad_px": 0.6497423168316308
+   }
+  },
+  "runtime_s": 237.26,
+  "degraded": [
+   "source: pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)",
+   "source: geometry from the loc backplane",
+   "reference: 5958 megapixels: read lazily, in windows",
+   "refined: re-placed at 2 x decimation over the overlap instead of 3 x over the whole reference"
+  ]
+ },
+ {
+  "name": "TC 29.6 m (full)",
+  "job": "outputs/reference_compare_full/tc_x4_full/788b9bfb6f4b",
+  "reference": "TCO_MAPm04_full_x4.tif",
+  "reference_gsd_m": 29.6126468986796,
+  "status": "warning",
+  "acceptance": "failed",
+  "model": "affine",
+  "method": "dense-ncc",
+  "split": [
+   49,
+   3
+  ],
+  "working_grid": {
+   "requested": 6144,
+   "planned": 5503,
+   "limit_bytes": 5767168000,
+   "limit_source": "cgroup memory limit",
+   "free_bytes": 5338910720,
+   "budget_fraction": 0.5,
+   "reserve_bytes": 1073741824,
+   "bytes_per_px": 900,
+   "used": 5503,
+   "basis": "memory limit"
+  },
+  "transform_sha256": "b7649ad6160a514e42ee3c56c1602f12f0b26b1b5b1401bc1011491f55fa6750",
+  "held_out": 364,
+  "invalid": 0,
+  "screened": 357,
+  "all_rmse_px": 0.6875925310126562,
+  "all_rmse_ci": [
+   0.5693963957069036,
+   0.8209006313681048
+  ],
+  "all_p95_px": 1.3569898935085711,
+  "all_below_1": 0.8928571428571429,
+  "screened_rmse_px": 0.6080426952170367,
+  "screened_median_px": 0.3954075102556988,
+  "screened_p95_px": 1.2179534760222022,
+  "screened_below_1": 0.907563025210084,
+  "nmad_xy_px": [
+   0.2775135448859125,
+   0.42763937437554317
+  ],
+  "surface_rmse_m": 47.369460913676434,
+  "kaguya_form": {
+   "basis": "screened held-out",
+   "east_m": [
+    -0.29275871619617483,
+    17.986981187982867
+   ],
+   "north_m": [
+    10.523154821851415,
+    42.60872603913696
+   ],
+   "count": 357,
+   "source_gsd_m": 54.83,
+   "per_source_gsd": {
+    "east": [
+     -0.005339389315998082,
+     0.328049994309372
+    ],
+    "north": [
+     0.19192330515869807,
+     0.7771060740313143
+    ]
+   }
+  },
+  "ce90_m": 72.4132979394772,
+  "asp_mean_median_px": [
+   0.48856330007692517,
+   0.3954075102556988
+  ],
+  "support_inside_hull": 0.90926,
+  "noise": {
+   "sample": {
+    "explained_by_neighbours": 0.0,
+    "random_nmad_px": 0.2921752877556098
+   },
+   "line": {
+    "explained_by_neighbours": 0.35021167476222237,
+    "random_nmad_px": 0.2840767924527257
+   }
+  },
+  "runtime_s": 1618.73,
+  "degraded": [
+   "source: pseudo-pan from 47 of 256 bands (band centres from the label, 0.81-1.59 um)",
+   "source: geometry from the loc backplane",
+   "reference: 245 megapixels: read lazily, in windows",
+   "refined: re-placed at 7 x decimation over the overlap instead of 8 x over the whole reference",
+   "working grid capped at 5503 px a side (asked for 6144) by the 5.8 GB cgroup memory limit, budgeting 50% of it after a 1 GB reserve"
+  ]
+ }
+]
