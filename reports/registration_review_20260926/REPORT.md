@@ -176,7 +176,8 @@ Metric-contract items from sections 4 and 6 now exist in code. Every registratio
 | Final-warp validity | Done: folds (orientation flips), area and shear relative to the base model, non-global correction size. Seam discontinuities not assessed | `quality.warp_validity` |
 | Agency reporting forms | Done: ASP bundle_adjust, ISIS jigsaw, Kaguya TC, CE90/CE95, SLDEM2015 practice. Each row states how the measurement differs | `quality.conventions` |
 | Export / quality / independent verification kept separate; sampling claim removed | Done | quality panel; `subpixel_attainable` is null |
-| Independent checkpoints; viewer masks, wipe, whole-strip fit, residual vectors; masked before/after similarity; suite-level false-acceptance rate; reference, terrain and camera experiments | **Not done** | — |
+| Reference experiment (Kaguya TC vs WAC) | Northern half done, below; full strip pending the remaining tiles | `scripts/build_tc_mosaic.py`, `compare_references.py` |
+| Independent checkpoints; viewer masks, wipe, whole-strip fit, residual vectors; masked before/after similarity; suite-level false-acceptance rate; terrain and camera experiments | **Not done** | — |
 
 The agency figures used were re-checked against the primary sources on 26 September 2026. ASP: "The errors should be under 1 pixel, ideally under 0.5 pixels", with mean, median and count per image and a count of "at least a dozen". Kaguya TC (Haruyama et al., LPSC 2012 #1200, TC at 10 m/pixel): longitude 5.4 m mean / 8.0 m 1σ and latitude 3.6 / 7.2 m at nine identical locations.
 
@@ -216,6 +217,35 @@ What the new diagnostics show that the old headline hid:
 5. **The grid-cell extrapolation estimate is unreliable on thin strips.** In C, 89% of valid overlap pixels lie inside the fit hull, yet the legacy estimate puts 45% of the area outside it. The legacy gate still drives acceptance; the valid-pixel figure is reported beside it.
 
 Even the best run fails every sub-source-pixel criterion and the ASP-form guidance. The priorities in section 6 stand: independent checks, then reference, terrain and geometry experiments. Settings and memory should be pinned for any comparison.
+
+*Why a better model cannot close the gap.* On the reproducible WAC run (C), neighbouring held-out points explain only 7–9% of each error's variance. The rest is random point-level scatter: NMAD 0.79 / 0.65 source px per component, about 0.4 WAC px. "95% below 1 source px" needs roughly 0.41 source px (0.22 WAC px) per component. Removing all the systematic part would still leave about twice that, so the limit is how precisely features can be located in a 100 m mosaic.
+
+*Reference comparison, northern half of the strip (36–54° S).* The Kaguya TC morning map (JAXA DARTS, v4.0, 7.4 m/px, SLDEM-orthorectified) was chosen because IIRS imaged this strip in the local morning. The subsolar point was near 78° E and the strip is at about 57.6° E; this estimate reproduces the label's 57.45° incidence. The full strip needs 25 tiles; the machine rebooted at 12 of them, so this first comparison uses those 12. WAC was cut to exactly the same 36–54° S, 54–60° E box (`WAC_subset_…vrt`).
+
+All three runs used the same source, the IIRS profile defaults (12 × 12 grid) and a 5.5 GB cap, each in a fresh process. The TC mosaics were built with `scripts/build_tc_mosaic.py`, and the table with `compare_references.py` ([table data](reference_comparison_half_strip.json)).
+
+| Northern half, same settings | WAC 100 m | **TC averaged 4 × 4 → 29.6 m** | TC native 7.4 m |
+|---|---:|---:|---:|
+| Held-out / invalid / screened | 267 / 0 / 261 | 657 / 0 / 647 | 81 / 0 / 78 |
+| All held-out RMSE [95% block bootstrap] | 1.63 [1.27–1.95] px | **0.57 [0.50–0.65] px** | 2.46 [1.64–3.44] px |
+| All held-out p95 | 3.15 px | **1.05 px** | 3.56 px |
+| Below 1 source px (all / screened) | 60.7% / 62.1% | **93.8% / 95.2%** | 29.6% / 30.8% |
+| Screened RMSE / median | 1.20 / 0.75 px | **0.48 / 0.33 px** | 1.70 / 1.36 px |
+| Random part, NMAD sample / line | 0.60 / 0.38 px | **0.25 / 0.23 px** | 1.82 / 0.74 px |
+| Surface RMSE (screened) | 81.6 m | **34.5 m** | 107.7 m |
+| ASP form: mean / median | 0.95 / 0.75 px | **0.40 / 0.33 px** | 1.47 / 1.36 px |
+| Native-resolution stage | adopted, 776 points | adopted, 1835 points | **failed**: no tile verified |
+| Precision gates (RMSE, p90, 95% < 1 px, bias) | fail | **all pass**: 0.479, 0.748, 95.2%, 0.071 px | fail |
+| Remaining acceptance failure | support + precision | legacy cell support only: 30% > 25%; valid-pixel hull support 97% | support + precision |
+
+1. **A sharper, matched-resolution reference roughly halves the random scatter and cuts all-held-out RMSE about threefold.** The intervals do not overlap. Against TC at 29.6 m (about 1.85 reference px per IIRS px) every sub-source-pixel precision gate passes, and the ASP-form mean and median fall within its "ideally under 0.5 pixels".
+2. **TC at native 7.4 m fails.** The native stage measures at the reference's resolution, so the 55 m source is upsampled 7.4× and each 41 px patch spans about 5 IIRS pixels. No tile verified, and the run fell back to the coarse solution. The gain comes from TC's sharper, better-controlled image at a resolution the source can match, not from finer pixels alone.
+3. **The only remaining TC failure is the legacy grid-cell support gate**, which section 7 already showed is biased on thin strips; valid-pixel hull support is 97%. The gate was not changed after seeing this result. Replacing it is a separate decision to be justified and checked on other pairs.
+4. **Limits.**
+   - This is half the strip and matcher consistency with TC, not independent accuracy.
+   - Surface metres are relative to TC, whose own geolocation has its own error.
+   - The full-strip comparison waits on the remaining tiles.
+   - The fine stage could choose a common measurement resolution automatically when the reference is much finer than the source, instead of relying on a pre-averaged mosaic.
 
 **Evidence, reproducibility and limits**
 
